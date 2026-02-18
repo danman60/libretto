@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { runPipeline } from '@/lib/pipeline';
 
@@ -59,10 +60,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Incomplete intake data' }, { status: 400 });
     }
 
-    // Fire off the pipeline — don't await, let it run in the background.
-    console.log('[api/generate] Firing pipeline...');
-    runPipeline(projectId).catch((err) => {
-      console.error('[api/generate] Pipeline background error:', err);
+    // Use next/server after() to run pipeline after response is sent.
+    // This keeps the serverless function alive for maxDuration while
+    // immediately returning 200 to the client.
+    console.log('[api/generate] Scheduling pipeline via after()...');
+    after(async () => {
+      console.log('[api/generate:after] Pipeline starting...');
+      try {
+        await runPipeline(projectId);
+        console.log('[api/generate:after] Pipeline completed successfully');
+      } catch (err) {
+        console.error('[api/generate:after] Pipeline error:', err);
+      }
     });
 
     return NextResponse.json({ success: true, projectId });
