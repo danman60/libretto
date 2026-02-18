@@ -124,3 +124,36 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Aurora animated gradient */
+.aurora-bg {
+  background: linear-gradient(
+    -45deg,
+    rgba(120, 80, 200, 0.3),
+    rgba(60, 60, 180, 0.2),
+    rgba(140, 60, 220, 0.25),
+    rgba(80, 120, 220, 0.2)
+  );
+  background-size: 400% 400%;
+  animation: aurora-shift 18s ease infinite;
+}
+
+@keyframes aurora-shift {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 100% 25%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 0% 75%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Quote fade animation */
+@keyframes quote-fade {
+  0% { opacity: 0; transform: translateY(4px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+
+.quote-animate {
+  animation: quote-fade 8s ease-in-out;
+}

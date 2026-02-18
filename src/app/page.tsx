@@ -7,9 +7,8 @@ export default function LandingPage() {
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        {/* Subtle radial gradient behind hero text */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(120,80,200,0.12)_0%,_transparent_70%)]" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle,_rgba(168,130,255,0.06)_0%,_transparent_60%)]" />
+        {/* Animated aurora gradient */}
+        <div className="absolute inset-0 aurora-bg opacity-30" />
 
         <div className="relative max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-medium tracking-widest uppercase text-gray-400 mb-8">
@@ -22,8 +21,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-gray-400 max-w-xl mx-auto mb-12 leading-relaxed">
-            Share your story. We&apos;ll transform it into a 5-track concept album
-            with AI-generated lyrics, music, and a cinematic biography.
+            Transform your life story into your own libretto &mdash; a 5-track
+            musical biography with AI-generated lyrics, music, and a cinematic narrative.
           </p>
 
           <Link href="/create">
@@ -31,7 +30,7 @@ export default function LandingPage() {
               size="lg"
               className="text-base px-10 py-6 rounded-full bg-white text-black hover:bg-gray-200 font-semibold transition-all hover:scale-105"
             >
-              Create Your Album
+              Create Your Libretto
             </Button>
           </Link>
 
@@ -49,7 +48,7 @@ export default function LandingPage() {
             How it works
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-20">
-            Three steps to your album
+            Three steps to your musical story
           </h2>
 
           <div className="grid md:grid-cols-3 gap-16">
@@ -70,7 +69,7 @@ export default function LandingPage() {
                 icon: Share2,
                 step: '03',
                 title: 'Listen & share',
-                desc: 'Get a cinematic album page with your biography, playable tracks, and lyrics — shareable with a single link.',
+                desc: 'Get a cinematic page with your biography, playable tracks, and lyrics — shareable with a single link.',
               },
             ].map(({ icon: Icon, step, title, desc }) => (
               <div key={step} className="relative">
@@ -103,9 +102,9 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               '5 original tracks with full lyrics',
-              'Custom album art from your story',
+              'Custom cover art from your story',
               'A reflective biography (900+ words)',
-              'Shareable album page with audio player',
+              'Shareable page with audio player',
               'Emotional arc mapped across 5 chapters',
               'Your story, never stored or shared',
             ].map((item) => (

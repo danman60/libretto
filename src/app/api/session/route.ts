@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { randomUUID } from 'crypto';
 
 export async function POST() {
+  console.log('[api/session] POST - Creating new session');
   try {
     const db = getServiceSupabase();
     const sessionToken = randomUUID();
@@ -14,16 +15,17 @@ export async function POST() {
       .single();
 
     if (error) {
-      console.error('Session creation error:', error);
+      console.error('[api/session] Supabase error:', error);
       return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
     }
 
+    console.log('[api/session] Created project:', data.id);
     return NextResponse.json({
       projectId: data.id,
       sessionToken: data.session_token,
     });
   } catch (err) {
-    console.error('Session error:', err);
+    console.error('[api/session] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

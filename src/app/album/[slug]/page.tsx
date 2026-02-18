@@ -44,8 +44,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     return (
       <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Album not found</h1>
-          <p className="text-gray-500">This album may have been removed or the link is incorrect.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Libretto not found</h1>
+          <p className="text-gray-500">This libretto may have been removed or the link is incorrect.</p>
         </div>
       </main>
     );
@@ -56,7 +56,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="flex items-center gap-3 text-gray-500">
           <Disc3 className="h-5 w-5 animate-spin" />
-          Loading album...
+          Loading...
         </div>
       </main>
     );
@@ -96,7 +96,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
             )}
             <div className="flex-1 text-center sm:text-left">
               <p className="text-xs font-medium tracking-widest text-gray-500 uppercase mb-2">
-                Album
+                Your Libretto
               </p>
               <h1 className="text-3xl sm:text-4xl font-bold mb-2">{album.title}</h1>
               {album.tagline && (

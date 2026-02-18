@@ -2,11 +2,14 @@
  * Album generation pipeline.
  * Extracted from the API route so it can run as a background process.
  * Each step updates Supabase so the client can poll for progress.
+ *
+ * INTERLEAVED: For each track, generates lyrics then audio before moving to next track.
+ * First track audio ready in ~80s instead of ~300s.
  */
 
 import { getServiceSupabase } from './supabase';
 import { callDeepSeek, callDeepSeekJSON } from './deepseek';
-import { generateTrack, getDelayBetweenTracks } from './suno';
+import { generateTrackViaKie } from './suno-kie';
 import { sanitizeStoryInput } from './sanitize';
 import {
   buildLifeMapPrompt,
@@ -47,30 +50,39 @@ function generateSlug(): string {
 
 export async function runPipeline(projectId: string): Promise<void> {
   const db = getServiceSupabase();
+  console.log(`[pipeline] Starting for project ${projectId}`);
 
   try {
     // Fetch all intake data
-    const { data: intakeRows } = await db
+    console.log('[pipeline] Fetching intake data...');
+    const { data: intakeRows, error: intakeError } = await db
       .from('story_intake')
       .select('*')
       .eq('project_id', projectId);
 
-    const { data: prefs } = await db
+    const { data: prefs, error: prefsError } = await db
       .from('music_preferences')
       .select('*')
       .eq('project_id', projectId)
       .single();
 
+    if (intakeError) console.error('[pipeline] Intake fetch error:', intakeError);
+    if (prefsError) console.error('[pipeline] Prefs fetch error:', prefsError);
+
     if (!intakeRows?.length || !prefs) {
+      console.error('[pipeline] Missing intake data or preferences, marking failed');
       await db.from('projects').update({ status: 'failed' }).eq('id', projectId);
       return;
     }
+
+    console.log(`[pipeline] Got ${intakeRows.length} intake rows and preferences`);
 
     const turningPointsRow = intakeRows.find((r: { step: string }) => r.step === 'turning_points');
     const innerWorldRow = intakeRows.find((r: { step: string }) => r.step === 'inner_world');
     const scenesRow = intakeRows.find((r: { step: string }) => r.step === 'scenes');
 
     if (!turningPointsRow || !innerWorldRow || !scenesRow) {
+      console.error('[pipeline] Missing required intake steps');
       await db.from('projects').update({ status: 'failed' }).eq('id', projectId);
       return;
     }
@@ -88,8 +100,10 @@ export async function runPipeline(projectId: string): Promise<void> {
 
     // Update status to processing
     await db.from('projects').update({ status: 'processing', updated_at: new Date().toISOString() }).eq('id', projectId);
+    console.log('[pipeline] Status -> processing');
 
     // ===== STEP 1: Generate LifeMap =====
+    console.log('[pipeline] Step 1: Generating LifeMap...');
     const lifeMapPrompt = buildLifeMapPrompt(
       sanitized.turningPoints,
       sanitized.innerWorld,
@@ -102,8 +116,9 @@ export async function runPipeline(projectId: string): Promise<void> {
     let lifeMap: LifeMap;
     try {
       lifeMap = await callDeepSeekJSON<LifeMap>(lifeMapPrompt);
+      console.log('[pipeline] LifeMap generated:', lifeMap.themes?.length, 'themes,', lifeMap.chapters?.length, 'chapters');
     } catch (err) {
-      console.error('LifeMap generation failed:', err);
+      console.error('[pipeline] LifeMap generation failed:', err);
       await db.from('projects').update({ status: 'failed' }).eq('id', projectId);
       return;
     }
@@ -116,14 +131,16 @@ export async function runPipeline(projectId: string): Promise<void> {
     });
 
     // ===== STEP 2: Generate Biography =====
+    console.log('[pipeline] Step 2: Generating biography...');
     let biography: string;
     try {
       biography = await callDeepSeek(
         buildBiographyPrompt(lifeMap, sanitized.turningPoints, sanitized.innerWorld),
         { temperature: 0.7, maxTokens: 3000 }
       );
+      console.log('[pipeline] Biography generated:', biography.length, 'chars');
     } catch (err) {
-      console.error('Biography generation failed:', err);
+      console.error('[pipeline] Biography generation failed:', err);
       biography = 'Biography generation failed. Your story is still preserved in the tracks below.';
     }
 
@@ -135,7 +152,8 @@ export async function runPipeline(projectId: string): Promise<void> {
     });
 
     // ===== STEP 3: Generate Album Title =====
-    let albumTitle = 'Untitled Album';
+    console.log('[pipeline] Step 3: Generating title...');
+    let albumTitle = 'Untitled';
     let albumTagline = '';
     try {
       const titleResult = await callDeepSeekJSON<{ title: string; tagline: string }>(
@@ -143,8 +161,9 @@ export async function runPipeline(projectId: string): Promise<void> {
       );
       albumTitle = titleResult.title;
       albumTagline = titleResult.tagline;
+      console.log('[pipeline] Title:', albumTitle, '| Tagline:', albumTagline);
     } catch (err) {
-      console.error('Album title generation failed:', err);
+      console.error('[pipeline] Title generation failed:', err);
       albumTitle = lifeMap.themes[0] || 'My Story';
     }
 
@@ -156,6 +175,7 @@ export async function runPipeline(projectId: string): Promise<void> {
       biography_markdown: biography,
       share_slug: shareSlug,
     });
+    console.log('[pipeline] Album created with slug:', shareSlug);
 
     // ===== STEP 4: Create track placeholders =====
     const trackTitles = lifeMap.chapters.slice(0, 5).map((c) => c.title);
@@ -172,27 +192,34 @@ export async function runPipeline(projectId: string): Promise<void> {
         status: 'pending',
       });
     }
+    console.log('[pipeline] 5 track placeholders created');
 
-    // ===== STEP 5: Generate Lyrics =====
+    // ===== STEP 5: INTERLEAVED Lyrics + Music Generation =====
+    // For each track: generate lyrics -> generate audio -> next track
+    // First track audio ready in ~80s instead of waiting for all lyrics first
     const musicPrefs = prefs as MusicPreferences;
 
     for (let i = 0; i < 5; i++) {
       const trackNum = i + 1;
       const role = NARRATIVE_ROLES[i];
+      console.log(`[pipeline] Track ${trackNum}: Starting lyrics generation...`);
 
+      // --- Generate Lyrics ---
       await db
         .from('tracks')
         .update({ status: 'generating_lyrics', updated_at: new Date().toISOString() })
         .eq('project_id', projectId)
         .eq('track_number', trackNum);
 
+      let lyrics: string | null = null;
+      let stylePrompt: string | null = null;
+
       try {
-        const lyrics = await callDeepSeek(
+        lyrics = await callDeepSeek(
           buildLyricsPrompt(trackNum, role, lifeMap, musicPrefs),
           { temperature: 0.85, maxTokens: 1500 }
         );
-
-        const stylePrompt = buildStylePrompt(role, lifeMap, musicPrefs);
+        stylePrompt = buildStylePrompt(role, lifeMap, musicPrefs);
 
         await db
           .from('tracks')
@@ -204,97 +231,101 @@ export async function runPipeline(projectId: string): Promise<void> {
           })
           .eq('project_id', projectId)
           .eq('track_number', trackNum);
+
+        console.log(`[pipeline] Track ${trackNum}: Lyrics done (${lyrics.length} chars)`);
       } catch (err) {
-        console.error(`Lyrics generation failed for track ${trackNum}:`, err);
+        console.error(`[pipeline] Track ${trackNum}: Lyrics generation failed:`, err);
         await db
           .from('tracks')
           .update({ status: 'failed', updated_at: new Date().toISOString() })
           .eq('project_id', projectId)
           .eq('track_number', trackNum);
+        continue; // Skip to next track
       }
-    }
 
-    // ===== STEP 6: Generate Music =====
-    await db.from('projects').update({ status: 'generating_music', updated_at: new Date().toISOString() }).eq('id', projectId);
+      // --- Generate Audio ---
+      console.log(`[pipeline] Track ${trackNum}: Starting audio generation...`);
+      await db
+        .from('tracks')
+        .update({ status: 'generating_audio', updated_at: new Date().toISOString() })
+        .eq('project_id', projectId)
+        .eq('track_number', trackNum);
 
-    const { data: tracks } = await db
-      .from('tracks')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('track_number');
+      // Update project status to generating_music once first track enters audio phase
+      if (i === 0) {
+        await db.from('projects').update({ status: 'generating_music', updated_at: new Date().toISOString() }).eq('id', projectId);
+      }
 
-    if (tracks) {
-      for (const track of tracks) {
-        if (track.status === 'failed' || !track.lyrics) continue;
+      try {
+        const isInstrumental = musicPrefs.vocal_mode === 'instrumental';
+        const result = await generateTrackViaKie(
+          lyrics,
+          stylePrompt!,
+          trackTitles[i],
+          isInstrumental
+        );
 
         await db
           .from('tracks')
-          .update({ status: 'generating_audio', updated_at: new Date().toISOString() })
-          .eq('id', track.id);
+          .update({
+            suno_task_id: result.id,
+            audio_url: result.audio_url,
+            cover_image_url: result.image_url,
+            duration: result.duration,
+            status: 'complete',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('project_id', projectId)
+          .eq('track_number', trackNum);
 
+        console.log(`[pipeline] Track ${trackNum}: Audio complete (${result.duration}s)`);
+      } catch (err) {
+        console.error(`[pipeline] Track ${trackNum}: Audio generation failed:`, err);
+
+        // Retry once with simpler style
         try {
-          const isInstrumental = musicPrefs.vocal_mode === 'instrumental';
-          const result = await generateTrack(
-            track.lyrics || '',
-            track.style_prompt || '',
-            track.title,
-            isInstrumental
+          console.log(`[pipeline] Track ${trackNum}: Retrying with simple style...`);
+          await db.from('tracks').update({ retry_count: 1 }).eq('project_id', projectId).eq('track_number', trackNum);
+          const simpleStyle = musicPrefs.genres[0] || 'pop';
+          const retryResult = await generateTrackViaKie(
+            lyrics,
+            simpleStyle,
+            trackTitles[i],
+            musicPrefs.vocal_mode === 'instrumental'
           );
-
           await db
             .from('tracks')
             .update({
-              suno_task_id: result.id,
-              audio_url: result.audio_url,
-              cover_image_url: result.image_url,
-              duration: result.duration,
+              suno_task_id: retryResult.id,
+              audio_url: retryResult.audio_url,
+              cover_image_url: retryResult.image_url,
+              duration: retryResult.duration,
               status: 'complete',
               updated_at: new Date().toISOString(),
             })
-            .eq('id', track.id);
-        } catch (err) {
-          console.error(`Music generation failed for track ${track.track_number}:`, err);
+            .eq('project_id', projectId)
+            .eq('track_number', trackNum);
 
-          if (track.retry_count === 0) {
-            try {
-              await db.from('tracks').update({ retry_count: 1 }).eq('id', track.id);
-              const simpleStyle = musicPrefs.genres[0] || 'pop';
-              const retryResult = await generateTrack(
-                track.lyrics || '',
-                simpleStyle,
-                track.title,
-                musicPrefs.vocal_mode === 'instrumental'
-              );
-              await db
-                .from('tracks')
-                .update({
-                  suno_task_id: retryResult.id,
-                  audio_url: retryResult.audio_url,
-                  cover_image_url: retryResult.image_url,
-                  duration: retryResult.duration,
-                  status: 'complete',
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', track.id);
-            } catch {
-              await db
-                .from('tracks')
-                .update({ status: 'failed', updated_at: new Date().toISOString() })
-                .eq('id', track.id);
-            }
-          } else {
-            await db
-              .from('tracks')
-              .update({ status: 'failed', updated_at: new Date().toISOString() })
-              .eq('id', track.id);
-          }
+          console.log(`[pipeline] Track ${trackNum}: Retry succeeded`);
+        } catch (retryErr) {
+          console.error(`[pipeline] Track ${trackNum}: Retry also failed:`, retryErr);
+          await db
+            .from('tracks')
+            .update({ status: 'failed', updated_at: new Date().toISOString() })
+            .eq('project_id', projectId)
+            .eq('track_number', trackNum);
         }
+      }
 
-        await sleep(getDelayBetweenTracks());
+      // Courtesy delay between tracks (skip after last)
+      if (i < 4) {
+        console.log(`[pipeline] Waiting 5s before next track...`);
+        await sleep(5_000);
       }
     }
 
-    // ===== STEP 7: Finalization =====
+    // ===== STEP 6: Finalization =====
+    console.log('[pipeline] Finalizing...');
     const { data: completedTracks } = await db
       .from('tracks')
       .select('cover_image_url')
@@ -311,8 +342,9 @@ export async function runPipeline(projectId: string): Promise<void> {
     }
 
     await db.from('projects').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', projectId);
+    console.log(`[pipeline] Complete! Project ${projectId} finished successfully.`);
   } catch (err) {
-    console.error('Pipeline error:', err);
+    console.error('[pipeline] Fatal pipeline error:', err);
     const db = getServiceSupabase();
     await db.from('projects').update({ status: 'failed', updated_at: new Date().toISOString() }).eq('id', projectId);
   }

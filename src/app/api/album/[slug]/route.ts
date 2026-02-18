@@ -7,15 +7,21 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    console.log('[api/album] GET for slug:', slug);
     const db = getServiceSupabase();
 
-    const { data: album } = await db
+    const { data: album, error: albumError } = await db
       .from('albums')
       .select('*')
       .eq('share_slug', slug)
       .single();
 
+    if (albumError) {
+      console.error('[api/album] Album fetch error:', albumError);
+    }
+
     if (!album) {
+      console.log('[api/album] Album not found for slug:', slug);
       return NextResponse.json({ error: 'Album not found' }, { status: 404 });
     }
 
@@ -26,12 +32,14 @@ export async function GET(
       .eq('status', 'complete')
       .order('track_number');
 
+    console.log('[api/album] Found album:', album.title, 'with', tracks?.length || 0, 'tracks');
+
     return NextResponse.json({
       album,
       tracks: tracks || [],
     });
   } catch (err) {
-    console.error('Album error:', err);
+    console.error('[api/album] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

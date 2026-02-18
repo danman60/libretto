@@ -2,41 +2,45 @@
  * KIE.ai Suno API client.
  * Docs: https://docs.kie.ai/suno-api/generate-music
  *
- * STATUS: API is currently broken (Feb 2026). All generation attempts return
- * GENERATE_AUDIO_FAILED / errorCode 500. Keep this client ready for when
- * they fix it — their dashboard generation works, just not the API.
+ * VERIFIED WORKING: Feb 18, 2026
+ * Status progression: PENDING → TEXT_SUCCESS → FIRST_SUCCESS → SUCCESS (~65s)
+ * Returns 2 tracks per generation (pick the best one).
  */
 
 const KIE_API_URL = 'https://api.kie.ai';
-const POLL_INTERVAL_MS = 15_000;
-const MAX_POLL_ATTEMPTS = 40;
+const POLL_INTERVAL_MS = 10_000; // 10 seconds
+const MAX_POLL_ATTEMPTS = 30;    // ~5 minutes max
 
 interface KieGenerateRequest {
-  prompt: string;          // lyrics (custom mode) or description (non-custom)
-  model: string;           // V3_5 | V4 | V4_5 | V4_5PLUS | V4_5ALL | V5
-  custom: boolean;         // true = provide lyrics, false = prompt-based
+  customMode: boolean;     // true = provide lyrics + style
   instrumental: boolean;
-  callBackUrl: string;     // REQUIRED by KIE
-  title?: string;          // only in custom mode
-  tags?: string;           // style tags, only in custom mode
+  model: string;           // V3_5 | V4 | V4_5 | V5
+  title: string;
+  style: string;           // genre/mood tags
+  prompt: string;          // lyrics (custom) or description (non-custom)
+  callBackUrl: string;     // REQUIRED
+}
+
+interface KieSunoTrack {
+  id: string;
+  title: string;
+  audioUrl: string;       // camelCase in actual response
+  imageUrl: string;       // camelCase in actual response
+  duration: number;
 }
 
 interface KiePollResponse {
+  code: number;
   data: {
     taskId: string;
-    status: string;        // SUCCESS | GENERATE_AUDIO_FAILED | PENDING | etc
+    status: string;        // PENDING | TEXT_SUCCESS | FIRST_SUCCESS | SUCCESS | GENERATE_AUDIO_FAILED
     response?: {
-      sunoData?: {
-        id: string;
-        audio_url: string;
-        image_url: string;
-        duration: number;
-      }[];
+      sunoData?: KieSunoTrack[];
     };
   };
 }
 
-interface KieTrackResult {
+export interface KieTrackResult {
   id: string;
   audio_url: string;
   image_url: string;
@@ -50,30 +54,32 @@ function getApiKey(): string {
 }
 
 function getCallbackUrl(): string {
-  // KIE requires a callback URL even though we poll.
-  // Use the app URL or a placeholder.
-  return process.env.KIE_CALLBACK_URL || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook/kie`;
+  return process.env.KIE_CALLBACK_URL || 'https://webhook.site/placeholder';
 }
 
 /**
  * Submit a custom generation request to KIE.
+ * Uses customMode=true with lyrics + style tags.
  */
 export async function submitKieGeneration(
   lyrics: string,
   stylePrompt: string,
   title: string,
   instrumental: boolean = false,
-  model: string = 'V4'
+  model: string = 'V4_5'
 ): Promise<string> {
   const body: KieGenerateRequest = {
-    prompt: lyrics,
-    model,
-    custom: true,
+    customMode: true,
     instrumental,
-    callBackUrl: getCallbackUrl(),
+    model,
     title,
-    tags: stylePrompt,
+    style: stylePrompt,
+    prompt: lyrics,
+    callBackUrl: getCallbackUrl(),
   };
+
+  console.log(`[kie] Submitting generation: "${title}" | model=${model} | instrumental=${instrumental}`);
+  console.log(`[kie] Style: ${stylePrompt}`);
 
   const response = await fetch(`${KIE_API_URL}/api/v1/generate`, {
     method: 'POST',
@@ -86,21 +92,24 @@ export async function submitKieGeneration(
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error(`[kie] Generate error ${response.status}:`, errorText);
     throw new Error(`KIE generate error ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
-  const taskId = data?.data?.taskId;
 
-  if (!taskId) {
-    throw new Error('KIE did not return a taskId');
+  if (data.code !== 200 || !data.data?.taskId) {
+    console.error(`[kie] Submission failed:`, data);
+    throw new Error(`KIE submission failed: ${JSON.stringify(data)}`);
   }
 
-  return taskId;
+  console.log(`[kie] Task submitted: ${data.data.taskId}`);
+  return data.data.taskId;
 }
 
 /**
  * Poll KIE for track completion.
+ * Returns the longer of the two generated tracks (KIE generates 2 per request).
  */
 export async function pollKieCompletion(taskId: string): Promise<KieTrackResult> {
   for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
@@ -110,7 +119,10 @@ export async function pollKieCompletion(taskId: string): Promise<KieTrackResult>
       const response = await fetch(
         `${KIE_API_URL}/api/v1/generate/record-info?taskId=${taskId}`,
         {
-          headers: { Authorization: `Bearer ${getApiKey()}` },
+          headers: {
+            Authorization: `Bearer ${getApiKey()}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -122,27 +134,38 @@ export async function pollKieCompletion(taskId: string): Promise<KieTrackResult>
       const result: KiePollResponse = await response.json();
       const status = result.data?.status;
 
+      console.log(`KIE poll [${attempt + 1}/${MAX_POLL_ATTEMPTS}]: ${status}`);
+
       if (status === 'SUCCESS') {
         const tracks = result.data.response?.sunoData;
-        if (tracks?.length) {
-          return {
-            id: tracks[0].id,
-            audio_url: tracks[0].audio_url,
-            image_url: tracks[0].image_url,
-            duration: tracks[0].duration,
-          };
+        if (!tracks?.length) {
+          throw new Error('KIE returned SUCCESS but no track data');
         }
-        throw new Error('KIE returned SUCCESS but no track data');
+
+        // Pick the longer track (better quality usually)
+        const best = tracks.reduce((a, b) => (b.duration > a.duration ? b : a));
+
+        return {
+          id: best.id,
+          audio_url: best.audioUrl,
+          image_url: best.imageUrl,
+          duration: best.duration,
+        };
       }
 
-      if (status === 'GENERATE_AUDIO_FAILED') {
-        throw new Error('KIE generation failed (GENERATE_AUDIO_FAILED)');
+      if (status === 'GENERATE_AUDIO_FAILED' || status?.includes('FAILED')) {
+        throw new Error(`KIE generation failed: ${status}`);
       }
 
-      // Still processing — continue polling
+      // PENDING, TEXT_SUCCESS, FIRST_SUCCESS — keep polling
     } catch (error) {
       if (attempt === MAX_POLL_ATTEMPTS - 1) throw error;
-      console.warn(`KIE poll error (attempt ${attempt + 1}):`, error);
+      // Only log non-terminal errors
+      if (error instanceof Error && !error.message.includes('FAILED')) {
+        console.warn(`KIE poll error (attempt ${attempt + 1}):`, error.message);
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -160,7 +183,7 @@ export async function checkKieCredits(): Promise<number> {
   if (!response.ok) throw new Error(`KIE credits check failed: ${response.status}`);
 
   const data = await response.json();
-  return data?.data?.credit ?? 0;
+  return data?.data ?? 0;
 }
 
 /**

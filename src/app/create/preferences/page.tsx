@@ -104,7 +104,7 @@ export default function PreferencesPage() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-2">Music Preferences</h2>
           <p className="text-gray-500 text-sm">
-            Shape the sound of your album. Pick your genres, influences, and vibe.
+            Shape the sound of your libretto. Pick your genres, influences, and vibe.
           </p>
         </div>
 
@@ -258,7 +258,7 @@ export default function PreferencesPage() {
                 Creating...
               </>
             ) : (
-              'Generate My Album'
+              'Generate My Libretto'
             )}
           </Button>
         </div>

@@ -54,7 +54,7 @@ export function ProgressTracker({ projectStatus, tracks }: ProgressTrackerProps)
             : 'pending',
     },
     {
-      label: 'Finalizing your album',
+      label: 'Finalizing your libretto',
       state: projectStatus === 'complete' ? 'complete' : 'pending',
     },
   ];

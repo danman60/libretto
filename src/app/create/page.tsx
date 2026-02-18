@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SceneCard } from '@/components/SceneCard';
+import { TherapistPrompt } from '@/components/TherapistPrompt';
 import type { Scene } from '@/lib/types';
 import { ArrowLeft, ArrowRight, Disc3 } from 'lucide-react';
 
@@ -16,9 +17,21 @@ const EMPTY_SCENE: Scene = {
 };
 
 const STEP_META = [
-  { num: 1, title: 'Life Turning Points', desc: 'Tell us about the key moments that shaped who you are. Include when they happened and how they made you feel.' },
-  { num: 2, title: 'Inner World', desc: 'What drives you? What keeps you up at night? What patterns do you notice in your life?' },
-  { num: 3, title: 'Cinematic Scenes', desc: 'Describe at least 3 key scenes from your life — moments you can picture vividly. These become the emotional anchors of your album.' },
+  {
+    num: 1,
+    title: 'Life Turning Points',
+    desc: 'Tell us about the key moments that shaped who you are. Include when they happened and how they made you feel.',
+  },
+  {
+    num: 2,
+    title: 'Inner World',
+    desc: 'What drives you? What keeps you up at night? What patterns do you notice in your life?',
+  },
+  {
+    num: 3,
+    title: 'Cinematic Scenes',
+    desc: 'Describe at least 3 key scenes from your life — moments you can picture vividly. These become the emotional anchors of your libretto.',
+  },
 ];
 
 export default function CreatePage() {
@@ -86,8 +99,8 @@ export default function CreatePage() {
   };
 
   const canProceed = () => {
-    if (step === 1) return turningPoints.length >= 800;
-    if (step === 2) return innerWorld.length >= 600;
+    if (step === 1) return turningPoints.trim().length > 0;
+    if (step === 2) return innerWorld.trim().length > 0;
     if (step === 3) {
       return scenes.length >= 3 && scenes.every(
         (s) => s.location && s.who_was_present && s.what_changed && s.dominant_emotion
@@ -112,7 +125,6 @@ export default function CreatePage() {
 
   const meta = STEP_META[step - 1];
   const charCount = step === 1 ? turningPoints.length : step === 2 ? innerWorld.length : 0;
-  const charMin = step === 1 ? 800 : step === 2 ? 600 : 0;
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
@@ -136,25 +148,22 @@ export default function CreatePage() {
           </div>
         </div>
 
-        {/* Step title */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">{meta.title}</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">{meta.desc}</p>
-        </div>
+        {/* Therapist prompt with avatar */}
+        <TherapistPrompt question={meta.title} detail={meta.desc} />
 
         {/* Step 1: Turning Points */}
         {step === 1 && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Textarea
               value={turningPoints}
               onChange={(e) => setTurningPoints(e.target.value)}
-              rows={14}
+              rows={20}
               placeholder="I grew up in a small town where everyone knew each other. The first turning point came when I was 14..."
-              className="bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 text-base resize-none focus:border-purple-500/30 focus:ring-purple-500/10"
+              className="bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 text-base resize-none focus:border-purple-500/30 focus:ring-purple-500/10 min-h-[400px]"
             />
             <div className="flex justify-end">
-              <span className={`text-xs tabular-nums ${charCount >= charMin ? 'text-green-500/70' : 'text-gray-600'}`}>
-                {charCount} / {charMin} min
+              <span className="text-xs tabular-nums text-gray-600">
+                {charCount} characters
               </span>
             </div>
           </div>
@@ -162,17 +171,17 @@ export default function CreatePage() {
 
         {/* Step 2: Inner World */}
         {step === 2 && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Textarea
               value={innerWorld}
               onChange={(e) => setInnerWorld(e.target.value)}
-              rows={14}
+              rows={20}
               placeholder="I've always been someone who feels things deeply. The pattern I notice most is..."
-              className="bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 text-base resize-none focus:border-purple-500/30 focus:ring-purple-500/10"
+              className="bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 text-base resize-none focus:border-purple-500/30 focus:ring-purple-500/10 min-h-[400px]"
             />
             <div className="flex justify-end">
-              <span className={`text-xs tabular-nums ${charCount >= charMin ? 'text-green-500/70' : 'text-gray-600'}`}>
-                {charCount} / {charMin} min
+              <span className="text-xs tabular-nums text-gray-600">
+                {charCount} characters
               </span>
             </div>
           </div>

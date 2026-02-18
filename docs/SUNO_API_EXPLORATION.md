@@ -2,14 +2,14 @@
 
 ## Summary
 
-We need music generation for Libretto (5 tracks per album). Explored multiple options. **No working solution yet** — KIE API is broken, alternatives are dead ends or require local GPU.
+We need music generation for Libretto (5 tracks per album). Explored multiple options. **KIE.ai is now working** (confirmed Feb 18, 2026) — generation completes in ~65s, returns 2 tracks per request.
 
 ---
 
 ## Option 1: KIE.ai Suno API Wrapper (Primary Attempt)
 
 **Docs:** https://docs.kie.ai/suno-api/generate-music
-**Status:** BROKEN — API generation fails on all models
+**Status:** WORKING (confirmed Feb 18, 2026) — was broken earlier same day, came back after KIE posted service notice
 
 ### API Reference
 
