@@ -72,10 +72,16 @@ export default function LandingPage() {
               },
               {
                 note: (
-                  <span className="flex flex-col items-center leading-none">
-                    <span className="text-[10px] -mb-0.5">3</span>
-                    <span className="text-2xl">♫♪</span>
-                  </span>
+                  <svg width="28" height="24" viewBox="0 0 28 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="2" width="20" height="2.5" rx="1" />
+                    <rect x="4" y="5.5" width="20" height="2.5" rx="1" />
+                    <rect x="4" y="0" width="2" height="20" />
+                    <rect x="13" y="0" width="2" height="20" />
+                    <rect x="22" y="0" width="2" height="20" />
+                    <ellipse cx="2.5" cy="21" rx="3.5" ry="2.5" transform="rotate(-15 2.5 21)" />
+                    <ellipse cx="11.5" cy="21" rx="3.5" ry="2.5" transform="rotate(-15 11.5 21)" />
+                    <ellipse cx="20.5" cy="21" rx="3.5" ry="2.5" transform="rotate(-15 20.5 21)" />
+                  </svg>
                 ),
                 title: 'Listen & share',
                 desc: 'Receive a cinematic album page with your biography, playable tracks, and a shareable link.',
