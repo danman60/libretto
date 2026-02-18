@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import JSZip from 'jszip';
 import { TrackCard } from '@/components/TrackCard';
-import { Share2, Check, Loader2 } from 'lucide-react';
+import { Share2, Check, Loader2, Download } from 'lucide-react';
 import type { AlbumPageData, Track } from '@/lib/types';
 
 export default function AlbumPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -13,6 +14,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     fetch(`/api/album/${slug}`)
@@ -62,14 +64,65 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownload = useCallback(async () => {
+    if (!data) return;
+    setDownloading(true);
+    try {
+      const zip = new JSZip();
+      const { album, tracks } = data;
+      const completeTracks = tracks.filter(t => t.status === 'complete' && t.audio_url);
+
+      // Fetch and add each track
+      for (const track of completeTracks) {
+        try {
+          const res = await fetch(track.audio_url!);
+          const blob = await res.blob();
+          const ext = track.audio_url!.includes('.mp3') ? 'mp3' : 'mp3';
+          const safeName = track.title.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+          zip.file(`${String(track.track_number).padStart(2, '0')} - ${safeName}.${ext}`, blob);
+        } catch {
+          // Skip failed downloads
+        }
+      }
+
+      // Fetch and add cover art
+      if (album.cover_image_url) {
+        try {
+          const res = await fetch(album.cover_image_url);
+          const blob = await res.blob();
+          const ext = album.cover_image_url.includes('.png') ? 'png' : 'jpg';
+          zip.file(`cover.${ext}`, blob);
+        } catch {
+          // Skip if cover fails
+        }
+      }
+
+      // Generate and trigger download
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeTitle = album.title.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+      a.download = `${safeTitle} - Libretto.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+    } finally {
+      setDownloading(false);
+    }
+  }, [data]);
+
   if (error) {
     return (
       <main className="min-h-screen bg-[#0D0B0E] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl text-[#F5F0EB] mb-2" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+          <h1 className="text-3xl text-[#F5F0EB] mb-3" style={{ fontFamily: 'var(--font-dm-serif)' }}>
             Libretto not found
           </h1>
-          <p className="text-[#9B8E99]">This libretto may have been removed or the link is incorrect.</p>
+          <p className="text-[#9B8E99] text-base">This libretto may have been removed or the link is incorrect.</p>
         </div>
       </main>
     );
@@ -78,7 +131,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   if (!data) {
     return (
       <main className="min-h-screen bg-[#0D0B0E] flex items-center justify-center">
-        <div className="flex items-center gap-3 text-[#9B8E99]">
+        <div className="flex items-center gap-3 text-[#9B8E99] text-base">
           <Loader2 className="h-5 w-5 animate-spin text-[#E8A87C]" />
           Loading...
         </div>
@@ -87,6 +140,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   }
 
   const { album, tracks } = data;
+  const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
 
   return (
     <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
@@ -112,48 +166,64 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               <img
                 src={album.cover_image_url}
                 alt={album.title}
-                className={`w-52 h-52 rounded-2xl shadow-2xl shadow-black/50 object-cover flex-shrink-0 ${
+                className={`w-56 h-56 rounded-2xl shadow-2xl shadow-black/50 object-cover flex-shrink-0 ${
                   revealed ? 'reveal-blur' : 'opacity-0'
                 }`}
               />
             ) : (
-              <div className="w-52 h-52 rounded-2xl glass-card flex items-center justify-center flex-shrink-0">
-                <div className="text-4xl text-[#E8A87C]/30" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+              <div className="w-56 h-56 rounded-2xl glass-card flex items-center justify-center flex-shrink-0">
+                <div className="text-5xl text-[#E8A87C]/30" style={{ fontFamily: 'var(--font-dm-serif)' }}>
                   L
                 </div>
               </div>
             )}
 
             <div className="flex-1 text-center sm:text-left">
-              <p className="text-xs tracking-widest text-[#9B8E99] uppercase mb-2">
+              <p className="text-sm tracking-widest text-[#9B8E99] uppercase mb-2">
                 Your Libretto
               </p>
               <h1
-                className={`text-3xl sm:text-4xl mb-2 transition-opacity duration-1000 ${revealed ? 'opacity-100' : 'opacity-0'}`}
+                className={`text-4xl sm:text-5xl mb-3 transition-opacity duration-1000 ${revealed ? 'opacity-100' : 'opacity-0'}`}
                 style={{ fontFamily: 'var(--font-dm-serif)' }}
               >
                 {album.title}
               </h1>
               {album.tagline && (
-                <p className="text-base text-[#B8A9C9] italic mb-5" style={{ fontFamily: 'var(--font-lora)' }}>
+                <p className="text-lg text-[#B8A9C9] italic mb-5" style={{ fontFamily: 'var(--font-lora)' }}>
                   {album.tagline}
                 </p>
               )}
               <div className="flex items-center gap-3 justify-center sm:justify-start">
-                <span className="text-xs text-[#9B8E99]">
+                <span className="text-sm text-[#9B8E99]">
                   {tracks.length} track{tracks.length !== 1 ? 's' : ''}
                 </span>
                 <span className="text-[#9B8E99]/30">|</span>
                 <button
                   onClick={handleShare}
-                  className="flex items-center gap-1.5 text-xs text-[#9B8E99] hover:text-[#E8A87C] transition-colors"
+                  className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors"
                 >
                   {copied ? (
-                    <><Check className="h-3.5 w-3.5" /> Copied</>
+                    <><Check className="h-4 w-4" /> Copied</>
                   ) : (
-                    <><Share2 className="h-3.5 w-3.5" /> Share</>
+                    <><Share2 className="h-4 w-4" /> Share</>
                   )}
                 </button>
+                {hasCompleteTracks && (
+                  <>
+                    <span className="text-[#9B8E99]/30">|</span>
+                    <button
+                      onClick={handleDownload}
+                      disabled={downloading}
+                      className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50"
+                    >
+                      {downloading ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Zipping...</>
+                      ) : (
+                        <><Download className="h-4 w-4" /> Download</>
+                      )}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -171,14 +241,14 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
       {/* Biography */}
       {album.biography_markdown && (
-        <section className="max-w-[640px] mx-auto px-6 py-12">
+        <section className="max-w-[680px] mx-auto px-6 py-12">
           <div className="border-t border-white/[0.04] pt-12">
-            <h2 className="text-xs tracking-widest text-[#9B8E99] uppercase mb-6">
+            <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-6">
               The Story
             </h2>
             <div
-              className="text-[#9B8E99] space-y-4 [&_h1]:text-[#F5F0EB] [&_h1]:text-2xl [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[#F5F0EB] [&_h2]:text-xl [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-[#B8A9C9] [&_h3]:text-lg [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:text-[#B8A9C9] [&_em]:text-[#B8A9C9] [&_hr]:border-white/[0.06] [&_hr]:my-8 [&_a]:text-[#E8A87C] [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-[#E8A87C]/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#9B8E99]/80"
-              style={{ fontFamily: 'var(--font-lora)', lineHeight: '1.7' }}
+              className="text-[#A89DAF] text-base space-y-4 [&_h1]:text-[#F5F0EB] [&_h1]:text-2xl [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[#F5F0EB] [&_h2]:text-xl [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-[#B8A9C9] [&_h3]:text-lg [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:text-[#B8A9C9] [&_em]:text-[#B8A9C9] [&_hr]:border-white/[0.06] [&_hr]:my-8 [&_a]:text-[#E8A87C] [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-[#E8A87C]/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#9B8E99]/80"
+              style={{ fontFamily: 'var(--font-lora)', lineHeight: '1.8' }}
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {album.biography_markdown}
@@ -190,7 +260,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
       {/* Footer */}
       <footer className="border-t border-white/[0.04] py-8 text-center">
-        <p className="text-xs text-[#9B8E99]/40">
+        <p className="text-sm text-[#9B8E99]/40">
           Made with{' '}
           <a href="/" className="text-[#9B8E99]/60 hover:text-[#E8A87C] transition-colors">
             Libretto

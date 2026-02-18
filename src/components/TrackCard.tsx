@@ -22,21 +22,21 @@ export function TrackCard({ track, index }: TrackCardProps) {
     <div className={`track-cascade track-cascade-${index + 1} glass-card p-5 flex flex-col`}>
       {/* Track number badge */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-7 h-7 rounded-full bg-[#E8A87C]/15 flex items-center justify-center text-xs font-medium text-[#E8A87C]">
+        <div className="w-8 h-8 rounded-full bg-[#E8A87C]/15 flex items-center justify-center text-sm font-medium text-[#E8A87C]">
           {track.track_number}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-[#F5F0EB] font-semibold text-sm truncate">{track.title}</h3>
+          <h3 className="text-[#F5F0EB] font-semibold text-base truncate">{track.title}</h3>
           {momentRole && (
-            <p className="text-[#9B8E99] text-xs">{momentRole.label}</p>
+            <p className="text-[#9B8E99] text-sm">{momentRole.label}</p>
           )}
         </div>
       </div>
 
       {/* Loading state */}
       {isLoading && (
-        <div className="flex items-center gap-2 text-[#B8A9C9] text-xs py-4">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        <div className="flex items-center gap-2 text-[#B8A9C9] text-sm py-4">
+          <Loader2 className="h-4 w-4 animate-spin" />
           {track.status === 'generating_lyrics' && 'Writing lyrics...'}
           {track.status === 'lyrics_done' && 'Lyrics ready, generating audio...'}
           {track.status === 'generating_audio' && 'Composing music...'}
@@ -46,7 +46,7 @@ export function TrackCard({ track, index }: TrackCardProps) {
 
       {/* Failed state */}
       {isFailed && (
-        <p className="text-[#D4A5A5] text-xs py-2">Generation failed</p>
+        <p className="text-[#D4A5A5] text-sm py-2">Generation failed</p>
       )}
 
       {/* Audio player */}
@@ -61,16 +61,16 @@ export function TrackCard({ track, index }: TrackCardProps) {
         <div className="mt-3">
           <button
             onClick={() => setShowLyrics(!showLyrics)}
-            className="flex items-center gap-1 text-xs text-[#9B8E99] hover:text-[#F5F0EB] transition-colors"
+            className="flex items-center gap-1 text-sm text-[#9B8E99] hover:text-[#F5F0EB] transition-colors"
           >
             {showLyrics ? (
-              <><ChevronUp className="h-3.5 w-3.5" /> Hide lyrics</>
+              <><ChevronUp className="h-4 w-4" /> Hide lyrics</>
             ) : (
-              <><ChevronDown className="h-3.5 w-3.5" /> Show lyrics</>
+              <><ChevronDown className="h-4 w-4" /> Show lyrics</>
             )}
           </button>
           {showLyrics && (
-            <pre className="mt-3 text-xs text-[#9B8E99] whitespace-pre-wrap leading-relaxed bg-white/[0.02] rounded-xl p-4 border border-white/[0.04]"
+            <pre className="mt-3 text-sm text-[#9B8E99] whitespace-pre-wrap leading-relaxed bg-white/[0.02] rounded-xl p-4 border border-white/[0.04]"
               style={{ fontFamily: 'var(--font-lora)' }}
             >
               {track.lyrics}

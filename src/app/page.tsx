@@ -11,19 +11,19 @@ export default function LandingPage() {
         <SheetMusicBg />
 
         <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
-          <p className="text-[#9B8E99] text-sm tracking-widest uppercase mb-8">
+          <p className="text-[#9B8E99] text-base tracking-widest uppercase mb-8">
             Libretto
           </p>
 
           <h1
-            className="text-5xl sm:text-7xl mb-6 leading-tight"
+            className="text-6xl sm:text-8xl mb-6 leading-tight"
             style={{ fontFamily: 'var(--font-dm-serif)' }}
           >
             Your life,<br />in three moments
           </h1>
 
           <p
-            className="text-lg text-[#9B8E99] max-w-md mx-auto mb-12 leading-relaxed"
+            className="text-xl text-[#9B8E99] max-w-lg mx-auto mb-12 leading-relaxed"
             style={{ fontFamily: 'var(--font-lora)' }}
           >
             Share three moments that shaped you. We&apos;ll turn them into a
@@ -32,12 +32,12 @@ export default function LandingPage() {
           </p>
 
           <Link href="/create">
-            <button className="px-10 py-4 rounded-full bg-[#E8A87C] text-[#0D0B0E] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all">
+            <button className="px-12 py-4 rounded-full bg-[#E8A87C] text-[#0D0B0E] text-lg font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#E8A87C]/20">
               Begin your story
             </button>
           </Link>
 
-          <p className="mt-6 text-xs text-[#9B8E99]/50">
+          <p className="mt-6 text-sm text-[#9B8E99]/50">
             Free to use. No account required.
           </p>
         </div>
@@ -47,11 +47,11 @@ export default function LandingPage() {
       <section className="relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent" />
         <div className="relative max-w-4xl mx-auto px-6 py-28">
-          <p className="text-[#9B8E99] text-xs tracking-widest uppercase text-center mb-3">
+          <p className="text-[#9B8E99] text-sm tracking-widest uppercase text-center mb-3">
             How it works
           </p>
           <h2
-            className="text-3xl text-center mb-20 text-[#F5F0EB]"
+            className="text-4xl text-center mb-20 text-[#F5F0EB]"
             style={{ fontFamily: 'var(--font-dm-serif)' }}
           >
             Three moments become three songs
@@ -86,10 +86,10 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl glass-card flex items-center justify-center mb-5">
                     <Icon className="h-5 w-5 text-[#E8A87C]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-[#F5F0EB] mb-2">
+                  <h3 className="text-xl font-semibold text-[#F5F0EB] mb-2">
                     {title}
                   </h3>
-                  <p className="text-[#9B8E99] leading-relaxed text-sm" style={{ fontFamily: 'var(--font-lora)' }}>
+                  <p className="text-[#9B8E99] leading-relaxed text-base" style={{ fontFamily: 'var(--font-lora)' }}>
                     {desc}
                   </p>
                 </div>
@@ -103,12 +103,12 @@ export default function LandingPage() {
       <section className="max-w-2xl mx-auto px-6 py-24">
         <div className="glass-card p-8 sm:p-12">
           <h3
-            className="text-xl text-[#F5F0EB] mb-6"
+            className="text-2xl text-[#F5F0EB] mb-6"
             style={{ fontFamily: 'var(--font-dm-serif)' }}
           >
             What you&apos;ll receive
           </h3>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-5">
             {[
               '3 original tracks with lyrics',
               'Custom cover art from your story',
@@ -118,8 +118,8 @@ export default function LandingPage() {
               'Your story, never stored',
             ].map((item) => (
               <div key={item} className="flex items-start gap-3">
-                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#E8A87C]/60 flex-shrink-0" />
-                <span className="text-sm text-[#9B8E99]" style={{ fontFamily: 'var(--font-lora)' }}>{item}</span>
+                <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#E8A87C]/60 flex-shrink-0" />
+                <span className="text-base text-[#9B8E99]" style={{ fontFamily: 'var(--font-lora)' }}>{item}</span>
               </div>
             ))}
           </div>
@@ -129,12 +129,12 @@ export default function LandingPage() {
       {/* Privacy + CTA */}
       <section className="max-w-2xl mx-auto px-6 pb-20">
         <div className="text-center">
-          <p className="text-sm text-[#9B8E99]/60 mb-10" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
+          <p className="text-base text-[#9B8E99]/60 mb-10" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
             Your story is personal. We automatically redact sensitive information.
             No account, no tracking.
           </p>
           <Link href="/create">
-            <button className="px-8 py-3 rounded-full border border-[#E8A87C]/20 text-[#E8A87C] hover:bg-[#E8A87C]/10 transition-colors text-sm">
+            <button className="px-10 py-3.5 rounded-full border border-[#E8A87C]/20 text-[#E8A87C] hover:bg-[#E8A87C]/10 transition-colors text-base">
               Get started
             </button>
           </Link>
