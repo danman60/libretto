@@ -81,7 +81,7 @@ export default function CreatePage() {
 
     setIsSubmitting(true);
     try {
-      // Fire track generation
+      // Fire track generation — AI infers music style from story
       await fetch('/api/generate-track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -90,9 +90,6 @@ export default function CreatePage() {
           momentIndex: currentMoment,
           story: data.story,
           emotion: data.emotion,
-          genres: data.genres,
-          energy: data.energy,
-          vocalPreference: data.vocalPreference,
         }),
       });
 

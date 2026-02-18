@@ -48,15 +48,15 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* Libretto V2 Warm Palette */
-  --color-warm-bg: #0D0B0E;
-  --color-warm-card: rgba(45, 30, 52, 0.55);
-  --color-warm-amber: #E8A87C;
-  --color-warm-lavender: #B8A9C9;
-  --color-warm-rose: #D4A5A5;
-  --color-warm-text: #F5F0EB;
-  --color-warm-muted: #9B8E99;
-  --color-warm-sage: #8FBC8B;
+  /* Libretto V2 Warm Palette — brighter/warmer variant */
+  --color-warm-bg: #141117;
+  --color-warm-card: rgba(55, 38, 62, 0.55);
+  --color-warm-amber: #F0B88A;
+  --color-warm-lavender: #C8BBDA;
+  --color-warm-rose: #E0B5B5;
+  --color-warm-text: #FAF5F0;
+  --color-warm-muted: #AEA1AB;
+  --color-warm-sage: #9ECC9B;
 }
 
 :root {
@@ -141,16 +141,16 @@
 
 /* Glassmorphism card */
 .glass-card {
-  background: rgba(45, 30, 52, 0.55);
+  background: rgba(55, 38, 62, 0.55);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(232, 168, 124, 0.1);
+  border: 1px solid rgba(240, 184, 138, 0.12);
   border-radius: 20px;
 }
 
 /* Listening pulse on focused textarea */
 .listening-pulse:focus-within {
-  box-shadow: 0 0 0 2px rgba(232, 168, 124, 0.15), 0 0 40px rgba(232, 168, 124, 0.08);
+  box-shadow: 0 0 0 2px rgba(240, 184, 138, 0.2), 0 0 50px rgba(240, 184, 138, 0.1);
 }
 
 /* Album reveal blur ceremony */
@@ -175,14 +175,14 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Warm aurora gradient (amber/lavender) */
+/* Warm aurora gradient (amber/lavender) — brighter */
 .aurora-bg {
   background: linear-gradient(
     -45deg,
-    rgba(232, 168, 124, 0.2),
-    rgba(184, 169, 201, 0.15),
-    rgba(212, 165, 165, 0.18),
-    rgba(232, 168, 124, 0.12)
+    rgba(240, 184, 138, 0.25),
+    rgba(200, 187, 218, 0.2),
+    rgba(224, 181, 181, 0.22),
+    rgba(240, 184, 138, 0.18)
   );
   background-size: 400% 400%;
   animation: aurora-shift 18s ease infinite;

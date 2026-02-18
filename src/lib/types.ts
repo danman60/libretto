@@ -67,17 +67,11 @@ export type NarrativeRole = 'origin' | 'turning_point' | 'resolution';
 export interface MomentContent {
   story: string;
   emotion: Emotion;
-  genres: string[];
-  energy: 'calm' | 'mid' | 'dynamic';
-  vocal_preference: 'vocals' | 'instrumental' | 'mixed';
 }
 
 export interface MomentFormState {
   story: string;
   emotion: Emotion | null;
-  genres: string[];
-  energy: 'calm' | 'mid' | 'dynamic';
-  vocalPreference: 'vocals' | 'instrumental' | 'mixed';
 }
 
 export const MOMENT_ROLES: { index: number; role: NarrativeRole; label: string; prompt: string; subtitle: string }[] = [

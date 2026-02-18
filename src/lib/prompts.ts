@@ -22,31 +22,36 @@ export function buildMomentLyricsPrompt(
     ? 'This track will be INSTRUMENTAL — write evocative scene-setting text instead of sung lyrics, to guide the mood.'
     : '';
 
-  return `You are a songwriter writing lyrics for Track ${trackNum} of a 3-track concept album about someone's life.
+  return `You are a deeply empathetic songwriter who has just listened to someone share a defining moment from their life. You're writing Track ${trackNum} of a 3-track concept album that IS their life story.
 
 ## Track Role
 ${roleDescriptions[role]}
 
-## The Person's Story for This Moment
+## Their Words — Read Them Carefully
 "${story}"
 
-## Emotional Tone
-Primary emotion: ${emotion}
+## The Feeling They Named
+${emotion}
 
-## Music Style
+## Music Style (inferred from their story)
 Genre: ${genres.join(', ') || 'Pop'}
 Energy: ${energy}
 ${vocalNote}
 
-## Instructions
-- Write in first person
-- Use the structure tags: [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro]
-- Draw vivid imagery from their actual words — transform them poetically, don't copy verbatim
-- Match the emotional tone of ${emotion}
-- Keep lyrics concise — Suno works best with shorter, punchy lyrics (under 300 words)
-- ${allowNames ? 'You may use real names if they appear in the story' : 'Do NOT use real names — use metaphors or pronouns instead'}
+## How to Write This
 
-Respond with ONLY the lyrics text (with structure tags). No explanations.`;
+You must write as if you KNOW this person. Not from a distance — from inside the feeling.
+
+1. **Mirror their language.** Find the most vivid phrase, image, or detail in their story and weave it into the chorus. If they mentioned "the kitchen light" or "that highway in August" — those exact images belong in the song.
+2. **Write in first person** — this is THEIR voice singing back to them.
+3. **Structure:** [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro]
+4. **The chorus must feel like the emotional core** — the single sentence they'd whisper to themselves at 2am about this moment.
+5. **Be specific, not generic.** "The crack in the ceiling above my bed" beats "the weight of the world." Their details > your metaphors.
+6. **Emotional truth of ${emotion}** — don't explain the emotion, embody it. Show it in the rhythm, the word choice, the breathing room between lines.
+7. **Keep it concise** — under 250 words. Short lines. Let silence do work too.
+8. ${allowNames ? 'You may use real names if they appear in the story.' : 'Do NOT use real names — transform them into intimate pronouns or poetic substitutes ("you", "the one who", "that voice").'}
+
+Respond with ONLY the lyrics text (with structure tags). No explanations, no preamble.`;
 }
 
 export function buildMomentStylePrompt(

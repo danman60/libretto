@@ -1,5 +1,6 @@
 /**
  * V2: Generate a single track from one moment.
+ * AI infers music style from the story text + emotion + narrative role.
  * ~75s total (lyrics ~10s + audio ~65s), fits in one Vercel function.
  */
 
@@ -8,7 +9,7 @@ import { callDeepSeek } from './deepseek';
 import { generateTrackViaKie } from './suno-kie';
 import { sanitizeText } from './sanitize';
 import { buildMomentLyricsPrompt, buildMomentStylePrompt } from './prompts';
-import type { Emotion, NarrativeRole, MomentContent } from './types';
+import type { Emotion, NarrativeRole } from './types';
 
 const ROLE_MAP: Record<number, NarrativeRole> = {
   1: 'origin',
@@ -22,21 +23,90 @@ const ROLE_TITLES: Record<NarrativeRole, string> = {
   resolution: 'Where I Stand',
 };
 
+/**
+ * Infer music style from the story content + emotion + narrative role.
+ * This replaces user-facing genre/energy/vocal controls — the AI "knows" them.
+ */
+function inferMusicStyle(
+  story: string,
+  emotion: Emotion,
+  role: NarrativeRole
+): { genres: string[]; energy: 'calm' | 'mid' | 'dynamic'; vocal: 'vocals' | 'instrumental' | 'mixed' } {
+  const lower = story.toLowerCase();
+
+  // --- Energy inference from narrative role + emotional intensity ---
+  const highEnergyEmotions: Emotion[] = ['anger', 'joy', 'surprise', 'pride'];
+  const lowEnergyEmotions: Emotion[] = ['grief', 'nostalgia', 'relief', 'fear'];
+
+  let energy: 'calm' | 'mid' | 'dynamic';
+  if (role === 'origin') {
+    energy = lowEnergyEmotions.includes(emotion) ? 'calm' : 'mid';
+  } else if (role === 'turning_point') {
+    energy = highEnergyEmotions.includes(emotion) ? 'dynamic' : 'mid';
+  } else {
+    // resolution — tends toward mid/calm, hopeful
+    energy = emotion === 'joy' || emotion === 'pride' ? 'mid' : 'calm';
+  }
+
+  // --- Genre inference from story keywords + emotion ---
+  const genres: string[] = [];
+
+  // Check for musical keywords in their story
+  const genreSignals: [string[], string][] = [
+    [['guitar', 'campfire', 'road', 'highway', 'truck', 'farm', 'country'], 'Folk'],
+    [['club', 'dance', 'beat', 'night out', 'party', 'rave'], 'Electronic'],
+    [['church', 'gospel', 'soul', 'mama', 'grandmother', 'prayer'], 'R&B'],
+    [['city', 'street', 'hustle', 'grind', 'blocks', 'hood'], 'Hip-Hop'],
+    [['rain', 'quiet', 'alone', 'midnight', 'whisper', 'silence'], 'Indie'],
+    [['ocean', 'mountain', 'nature', 'forest', 'river', 'stars'], 'Folk'],
+    [['fight', 'scream', 'rage', 'loud', 'rebel'], 'Rock'],
+    [['classical', 'piano', 'orchestra', 'symphony'], 'Classical'],
+  ];
+
+  for (const [keywords, genre] of genreSignals) {
+    if (keywords.some(kw => lower.includes(kw)) && !genres.includes(genre)) {
+      genres.push(genre);
+      if (genres.length >= 2) break;
+    }
+  }
+
+  // Emotion-based fallbacks if no keyword matches
+  if (genres.length === 0) {
+    const emotionGenres: Record<Emotion, string[]> = {
+      joy: ['Pop', 'Indie'],
+      grief: ['Indie', 'Folk'],
+      anger: ['Rock', 'Hip-Hop'],
+      hope: ['Pop', 'Folk'],
+      fear: ['Indie', 'Electronic'],
+      love: ['R&B', 'Pop'],
+      surprise: ['Pop', 'Electronic'],
+      nostalgia: ['Folk', 'Indie'],
+      pride: ['Pop', 'R&B'],
+      relief: ['Folk', 'Indie'],
+    };
+    genres.push(...(emotionGenres[emotion] || ['Pop', 'Indie']));
+  }
+
+  // Always vocals — these are personal stories
+  const vocal: 'vocals' | 'instrumental' | 'mixed' = 'vocals';
+
+  return { genres: genres.slice(0, 2), energy, vocal };
+}
+
 export async function generateTrackFromMoment(
   projectId: string,
   momentIndex: number,
   story: string,
   emotion: Emotion,
-  genres: string[],
-  energy: 'calm' | 'mid' | 'dynamic',
-  vocal: 'vocals' | 'instrumental' | 'mixed',
   allowNames: boolean
 ): Promise<void> {
   const db = getServiceSupabase();
   const role = ROLE_MAP[momentIndex];
   const trackNum = momentIndex;
 
-  console.log(`[generate-track] Starting track ${trackNum} (${role}) for project ${projectId}`);
+  // Infer music style from their words
+  const { genres, energy, vocal } = inferMusicStyle(story, emotion, role);
+  console.log(`[generate-track] Track ${trackNum} (${role}): inferred genres=${genres.join(',')}, energy=${energy}, vocal=${vocal}`);
 
   try {
     // Sanitize the story text

@@ -10,14 +10,11 @@ export async function POST(request: NextRequest) {
   console.log('[api/generate-track] POST');
   try {
     const body = await request.json();
-    const { projectId, momentIndex, story, emotion, genres, energy, vocalPreference } = body as {
+    const { projectId, momentIndex, story, emotion } = body as {
       projectId: string;
       momentIndex: number;
       story: string;
       emotion: Emotion;
-      genres: string[];
-      energy: 'calm' | 'mid' | 'dynamic';
-      vocalPreference: 'vocals' | 'instrumental' | 'mixed';
     };
 
     if (!projectId || !momentIndex || !story || !emotion) {
@@ -43,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Save moment to story_intake
     const step = `moment_${momentIndex}` as const;
-    const content = { story, emotion, genres: genres || [], energy: energy || 'mid', vocal_preference: vocalPreference || 'vocals' };
+    const content = { story, emotion };
 
     const { data: existing } = await db
       .from('story_intake')
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[api/generate-track] Saved moment ${momentIndex}, firing generation via after()`);
 
-    // Fire generation in background
+    // Fire generation in background — AI infers music style from story
     after(async () => {
       try {
         await generateTrackFromMoment(
@@ -68,9 +65,6 @@ export async function POST(request: NextRequest) {
           momentIndex,
           story,
           emotion,
-          genres || [],
-          energy || 'mid',
-          vocalPreference || 'vocals',
           project.allow_real_names || false
         );
       } catch (err) {
