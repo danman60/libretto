@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Music, Pen, Share2 } from 'lucide-react';
+import { ChevronRight, Pen, Music, Share2 } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -47,7 +47,7 @@ export default function LandingPage() {
       {/* How it works */}
       <section className="relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent" />
-        <div className="relative max-w-4xl mx-auto px-6 py-28">
+        <div className="relative max-w-4xl mx-auto px-6 py-20">
           <p className="text-[#9B8E99] text-sm tracking-widest uppercase text-center mb-3">
             How it works
           </p>
@@ -58,7 +58,7 @@ export default function LandingPage() {
             Three moments become three songs
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-16">
+          <div className="grid md:grid-cols-3 gap-12 md:gap-16">
             {[
               {
                 icon: Pen,
@@ -79,21 +79,16 @@ export default function LandingPage() {
                 desc: 'Receive a cinematic album page with your biography, playable tracks, and a shareable link.',
               },
             ].map(({ icon: Icon, step, title, desc }) => (
-              <div key={step} className="relative">
-                <div className="text-5xl font-bold text-[#E8A87C]/[0.06] absolute -top-6 -left-2 select-none">
-                  {step}
+              <div key={step} className="flex flex-col items-center text-center md:items-start md:text-left">
+                <div className="w-14 h-14 rounded-2xl glass-card flex items-center justify-center mb-5">
+                  <span className="text-sm font-semibold text-[#E8A87C]">{step}</span>
                 </div>
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-2xl glass-card flex items-center justify-center mb-5">
-                    <Icon className="h-5 w-5 text-[#E8A87C]" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-[#F5F0EB] mb-2">
-                    {title}
-                  </h3>
-                  <p className="text-[#9B8E99] leading-relaxed text-base" style={{ fontFamily: 'var(--font-lora)' }}>
-                    {desc}
-                  </p>
-                </div>
+                <h3 className="text-xl font-semibold text-[#F5F0EB] mb-2">
+                  {title}
+                </h3>
+                <p className="text-[#9B8E99] leading-relaxed text-base max-w-xs" style={{ fontFamily: 'var(--font-lora)' }}>
+                  {desc}
+                </p>
               </div>
             ))}
           </div>
@@ -101,7 +96,7 @@ export default function LandingPage() {
       </section>
 
       {/* What you get */}
-      <section className="max-w-2xl mx-auto px-6 py-24">
+      <section className="max-w-2xl mx-auto px-6 py-16">
         <div className="glass-card p-8 sm:p-12">
           <h3
             className="text-2xl text-[#F5F0EB] mb-6"
@@ -118,8 +113,8 @@ export default function LandingPage() {
               'Music shaped by your emotions',
               'Your story, never stored',
             ].map((item) => (
-              <div key={item} className="flex items-start gap-3">
-                <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#E8A87C]/60 flex-shrink-0" />
+              <div key={item} className="flex items-center gap-3">
+                <ChevronRight className="w-4 h-4 text-[#E8A87C]/60 flex-shrink-0" />
                 <span className="text-base text-[#9B8E99]" style={{ fontFamily: 'var(--font-lora)' }}>{item}</span>
               </div>
             ))}
@@ -128,7 +123,7 @@ export default function LandingPage() {
       </section>
 
       {/* Privacy + CTA */}
-      <section className="max-w-2xl mx-auto px-6 pb-20">
+      <section className="max-w-2xl mx-auto px-6 pb-16">
         <div className="text-center">
           <p className="text-base text-[#9B8E99]/60 mb-10" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
             Your story is personal. We automatically redact sensitive information.
