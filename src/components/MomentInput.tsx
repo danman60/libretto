@@ -95,10 +95,10 @@ export function MomentInput({ momentIndex, onSubmit, isSubmitting }: MomentInput
           }`}
         >
           {isSubmitting
-            ? 'Sharing...'
+            ? 'Saving...'
             : isLast
               ? 'Complete your story'
-              : 'Share this moment'
+              : 'Next moment'
           }
         </button>
         <p className="text-[#B8A9C9]/50 text-xs mt-4" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
