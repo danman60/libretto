@@ -1,6 +1,5 @@
 'use client';
 
-import { Progress } from '@/components/ui/progress';
 import { Check, Loader2, Circle } from 'lucide-react';
 import type { ProjectStatus, Track } from '@/lib/types';
 
@@ -24,14 +23,11 @@ export function ProgressTracker({ projectStatus, tracks }: ProgressTrackerProps)
 
   const steps: Step[] = [
     {
-      label: 'Analyzing your story...',
-      state:
-        projectStatus === 'intake'
-          ? 'active'
-          : 'complete',
+      label: 'Analyzing your story',
+      state: projectStatus === 'intake' ? 'active' : 'complete',
     },
     {
-      label: 'Writing your biography...',
+      label: 'Writing your biography',
       state:
         projectStatus === 'processing' && lyricsDone === 0
           ? 'active'
@@ -40,7 +36,7 @@ export function ProgressTracker({ projectStatus, tracks }: ProgressTrackerProps)
             : 'pending',
     },
     {
-      label: `Composing lyrics... (${lyricsDone}/5)`,
+      label: `Composing lyrics${lyricsDone > 0 ? ` (${lyricsDone}/5)` : ''}`,
       state:
         projectStatus === 'processing' && lyricsDone > 0 && lyricsDone < 5
           ? 'active'
@@ -49,7 +45,7 @@ export function ProgressTracker({ projectStatus, tracks }: ProgressTrackerProps)
             : 'pending',
     },
     {
-      label: `Generating music... (${completedTracks}/5)`,
+      label: `Generating music${completedTracks > 0 ? ` (${completedTracks}/5)` : ''}`,
       state:
         projectStatus === 'generating_music'
           ? 'active'
@@ -58,44 +54,44 @@ export function ProgressTracker({ projectStatus, tracks }: ProgressTrackerProps)
             : 'pending',
     },
     {
-      label: 'Finalizing your album...',
+      label: 'Finalizing your album',
       state: projectStatus === 'complete' ? 'complete' : 'pending',
     },
   ];
 
-  const completedSteps = steps.filter((s) => s.state === 'complete').length;
-  const progressValue = (completedSteps / steps.length) * 100;
-
   return (
-    <div className="space-y-6">
-      <Progress value={progressValue} className="h-2" />
-
-      <div className="space-y-4">
-        {steps.map((step, i) => (
-          <div key={i} className="flex items-center gap-3">
-            {step.state === 'complete' ? (
-              <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="h-4 w-4 text-green-600" />
-              </div>
-            ) : step.state === 'active' ? (
-              <Loader2 className="h-6 w-6 text-gray-900 animate-spin" />
-            ) : (
-              <Circle className="h-6 w-6 text-gray-300" />
-            )}
-            <span
-              className={`text-sm ${
-                step.state === 'active'
-                  ? 'text-gray-900 font-medium'
-                  : step.state === 'complete'
-                    ? 'text-gray-500'
-                    : 'text-gray-400'
-              }`}
-            >
-              {step.label}
-            </span>
-          </div>
-        ))}
-      </div>
+    <div className="space-y-3">
+      {steps.map((step, i) => (
+        <div
+          key={i}
+          className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+            step.state === 'active'
+              ? 'bg-white/[0.04] border border-white/[0.08]'
+              : 'border border-transparent'
+          }`}
+        >
+          {step.state === 'complete' ? (
+            <div className="h-5 w-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+              <Check className="h-3 w-3 text-green-400" />
+            </div>
+          ) : step.state === 'active' ? (
+            <Loader2 className="h-5 w-5 text-white animate-spin flex-shrink-0" />
+          ) : (
+            <Circle className="h-5 w-5 text-gray-800 flex-shrink-0" />
+          )}
+          <span
+            className={`text-sm ${
+              step.state === 'active'
+                ? 'text-white font-medium'
+                : step.state === 'complete'
+                  ? 'text-gray-500'
+                  : 'text-gray-700'
+            }`}
+          >
+            {step.label}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

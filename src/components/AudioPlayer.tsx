@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface AudioPlayerProps {
   src: string;
@@ -64,30 +63,32 @@ export function AudioPlayer({ src, title }: AudioPlayerProps) {
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
+    <div className="flex items-center gap-3">
       <audio ref={audioRef} src={src} preload="metadata" />
 
-      <Button
-        variant="ghost"
-        size="sm"
+      <button
         onClick={togglePlay}
-        className="h-10 w-10 rounded-full bg-gray-900 text-white hover:bg-gray-800 hover:text-white flex-shrink-0"
+        className="h-8 w-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 hover:scale-105 transition-transform"
         aria-label={isPlaying ? `Pause ${title}` : `Play ${title}`}
       >
-        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-      </Button>
+        {isPlaying ? (
+          <Pause className="h-3.5 w-3.5 text-black" />
+        ) : (
+          <Play className="h-3.5 w-3.5 text-black ml-0.5" />
+        )}
+      </button>
 
       <div className="flex-1 space-y-1">
         <div
-          className="h-1.5 bg-gray-200 rounded-full cursor-pointer"
+          className="h-1 bg-white/10 rounded-full cursor-pointer group/bar"
           onClick={handleSeek}
         >
           <div
-            className="h-full bg-gray-900 rounded-full transition-all duration-100"
+            className="h-full bg-white/60 rounded-full transition-all duration-100 group-hover/bar:bg-white"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="flex justify-between text-xs text-gray-500">
+        <div className="flex justify-between text-[10px] text-gray-600 tabular-nums">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>

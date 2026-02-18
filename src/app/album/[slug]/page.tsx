@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { TrackCard } from '@/components/TrackCard';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Share2, Check } from 'lucide-react';
+import { Share2, Check, Disc3 } from 'lucide-react';
 import type { AlbumPageData } from '@/lib/types';
 
 export default function AlbumPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -27,27 +28,24 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       const input = document.createElement('input');
       input.value = url;
       document.body.appendChild(input);
       input.select();
       document.execCommand('copy');
       document.body.removeChild(input);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Album not found</h1>
-          <p className="text-gray-600">This album may have been removed or the link is incorrect.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Album not found</h1>
+          <p className="text-gray-500">This album may have been removed or the link is incorrect.</p>
         </div>
       </main>
     );
@@ -55,8 +53,11 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
   if (!data) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Loading album...</p>
+      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-gray-500">
+          <Disc3 className="h-5 w-5 animate-spin" />
+          Loading album...
+        </div>
       </main>
     );
   }
@@ -64,76 +65,106 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const { album, tracks } = data;
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Album Header */}
-      <section className="bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-        <div className="max-w-3xl mx-auto px-6 py-16">
-          <div className="flex flex-col sm:flex-row items-start gap-8">
-            {album.cover_image_url && (
+      <section className="relative overflow-hidden">
+        {/* Background blur from cover image */}
+        {album.cover_image_url && (
+          <div
+            className="absolute inset-0 opacity-20 blur-3xl scale-110"
+            style={{
+              backgroundImage: `url(${album.cover_image_url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a0a]" />
+
+        <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-12">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-8">
+            {album.cover_image_url ? (
               <img
                 src={album.cover_image_url}
                 alt={album.title}
-                className="w-48 h-48 rounded-lg shadow-2xl object-cover flex-shrink-0"
+                className="w-52 h-52 rounded-lg shadow-2xl shadow-black/50 object-cover flex-shrink-0"
               />
+            ) : (
+              <div className="w-52 h-52 rounded-lg bg-gradient-to-br from-purple-900/40 to-gray-900 flex items-center justify-center flex-shrink-0 border border-white/10">
+                <Disc3 className="h-16 w-16 text-gray-600" />
+              </div>
             )}
-            <div className="flex-1">
-              <p className="text-sm font-medium tracking-widest text-gray-400 uppercase mb-2">
-                Libretto
+            <div className="flex-1 text-center sm:text-left">
+              <p className="text-xs font-medium tracking-widest text-gray-500 uppercase mb-2">
+                Album
               </p>
-              <h1 className="text-4xl font-bold mb-2">{album.title}</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">{album.title}</h1>
               {album.tagline && (
-                <p className="text-lg text-gray-300 italic mb-6">{album.tagline}</p>
+                <p className="text-base text-gray-400 italic mb-5">{album.tagline}</p>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-                className="border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 bg-transparent"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Link copied
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share album
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-3 justify-center sm:justify-start">
+                <span className="text-xs text-gray-500">
+                  {tracks.length} track{tracks.length !== 1 ? 's' : ''}
+                </span>
+                <span className="text-gray-700">|</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="text-gray-400 hover:text-white h-auto py-1 px-2"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 mr-1.5" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                      Share
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Biography */}
-      {album.biography_markdown && (
-        <section className="max-w-3xl mx-auto px-6 py-12">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">The Story</h2>
-          <div className="prose prose-gray max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {album.biography_markdown}
-          </div>
-        </section>
-      )}
-
-      <div className="max-w-3xl mx-auto px-6">
-        <Separator />
-      </div>
-
       {/* Tracks */}
-      <section className="max-w-3xl mx-auto px-6 py-12">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Tracks</h2>
-        <div className="space-y-4">
+      <section className="max-w-3xl mx-auto px-6 py-8">
+        <div className="space-y-3">
           {tracks.map((track) => (
             <TrackCard key={track.id} track={track} />
           ))}
         </div>
       </section>
 
+      {/* Biography */}
+      {album.biography_markdown && (
+        <section className="max-w-3xl mx-auto px-6 py-12">
+          <div className="border-t border-white/[0.06] pt-12">
+            <h2 className="text-xs font-medium tracking-widest text-gray-500 uppercase mb-6">
+              The Story
+            </h2>
+            <div className="biography-content text-gray-400 leading-relaxed space-y-4 [&_h1]:text-white [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-white [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-gray-300 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:text-gray-300 [&_em]:text-gray-300 [&_hr]:border-white/10 [&_hr]:my-8 [&_a]:text-purple-400 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-white/10 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-500">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {album.biography_markdown}
+              </ReactMarkdown>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Footer */}
-      <footer className="py-8 text-center text-sm text-gray-400 border-t border-gray-100">
-        Made with Libretto &mdash; your life, your libretto.
+      <footer className="border-t border-white/[0.06] py-8 text-center">
+        <p className="text-xs text-gray-600">
+          Made with{' '}
+          <a href="/" className="text-gray-500 hover:text-gray-400 transition-colors">
+            Libretto
+          </a>
+          {' '}&mdash; your life, your libretto.
+        </p>
       </footer>
     </main>
   );

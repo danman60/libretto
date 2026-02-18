@@ -1,10 +1,7 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { EMOTIONS } from '@/lib/types';
 import type { Scene, Emotion } from '@/lib/types';
 import { X } from 'lucide-react';
@@ -18,75 +15,76 @@ interface SceneCardProps {
 }
 
 export function SceneCard({ index, scene, onChange, onRemove, canRemove }: SceneCardProps) {
-  return (
-    <Card className="relative">
-      <CardContent className="pt-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-gray-700">Scene {index + 1}</h4>
-          {canRemove && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onRemove}
-              className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+  const inputClasses = "bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 focus:border-purple-500/30 focus:ring-purple-500/10";
 
-        <div className="space-y-2">
-          <Label htmlFor={`location-${index}`}>Location</Label>
+  return (
+    <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Scene {index + 1}
+        </span>
+        {canRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="p-1 text-gray-600 hover:text-red-400 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">Location</label>
           <Input
-            id={`location-${index}`}
             placeholder="Where did this happen?"
             value={scene.location}
             onChange={(e) => onChange({ ...scene, location: e.target.value })}
+            className={inputClasses}
           />
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor={`present-${index}`}>Who was present?</Label>
+        <div>
+          <label className="text-xs text-gray-500 mb-1 block">Who was present?</label>
           <Input
-            id={`present-${index}`}
             placeholder="Who was there with you?"
             value={scene.who_was_present}
             onChange={(e) => onChange({ ...scene, who_was_present: e.target.value })}
+            className={inputClasses}
           />
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={`changed-${index}`}>What changed?</Label>
-          <Textarea
-            id={`changed-${index}`}
-            placeholder="What shifted in this moment?"
-            value={scene.what_changed}
-            onChange={(e) => onChange({ ...scene, what_changed: e.target.value })}
-            rows={3}
-          />
-        </div>
+      <div>
+        <label className="text-xs text-gray-500 mb-1 block">What changed?</label>
+        <Textarea
+          placeholder="What shifted in this moment?"
+          value={scene.what_changed}
+          onChange={(e) => onChange({ ...scene, what_changed: e.target.value })}
+          rows={2}
+          className={`${inputClasses} resize-none`}
+        />
+      </div>
 
-        <div className="space-y-2">
-          <Label>Dominant emotion</Label>
-          <div className="flex flex-wrap gap-2">
-            {EMOTIONS.map((emotion) => (
-              <button
-                key={emotion}
-                type="button"
-                onClick={() => onChange({ ...scene, dominant_emotion: emotion as Emotion })}
-                className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                  scene.dominant_emotion === emotion
-                    ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                {emotion}
-              </button>
-            ))}
-          </div>
+      <div>
+        <label className="text-xs text-gray-500 mb-2 block">Dominant emotion</label>
+        <div className="flex flex-wrap gap-1.5">
+          {EMOTIONS.map((emotion) => (
+            <button
+              key={emotion}
+              type="button"
+              onClick={() => onChange({ ...scene, dominant_emotion: emotion as Emotion })}
+              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                scene.dominant_emotion === emotion
+                  ? 'bg-white text-black border-white'
+                  : 'bg-transparent text-gray-500 border-white/10 hover:border-white/20'
+              }`}
+            >
+              {emotion}
+            </button>
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

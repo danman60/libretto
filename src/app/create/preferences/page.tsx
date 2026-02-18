@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { GENRES } from '@/lib/types';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Disc3 } from 'lucide-react';
 
 export default function PreferencesPage() {
   const router = useRouter();
@@ -54,7 +52,7 @@ export default function PreferencesPage() {
         }),
       });
 
-      // Start generation (fire and forget — long-running)
+      // Kick off generation
       fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,29 +68,52 @@ export default function PreferencesPage() {
 
   const canSubmit = genres.length >= 1 && !submitting;
 
+  const inputClasses = "bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 focus:border-purple-500/30 focus:ring-purple-500/10";
+
+  const radioButton = (label: string, active: boolean, onClick: () => void) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 py-2.5 text-sm rounded-lg border transition-colors capitalize ${
+        active
+          ? 'bg-white text-black border-white font-medium'
+          : 'bg-transparent text-gray-500 border-white/10 hover:border-white/20'
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-[#0a0a0a] text-white">
       <div className="max-w-2xl mx-auto px-6 py-12">
         {/* Header */}
+        <div className="flex items-center gap-3 mb-10">
+          <Disc3 className="h-5 w-5 text-gray-600" />
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-gray-500">Step 4 of 4</span>
+              <span className="text-xs text-gray-700">100%</span>
+            </div>
+            <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-purple-500/60 to-purple-400/40 rounded-full w-full" />
+            </div>
+          </div>
+        </div>
+
         <div className="mb-8">
-          <p className="text-sm font-medium text-gray-500 mb-1">Step 4 of 4</p>
-          <Progress value={100} className="h-1.5" />
+          <h2 className="text-2xl font-bold text-white mb-2">Music Preferences</h2>
+          <p className="text-gray-500 text-sm">
+            Shape the sound of your album. Pick your genres, influences, and vibe.
+          </p>
         </div>
 
         <div className="space-y-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Music Preferences
-            </h2>
-            <p className="text-gray-600">
-              Help us shape the sound of your album. Pick your genres, influences,
-              and vibe.
-            </p>
-          </div>
-
           {/* Genres */}
-          <div className="space-y-3">
-            <Label>Genres (pick up to 3)</Label>
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">
+              Genres (up to 3)
+            </label>
             <div className="flex flex-wrap gap-2">
               {GENRES.map((genre) => (
                 <button
@@ -101,8 +122,8 @@ export default function PreferencesPage() {
                   onClick={() => toggleGenre(genre)}
                   className={`px-4 py-2 text-sm rounded-full border transition-colors ${
                     genres.includes(genre)
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                      ? 'bg-white text-black border-white font-medium'
+                      : 'bg-transparent text-gray-500 border-white/10 hover:border-white/20'
                   }`}
                 >
                   {genre}
@@ -112,99 +133,82 @@ export default function PreferencesPage() {
           </div>
 
           {/* Artist References */}
-          <div className="space-y-3">
-            <Label>Artist references (optional)</Label>
-            {artists.map((artist, i) => (
-              <Input
-                key={i}
-                placeholder={`Artist ${i + 1}`}
-                value={artist}
-                onChange={(e) => {
-                  const updated = [...artists];
-                  updated[i] = e.target.value;
-                  setArtists(updated);
-                }}
-              />
-            ))}
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">
+              Artist references (optional)
+            </label>
+            <div className="space-y-2">
+              {artists.map((artist, i) => (
+                <Input
+                  key={i}
+                  placeholder={`Artist ${i + 1}`}
+                  value={artist}
+                  onChange={(e) => {
+                    const updated = [...artists];
+                    updated[i] = e.target.value;
+                    setArtists(updated);
+                  }}
+                  className={inputClasses}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Favorite Songs */}
-          <div className="space-y-3">
-            <Label>Favorite songs (optional)</Label>
-            {favoriteSongs.map((song, i) => (
-              <Input
-                key={i}
-                placeholder={`Song ${i + 1}`}
-                value={song}
-                onChange={(e) => {
-                  const updated = [...favoriteSongs];
-                  updated[i] = e.target.value;
-                  setFavoriteSongs(updated);
-                }}
-              />
-            ))}
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">
+              Favorite songs (optional)
+            </label>
+            <div className="space-y-2">
+              {favoriteSongs.map((song, i) => (
+                <Input
+                  key={i}
+                  placeholder={`Song ${i + 1}`}
+                  value={song}
+                  onChange={(e) => {
+                    const updated = [...favoriteSongs];
+                    updated[i] = e.target.value;
+                    setFavoriteSongs(updated);
+                  }}
+                  className={inputClasses}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Vocal Mode */}
-          <div className="space-y-3">
-            <Label>Vocal style</Label>
-            <div className="flex gap-3">
-              {(['vocals', 'instrumental', 'mixed'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setVocalMode(mode)}
-                  className={`flex-1 py-3 text-sm rounded-lg border transition-colors capitalize ${
-                    vocalMode === mode
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  {mode}
-                </button>
-              ))}
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">
+              Vocal style
+            </label>
+            <div className="flex gap-2">
+              {(['vocals', 'instrumental', 'mixed'] as const).map((mode) =>
+                radioButton(mode, vocalMode === mode, () => setVocalMode(mode))
+              )}
             </div>
           </div>
 
           {/* Energy */}
-          <div className="space-y-3">
-            <Label>Energy</Label>
-            <div className="flex gap-3">
-              {(['calm', 'mid', 'dynamic', 'mixed'] as const).map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setEnergy(e)}
-                  className={`flex-1 py-3 text-sm rounded-lg border transition-colors capitalize ${
-                    energy === e
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  {e}
-                </button>
-              ))}
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">
+              Energy
+            </label>
+            <div className="flex gap-2">
+              {(['calm', 'mid', 'dynamic', 'mixed'] as const).map((e) =>
+                radioButton(e, energy === e, () => setEnergy(e))
+              )}
             </div>
           </div>
 
           {/* Era */}
-          <div className="space-y-3">
-            <Label>Era</Label>
-            <div className="flex gap-3">
-              {(['classic', 'modern', 'mixed'] as const).map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setEra(e)}
-                  className={`flex-1 py-3 text-sm rounded-lg border transition-colors capitalize ${
-                    era === e
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  {e}
-                </button>
-              ))}
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-wider mb-3 block">
+              Era
+            </label>
+            <div className="flex gap-2">
+              {(['classic', 'modern', 'mixed'] as const).map((e) =>
+                radioButton(e, era === e, () => setEra(e))
+              )}
             </div>
           </div>
 
@@ -213,28 +217,31 @@ export default function PreferencesPage() {
             <button
               type="button"
               onClick={() => setAllowRealNames(!allowRealNames)}
-              className={`w-10 h-6 rounded-full transition-colors ${
-                allowRealNames ? 'bg-gray-900' : 'bg-gray-300'
-              } relative`}
+              className={`w-10 h-5 rounded-full transition-colors relative ${
+                allowRealNames ? 'bg-purple-500/60' : 'bg-white/10'
+              }`}
             >
               <span
-                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
-                  allowRealNames ? 'translate-x-[18px]' : 'translate-x-0.5'
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                  allowRealNames ? 'translate-x-[22px]' : 'translate-x-0.5'
                 }`}
               />
             </button>
-            <Label className="cursor-pointer" onClick={() => setAllowRealNames(!allowRealNames)}>
+            <span
+              className="text-sm text-gray-400 cursor-pointer"
+              onClick={() => setAllowRealNames(!allowRealNames)}
+            >
               Allow real names in lyrics
-            </Label>
+            </span>
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between mt-10">
+        <div className="flex justify-between mt-10 pt-6 border-t border-white/[0.06]">
           <Button
             variant="ghost"
             onClick={() => router.push('/create')}
-            className="gap-2"
+            className="text-gray-500 hover:text-white gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -243,12 +250,12 @@ export default function PreferencesPage() {
             onClick={handleSubmit}
             disabled={!canSubmit}
             size="lg"
-            className="gap-2"
+            className="bg-white text-black hover:bg-gray-200 font-semibold gap-2 disabled:opacity-30 disabled:bg-white/10 disabled:text-gray-600 rounded-full px-8"
           >
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Creating your album...
+                Creating...
               </>
             ) : (
               'Generate My Album'
