@@ -35,29 +35,40 @@ export async function POST(request: NextRequest) {
 
     console.log('[api/generate] Project status:', project.status);
 
-    if (project.status !== 'intake') {
+    // Allow re-entry for resumable pipeline (intake = fresh start, generating_music = resume)
+    const allowedStatuses = ['intake', 'processing', 'generating_music'];
+    if (!allowedStatuses.includes(project.status)) {
+      if (project.status === 'complete') {
+        return NextResponse.json({ error: 'Generation already complete' }, { status: 409 });
+      }
       return NextResponse.json({ error: 'Generation already started' }, { status: 409 });
     }
 
-    // Verify all intake steps are complete
-    const { data: intakeRows } = await db
-      .from('story_intake')
-      .select('step')
-      .eq('project_id', projectId);
+    const isResume = project.status !== 'intake';
 
-    const { data: prefs } = await db
-      .from('music_preferences')
-      .select('id')
-      .eq('project_id', projectId)
-      .single();
+    // Skip intake validation on resume — data already verified on first run
+    if (!isResume) {
+      const { data: intakeRows } = await db
+        .from('story_intake')
+        .select('step')
+        .eq('project_id', projectId);
 
-    const steps = (intakeRows || []).map((r: { step: string }) => r.step);
-    const hasAll = ['turning_points', 'inner_world', 'scenes'].every((s) => steps.includes(s));
+      const { data: prefs } = await db
+        .from('music_preferences')
+        .select('id')
+        .eq('project_id', projectId)
+        .single();
 
-    console.log('[api/generate] Intake steps:', steps, 'hasAll:', hasAll, 'hasPrefs:', !!prefs);
+      const steps = (intakeRows || []).map((r: { step: string }) => r.step);
+      const hasAll = ['turning_points', 'inner_world', 'scenes'].every((s) => steps.includes(s));
 
-    if (!hasAll || !prefs) {
-      return NextResponse.json({ error: 'Incomplete intake data' }, { status: 400 });
+      console.log('[api/generate] Intake steps:', steps, 'hasAll:', hasAll, 'hasPrefs:', !!prefs);
+
+      if (!hasAll || !prefs) {
+        return NextResponse.json({ error: 'Incomplete intake data' }, { status: 400 });
+      }
+    } else {
+      console.log('[api/generate] Resuming — skipping intake validation');
     }
 
     // Use next/server after() to run pipeline after response is sent.

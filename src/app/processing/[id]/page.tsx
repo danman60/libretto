@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, use } from 'react';
+import { useEffect, useState, useCallback, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProgressTracker } from '@/components/ProgressTracker';
 import { Disc3 } from 'lucide-react';
@@ -43,6 +43,11 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
   const [error, setError] = useState<string | null>(null);
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [quoteKey, setQuoteKey] = useState(0);
+  const lastProgressRef = useRef<{ time: number; completedCount: number }>({
+    time: Date.now(),
+    completedCount: 0,
+  });
+  const retriggerCountRef = useRef(0);
 
   // Rotate quotes every 8 seconds
   const rotateQuote = useCallback(() => {
@@ -54,6 +59,41 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
     const interval = setInterval(rotateQuote, 8000);
     return () => clearInterval(interval);
   }, [rotateQuote]);
+
+  // Auto-retrigger pipeline if stalled (Vercel function timed out)
+  const maybeRetrigger = useCallback(async (data: StatusResponse) => {
+    const completedCount = data.tracks.filter((t) => t.status === 'complete').length;
+    const allDone = completedCount === data.tracks.length;
+
+    if (allDone || data.project.status === 'complete' || data.project.status === 'failed') {
+      return;
+    }
+
+    // Track progress
+    if (completedCount > lastProgressRef.current.completedCount) {
+      lastProgressRef.current = { time: Date.now(), completedCount };
+      retriggerCountRef.current = 0;
+      return;
+    }
+
+    // If no progress for 90 seconds, retrigger (max 10 retriggers)
+    const stalledMs = Date.now() - lastProgressRef.current.time;
+    if (stalledMs > 90_000 && retriggerCountRef.current < 10) {
+      retriggerCountRef.current++;
+      console.log(`[processing] Stall detected (${Math.round(stalledMs / 1000)}s), retriggering pipeline (attempt ${retriggerCountRef.current})...`);
+      lastProgressRef.current.time = Date.now(); // Reset timer
+
+      try {
+        await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId }),
+        });
+      } catch (err) {
+        console.warn('[processing] Retrigger failed:', err);
+      }
+    }
+  }, [projectId]);
 
   useEffect(() => {
     let active = true;
@@ -68,6 +108,9 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
         const data: StatusResponse = await res.json();
         if (!active) return;
         setStatus(data);
+
+        // Check for stalls and auto-retrigger
+        await maybeRetrigger(data);
 
         if (data.project.status === 'complete' && data.album?.share_slug) {
           setTimeout(() => router.push(`/album/${data.album!.share_slug}`), 1500);
@@ -87,7 +130,7 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
 
     poll();
     return () => { active = false; };
-  }, [projectId, router]);
+  }, [projectId, router, maybeRetrigger]);
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
