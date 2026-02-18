@@ -4,6 +4,8 @@ export interface Project {
   id: string;
   session_token: string;
   status: ProjectStatus;
+  version: number;
+  allow_real_names: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -11,6 +13,8 @@ export interface Project {
 export type ProjectStatus =
   | 'intake'
   | 'processing'
+  | 'moments_in_progress'
+  | 'generating_meta'
   | 'generating_music'
   | 'complete'
   | 'failed';
@@ -19,11 +23,11 @@ export interface StoryIntake {
   id: string;
   project_id: string;
   step: IntakeStep;
-  content: TurningPointsContent | InnerWorldContent | ScenesContent;
+  content: TurningPointsContent | InnerWorldContent | ScenesContent | MomentContent;
   created_at: string;
 }
 
-export type IntakeStep = 'turning_points' | 'inner_world' | 'scenes';
+export type IntakeStep = 'turning_points' | 'inner_world' | 'scenes' | 'moment_1' | 'moment_2' | 'moment_3';
 
 export interface TurningPointsContent {
   text: string;
@@ -55,6 +59,34 @@ export type Emotion =
   | 'nostalgia'
   | 'pride'
   | 'relief';
+
+// ===== V2: Moment Types =====
+
+export type NarrativeRole = 'origin' | 'turning_point' | 'resolution';
+
+export interface MomentContent {
+  story: string;
+  emotion: Emotion;
+  genres: string[];
+  energy: 'calm' | 'mid' | 'dynamic';
+  vocal_preference: 'vocals' | 'instrumental' | 'mixed';
+}
+
+export interface MomentFormState {
+  story: string;
+  emotion: Emotion | null;
+  genres: string[];
+  energy: 'calm' | 'mid' | 'dynamic';
+  vocalPreference: 'vocals' | 'instrumental' | 'mixed';
+}
+
+export const MOMENT_ROLES: { index: number; role: NarrativeRole; label: string; prompt: string; subtitle: string }[] = [
+  { index: 1, role: 'origin', label: 'Where it all began', prompt: 'Where it all began', subtitle: 'The roots of your story — the people, places, and feelings that set everything in motion.' },
+  { index: 2, role: 'turning_point', label: 'The moment everything shifted', prompt: 'The moment everything shifted', subtitle: 'The event, realization, or encounter that changed your direction forever.' },
+  { index: 3, role: 'resolution', label: 'Where your story lands', prompt: 'Where your story lands', subtitle: 'Where you are now — who you\'ve become, what you carry, and what you hope for.' },
+];
+
+// ===== V1 Legacy Types =====
 
 export interface MusicPreferences {
   id: string;
@@ -104,13 +136,6 @@ export interface LifeMap {
   tone_profile: string;
 }
 
-export type NarrativeRole =
-  | 'origin'
-  | 'disruption'
-  | 'reflection'
-  | 'turning_point'
-  | 'resolution';
-
 export type TrackStatus =
   | 'pending'
   | 'generating_lyrics'
@@ -123,6 +148,7 @@ export interface Track {
   id: string;
   project_id: string;
   track_number: number;
+  moment_index: number | null;
   title: string;
   narrative_role: NarrativeRole;
   lyrics: string | null;
@@ -182,7 +208,7 @@ export interface AlbumPageData {
 
 // ===== Generation Types =====
 
-export const NARRATIVE_ROLES: { role: NarrativeRole; label: string; description: string }[] = [
+export const NARRATIVE_ROLES_V1: { role: NarrativeRole | 'disruption' | 'reflection'; label: string; description: string }[] = [
   { role: 'origin', label: 'Origin', description: 'Where it all began' },
   { role: 'disruption', label: 'Disruption', description: 'The conflict or challenge' },
   { role: 'reflection', label: 'Reflection', description: 'The inner world' },

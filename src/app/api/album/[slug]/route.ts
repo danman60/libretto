@@ -25,11 +25,11 @@ export async function GET(
       return NextResponse.json({ error: 'Album not found' }, { status: 404 });
     }
 
+    // Return all tracks (including in-progress) for partial state handling
     const { data: tracks } = await db
       .from('tracks')
       .select('*')
       .eq('project_id', album.project_id)
-      .eq('status', 'complete')
       .order('track_number');
 
     console.log('[api/album] Found album:', album.title, 'with', tracks?.length || 0, 'tracks');

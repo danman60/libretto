@@ -3,14 +3,14 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { randomUUID } from 'crypto';
 
 export async function POST() {
-  console.log('[api/session] POST - Creating new session');
+  console.log('[api/session] POST - Creating new V2 session');
   try {
     const db = getServiceSupabase();
     const sessionToken = randomUUID();
 
     const { data, error } = await db
       .from('projects')
-      .insert({ session_token: sessionToken })
+      .insert({ session_token: sessionToken, version: 2 })
       .select('id, session_token')
       .single();
 
@@ -19,7 +19,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
     }
 
-    console.log('[api/session] Created project:', data.id);
+    console.log('[api/session] Created V2 project:', data.id);
     return NextResponse.json({
       projectId: data.id,
       sessionToken: data.session_token,

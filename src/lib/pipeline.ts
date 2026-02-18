@@ -27,7 +27,7 @@ import type {
   MusicPreferences,
 } from './types';
 
-const NARRATIVE_ROLES: NarrativeRole[] = [
+const NARRATIVE_ROLES: string[] = [
   'origin',
   'disruption',
   'reflection',
@@ -138,13 +138,14 @@ export async function runPipeline(projectId: string): Promise<void> {
       console.log('[pipeline] Step 1: LifeMap already exists, skipping');
     } else {
       console.log('[pipeline] Step 1: Generating LifeMap...');
+      const enrichedScenes = sanitized.scenes.map((s: { location: string; who_was_present: string; what_changed: string }, i: number) => ({
+        ...s,
+        dominant_emotion: (scenesContent.scenes[i] as { dominant_emotion?: string })?.dominant_emotion ?? 'unknown',
+      }));
       const lifeMapPrompt = buildLifeMapPrompt(
         sanitized.turningPoints,
         sanitized.innerWorld,
-        sanitized.scenes.map((s: { location: string; who_was_present: string; what_changed: string }, i: number) => ({
-          ...s,
-          dominant_emotion: scenesContent.scenes[i]?.dominant_emotion,
-        }))
+        JSON.stringify(enrichedScenes)
       );
 
       try {
@@ -174,7 +175,7 @@ export async function runPipeline(projectId: string): Promise<void> {
       console.log('[pipeline] Step 2: Generating biography...');
       try {
         biography = await callDeepSeek(
-          buildBiographyPrompt(lifeMap, sanitized.turningPoints, sanitized.innerWorld),
+          buildBiographyPrompt(lifeMap, sanitized.turningPoints, sanitized.innerWorld, JSON.stringify(sanitized.scenes)),
           { temperature: 0.7, maxTokens: 3000 }
         );
         console.log('[pipeline] Biography generated:', biography.length, 'chars');
@@ -280,10 +281,10 @@ export async function runPipeline(projectId: string): Promise<void> {
 
         try {
           lyrics = await callDeepSeek(
-            buildLyricsPrompt(trackNum, role, lifeMap, musicPrefs),
+            buildLyricsPrompt(trackNum, role as NarrativeRole, lifeMap, musicPrefs),
             { temperature: 0.85, maxTokens: 1500 }
           );
-          stylePrompt = buildStylePrompt(role, lifeMap, musicPrefs);
+          stylePrompt = buildStylePrompt(role as NarrativeRole, lifeMap, musicPrefs);
 
           await db
             .from('tracks')

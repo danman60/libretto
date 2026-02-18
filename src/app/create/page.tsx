@@ -1,53 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { SceneCard } from '@/components/SceneCard';
-import { TherapistPrompt } from '@/components/TherapistPrompt';
-import type { Scene } from '@/lib/types';
-import { ArrowLeft, ArrowRight, Disc3 } from 'lucide-react';
-
-const EMPTY_SCENE: Scene = {
-  location: '',
-  who_was_present: '',
-  what_changed: '',
-  dominant_emotion: 'hope',
-};
-
-const STEP_META = [
-  {
-    num: 1,
-    title: 'Life Turning Points',
-    desc: 'Tell us about the key moments that shaped who you are. Include when they happened and how they made you feel.',
-  },
-  {
-    num: 2,
-    title: 'Inner World',
-    desc: 'What drives you? What keeps you up at night? What patterns do you notice in your life?',
-  },
-  {
-    num: 3,
-    title: 'Cinematic Scenes',
-    desc: 'Describe at least 3 key scenes from your life — moments you can picture vividly. These become the emotional anchors of your libretto.',
-  },
-];
+import { MomentInput } from '@/components/MomentInput';
+import { TrackCard } from '@/components/TrackCard';
+import { Loader2 } from 'lucide-react';
+import type { MomentFormState, Track, Album } from '@/lib/types';
 
 export default function CreatePage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [currentMoment, setCurrentMoment] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [album, setAlbum] = useState<Album | null>(null);
+  const [allDone, setAllDone] = useState(false);
 
-  const [turningPoints, setTurningPoints] = useState('');
-  const [innerWorld, setInnerWorld] = useState('');
-  const [scenes, setScenes] = useState<Scene[]>([
-    { ...EMPTY_SCENE },
-    { ...EMPTY_SCENE },
-    { ...EMPTY_SCENE },
-  ]);
-
+  // Create session on mount
   useEffect(() => {
     const stored = sessionStorage.getItem('libretto_project_id');
     if (stored) {
@@ -56,183 +25,189 @@ export default function CreatePage() {
     }
 
     fetch('/api/session', { method: 'POST' })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(r => r.json())
+      .then(data => {
         setProjectId(data.projectId);
         sessionStorage.setItem('libretto_project_id', data.projectId);
-        sessionStorage.setItem('libretto_session_token', data.sessionToken);
       })
       .catch(console.error);
   }, []);
 
-  const saveStep = async (stepName: string, content: unknown) => {
+  // Poll for track status after moments submitted
+  const pollStatus = useCallback(() => {
     if (!projectId) return;
-    setSaving(true);
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/status/${projectId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        setTracks(data.tracks || []);
+        if (data.album) setAlbum(data.album);
+
+        // Check if everything is done
+        const allTracksComplete = data.tracks?.length === 3 &&
+          data.tracks.every((t: Track) => t.status === 'complete' || t.status === 'failed');
+        const hasAlbum = !!data.album;
+
+        if (allTracksComplete && hasAlbum) {
+          setAllDone(true);
+          clearInterval(interval);
+          // Redirect to album page after brief delay
+          if (data.album.share_slug) {
+            setTimeout(() => {
+              router.push(`/album/${data.album.share_slug}`);
+            }, 2000);
+          }
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [projectId, router]);
+
+  // Start polling once moment 1 is submitted
+  useEffect(() => {
+    if (currentMoment > 1 || tracks.length > 0) {
+      return pollStatus();
+    }
+  }, [currentMoment, tracks.length, pollStatus]);
+
+  const handleMomentSubmit = async (data: MomentFormState) => {
+    if (!projectId || !data.emotion) return;
+
+    setIsSubmitting(true);
     try {
-      await fetch('/api/intake', {
+      // Fire track generation
+      await fetch('/api/generate-track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, step: stepName, content }),
+        body: JSON.stringify({
+          projectId,
+          momentIndex: currentMoment,
+          story: data.story,
+          emotion: data.emotion,
+          genres: data.genres,
+          energy: data.energy,
+          vocalPreference: data.vocalPreference,
+        }),
       });
+
+      // If this is moment 3, also fire meta generation
+      if (currentMoment === 3) {
+        await fetch('/api/generate-meta', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId }),
+        });
+      }
+
+      if (currentMoment < 3) {
+        setCurrentMoment(prev => prev + 1);
+      } else {
+        // All moments submitted — stay on page and wait for completion
+        setCurrentMoment(4); // sentinel: all submitted
+      }
     } catch (err) {
-      console.error('Save failed:', err);
+      console.error('Submit failed:', err);
     } finally {
-      setSaving(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleNext = async () => {
-    if (step === 1) {
-      await saveStep('turning_points', { text: turningPoints });
-      setStep(2);
-    } else if (step === 2) {
-      await saveStep('inner_world', { text: innerWorld });
-      setStep(3);
-    } else if (step === 3) {
-      await saveStep('scenes', { scenes });
-      router.push('/create/preferences');
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-  };
-
-  const canProceed = () => {
-    if (step === 1) return turningPoints.trim().length > 0;
-    if (step === 2) return innerWorld.trim().length > 0;
-    if (step === 3) {
-      return scenes.length >= 3 && scenes.every(
-        (s) => s.location && s.who_was_present && s.what_changed && s.dominant_emotion
-      );
-    }
-    return false;
-  };
-
-  const addScene = () => {
-    if (scenes.length < 6) setScenes([...scenes, { ...EMPTY_SCENE }]);
-  };
-
-  const updateScene = (index: number, scene: Scene) => {
-    const updated = [...scenes];
-    updated[index] = scene;
-    setScenes(updated);
-  };
-
-  const removeScene = (index: number) => {
-    setScenes(scenes.filter((_, i) => i !== index));
-  };
-
-  const meta = STEP_META[step - 1];
-  const charCount = step === 1 ? turningPoints.length : step === 2 ? innerWorld.length : 0;
-
-  return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="max-w-2xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-10">
-          <Disc3 className="h-5 w-5 text-gray-600" />
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-500">
-                Step {step} of 4
-              </span>
-              <span className="text-xs text-gray-700">{step * 25}%</span>
-            </div>
-            <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-purple-500/60 to-purple-400/40 rounded-full transition-all duration-500"
-                style={{ width: `${step * 25}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Therapist prompt with avatar */}
-        <TherapistPrompt question={meta.title} detail={meta.desc} />
-
-        {/* Step 1: Turning Points */}
-        {step === 1 && (
-          <div className="space-y-3">
-            <Textarea
-              value={turningPoints}
-              onChange={(e) => setTurningPoints(e.target.value)}
-              rows={20}
-              placeholder="I grew up in a small town where everyone knew each other. The first turning point came when I was 14..."
-              className="bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 text-base resize-none focus:border-purple-500/30 focus:ring-purple-500/10 min-h-[400px]"
-            />
-            <div className="flex justify-end">
-              <span className="text-xs tabular-nums text-gray-600">
-                {charCount} characters
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Inner World */}
-        {step === 2 && (
-          <div className="space-y-3">
-            <Textarea
-              value={innerWorld}
-              onChange={(e) => setInnerWorld(e.target.value)}
-              rows={20}
-              placeholder="I've always been someone who feels things deeply. The pattern I notice most is..."
-              className="bg-white/[0.04] border-white/[0.08] text-gray-200 placeholder:text-gray-700 text-base resize-none focus:border-purple-500/30 focus:ring-purple-500/10 min-h-[400px]"
-            />
-            <div className="flex justify-end">
-              <span className="text-xs tabular-nums text-gray-600">
-                {charCount} characters
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Cinematic Scenes */}
-        {step === 3 && (
-          <div className="space-y-4">
-            {scenes.map((scene, i) => (
-              <SceneCard
-                key={i}
-                index={i}
-                scene={scene}
-                onChange={(s) => updateScene(i, s)}
-                onRemove={() => removeScene(i)}
-                canRemove={scenes.length > 3}
-              />
-            ))}
-
-            {scenes.length < 6 && (
-              <button
-                type="button"
-                onClick={addScene}
-                className="w-full py-3 rounded-lg border border-dashed border-white/10 text-sm text-gray-500 hover:border-white/20 hover:text-gray-400 transition-colors"
-              >
-                + Add another scene
-              </button>
+  // Waiting screen after all 3 moments
+  if (currentMoment === 4) {
+    return (
+      <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <div className="text-center mb-12">
+            <h2
+              className="text-3xl mb-3"
+              style={{ fontFamily: 'var(--font-dm-serif)' }}
+            >
+              {allDone ? 'Your libretto is ready' : 'Your story is taking shape'}
+            </h2>
+            <p className="text-[#9B8E99]" style={{ fontFamily: 'var(--font-lora)' }}>
+              {allDone
+                ? 'Redirecting to your album...'
+                : 'Each moment is becoming music. This takes about a minute per track.'
+              }
+            </p>
+            {!allDone && (
+              <Loader2 className="h-5 w-5 animate-spin text-[#E8A87C] mx-auto mt-4" />
             )}
           </div>
+
+          {/* 3-column track grid */}
+          {tracks.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {tracks.map((track, i) => (
+                <TrackCard key={track.id} track={track} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
+      <div className="px-6 py-12">
+        {/* Progress dots */}
+        <div className="flex justify-center gap-2 mb-12">
+          {[1, 2, 3].map(i => (
+            <div
+              key={i}
+              className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                i === currentMoment
+                  ? 'bg-[#E8A87C] scale-125'
+                  : i < currentMoment
+                    ? 'bg-[#8FBC8B]'
+                    : 'bg-white/[0.1]'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Track status indicators between moments */}
+        {tracks.length > 0 && currentMoment <= 3 && (
+          <div className="max-w-[640px] mx-auto mb-8">
+            <div className="flex gap-2 justify-center">
+              {tracks.map(track => (
+                <div
+                  key={track.id}
+                  className={`px-3 py-1 rounded-full text-xs ${
+                    track.status === 'complete'
+                      ? 'bg-[#8FBC8B]/15 text-[#8FBC8B]'
+                      : track.status === 'failed'
+                        ? 'bg-[#D4A5A5]/15 text-[#D4A5A5]'
+                        : 'bg-[#B8A9C9]/15 text-[#B8A9C9]'
+                  }`}
+                >
+                  Track {track.track_number}: {
+                    track.status === 'complete' ? 'Ready' :
+                    track.status === 'failed' ? 'Failed' :
+                    track.status === 'generating_audio' ? 'Composing...' :
+                    track.status === 'generating_lyrics' ? 'Writing...' :
+                    'Pending'
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
-        {/* Navigation */}
-        <div className="flex justify-between mt-10 pt-6 border-t border-white/[0.06]">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            disabled={step === 1}
-            className="text-gray-500 hover:text-white gap-2 disabled:opacity-30"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            disabled={!canProceed() || saving}
-            className="bg-white text-black hover:bg-gray-200 gap-2 disabled:opacity-30 disabled:bg-white/10 disabled:text-gray-600"
-          >
-            {saving ? 'Saving...' : step === 3 ? 'Music Preferences' : 'Continue'}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {/* Moment input */}
+        <MomentInput
+          key={currentMoment}
+          momentIndex={currentMoment}
+          onSubmit={handleMomentSubmit}
+          isSubmitting={isSubmitting}
+        />
       </div>
     </main>
   );

@@ -1,29 +1,114 @@
-import type { LifeMap, MusicPreferences, NarrativeRole } from './types';
+import type { Emotion, LifeMap, MusicPreferences, NarrativeRole } from './types';
+
+// ===== V2 Prompts (3-moment flow) =====
+
+export function buildMomentLyricsPrompt(
+  trackNum: number,
+  role: NarrativeRole,
+  story: string,
+  emotion: Emotion,
+  genres: string[],
+  energy: 'calm' | 'mid' | 'dynamic',
+  vocal: 'vocals' | 'instrumental' | 'mixed',
+  allowNames: boolean
+): string {
+  const roleDescriptions: Record<NarrativeRole, string> = {
+    origin: 'This is the ORIGIN track — where the story begins. Focus on roots, innocence, the world before change.',
+    turning_point: 'This is the TURNING POINT track — the moment of upheaval, realization, or transformation.',
+    resolution: 'This is the RESOLUTION track — where they are now, who they have become, what they carry forward.',
+  };
+
+  const vocalNote = vocal === 'instrumental'
+    ? 'This track will be INSTRUMENTAL — write evocative scene-setting text instead of sung lyrics, to guide the mood.'
+    : '';
+
+  return `You are a songwriter writing lyrics for Track ${trackNum} of a 3-track concept album about someone's life.
+
+## Track Role
+${roleDescriptions[role]}
+
+## The Person's Story for This Moment
+"${story}"
+
+## Emotional Tone
+Primary emotion: ${emotion}
+
+## Music Style
+Genre: ${genres.join(', ') || 'Pop'}
+Energy: ${energy}
+${vocalNote}
+
+## Instructions
+- Write in first person
+- Use the structure tags: [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro]
+- Draw vivid imagery from their actual words — transform them poetically, don't copy verbatim
+- Match the emotional tone of ${emotion}
+- Keep lyrics concise — Suno works best with shorter, punchy lyrics (under 300 words)
+- ${allowNames ? 'You may use real names if they appear in the story' : 'Do NOT use real names — use metaphors or pronouns instead'}
+
+Respond with ONLY the lyrics text (with structure tags). No explanations.`;
+}
+
+export function buildMomentStylePrompt(
+  role: NarrativeRole,
+  emotion: Emotion,
+  genres: string[],
+  energy: 'calm' | 'mid' | 'dynamic',
+  vocal: 'vocals' | 'instrumental' | 'mixed'
+): string {
+  const moodMap: Record<NarrativeRole, string> = {
+    origin: 'nostalgic, warm, intimate',
+    turning_point: 'intense, building, emotional',
+    resolution: 'hopeful, peaceful, triumphant',
+  };
+
+  const emotionMoods: Record<Emotion, string> = {
+    joy: 'uplifting, bright',
+    grief: 'melancholic, tender',
+    anger: 'raw, powerful',
+    hope: 'soaring, warm',
+    fear: 'haunting, atmospheric',
+    love: 'intimate, heartfelt',
+    surprise: 'dynamic, unexpected',
+    nostalgia: 'wistful, bittersweet',
+    pride: 'triumphant, bold',
+    relief: 'gentle, releasing',
+  };
+
+  const parts: string[] = [];
+
+  parts.push(genres.slice(0, 2).join(' ') || 'Pop');
+  parts.push(moodMap[role]);
+  parts.push(emotionMoods[emotion]);
+
+  if (energy === 'calm') parts.push('slow tempo');
+  else if (energy === 'dynamic') parts.push('energetic');
+  else parts.push('mid-tempo');
+
+  if (vocal === 'instrumental') parts.push('instrumental');
+
+  return parts.join(', ');
+}
+
+// ===== V2 Meta Prompts =====
 
 export function buildLifeMapPrompt(
-  turningPoints: string,
-  innerWorld: string,
-  scenes: { location: string; who_was_present: string; what_changed: string; dominant_emotion?: string }[]
+  moment1Story: string,
+  moment2Story: string,
+  moment3Story: string
 ): string {
-  const scenesText = scenes
-    .map(
-      (s, i) =>
-        `Scene ${i + 1}: Location: ${s.location}. Present: ${s.who_was_present}. What changed: ${s.what_changed}. Emotion: ${s.dominant_emotion || 'unspecified'}.`
-    )
-    .join('\n');
+  return `You are a narrative analyst creating a structured "LifeMap" from someone's life story told in three moments. Analyze the following and produce a JSON object.
 
-  return `You are a narrative analyst creating a structured "LifeMap" from someone's life story. Analyze the following personal narrative and produce a JSON object.
+## Three Moments
 
-## Input
+### Moment 1: Where It All Began
+${moment1Story}
 
-### Life Turning Points
-${turningPoints}
+### Moment 2: The Moment Everything Shifted
+${moment2Story}
 
-### Inner World
-${innerWorld}
-
-### Key Scenes
-${scenesText}
+### Moment 3: Where Their Story Lands
+${moment3Story}
 
 ## Output Format
 
@@ -40,32 +125,35 @@ Respond with ONLY valid JSON (no markdown, no code fences):
   "tone_profile": "Overall tonal description in 1-2 sentences"
 }
 
-Create 3-5 chapters that cover the full arc. Extract real sensory details and phrases from their actual words. The lyrical_phrases should be evocative fragments that could work in song lyrics.`;
+Create 3 chapters (one per moment). Extract real sensory details and phrases from their actual words. The lyrical_phrases should be evocative fragments that could work in song lyrics.`;
 }
 
-export function buildBiographyPrompt(lifeMap: LifeMap, turningPoints: string, innerWorld: string): string {
-  return `You are a literary biographer writing a reflective, third-person biography based on someone's life story. Write in an intimate, cinematic style — as if narrating a documentary.
+export function buildBiographyPrompt(lifeMap: LifeMap, moment1: string, moment2: string, moment3: string): string {
+  return `You are a literary biographer writing a reflective, third-person biography based on someone's life story told in three moments. Write in an intimate, cinematic style — as if narrating a documentary.
 
 ## Source Material
 
 ### LifeMap Analysis
 ${JSON.stringify(lifeMap, null, 2)}
 
-### Their Words — Turning Points
-${turningPoints}
+### Their Words — Moment 1: Where It All Began
+${moment1}
 
-### Their Words — Inner World
-${innerWorld}
+### Their Words — Moment 2: The Shift
+${moment2}
+
+### Their Words — Moment 3: Where They Are Now
+${moment3}
 
 ## Instructions
 
-- Write 900-1500 words in markdown format
+- Write 600-1000 words in markdown format
 - Use third person ("they/them" — do NOT use real names unless provided)
-- Structure: childhood/origin → challenges → transformation → present
+- Structure: origins → transformation → present
 - Weave in sensory details and motifs from the LifeMap
 - Tone should match the tone_profile
 - Include section breaks (---) between major life phases
-- Make it feel like a album liner note biography — literary but accessible
+- Make it feel like album liner notes — literary but accessible
 - Do NOT invent facts. Only elaborate on what was shared.
 
 Respond with ONLY the markdown biography text.`;
@@ -88,63 +176,47 @@ Respond with ONLY valid JSON (no markdown, no code fences):
 The title should be evocative, 1-4 words. The tagline should be a poetic one-liner that captures the emotional journey.`;
 }
 
+// ===== V1 Legacy Prompts (kept for backward compat) =====
+
 export function buildLyricsPrompt(
   trackNumber: number,
   role: NarrativeRole,
   lifeMap: LifeMap,
   prefs: MusicPreferences
 ): string {
-  const roleDescriptions: Record<NarrativeRole, string> = {
-    origin: 'This is the ORIGIN track — where the story begins. Focus on childhood, roots, the world before everything changed.',
-    disruption: 'This is the DISRUPTION track — the conflict, challenge, or loss that shattered the status quo.',
-    reflection: 'This is the REFLECTION track — the inner world, introspection, questioning, and emotional processing.',
-    turning_point: 'This is the TURNING POINT track — the moment of shift, realization, or breakthrough.',
-    resolution: 'This is the RESOLUTION track — where they are now, what they have become, looking forward.',
+  const roleDescriptions: Record<string, string> = {
+    origin: 'This is the ORIGIN track — where the story begins.',
+    turning_point: 'This is the TURNING POINT track — the moment of shift.',
+    resolution: 'This is the RESOLUTION track — where they are now.',
   };
 
-  // Map track to most relevant chapter
   const chapterIndex = Math.min(trackNumber - 1, lifeMap.chapters.length - 1);
   const chapter = lifeMap.chapters[chapterIndex];
-
   const genreContext = prefs.genres.join(', ');
   const artistContext = prefs.artists?.length ? `Artist references: ${prefs.artists.join(', ')}` : '';
-  const vocalNote = prefs.vocal_mode === 'instrumental'
-    ? 'This track will be INSTRUMENTAL — write evocative scene-setting text instead of lyrics, to guide the mood.'
-    : '';
 
-  return `You are a songwriter writing lyrics for Track ${trackNumber} of a 5-track concept album about someone's life.
+  return `You are a songwriter writing lyrics for Track ${trackNumber} of a concept album about someone's life.
 
 ## Track Role
-${roleDescriptions[role]}
+${roleDescriptions[role] || 'Track in the story arc.'}
 
 ## Story Context for This Track
 Chapter: "${chapter.title}"
 Summary: ${chapter.summary}
 Emotional state: ${chapter.emotional_state}
-Timeframe: ${chapter.timeframe}
-
-## Overall Story
-Themes: ${lifeMap.themes.join(', ')}
-Emotional arc: ${lifeMap.emotional_arc.start} → ${lifeMap.emotional_arc.midpoint} → ${lifeMap.emotional_arc.resolution}
-Sensory elements: ${lifeMap.sensory_elements.join(', ')}
-Lyrical phrases to weave in: ${lifeMap.lyrical_phrases.join(', ')}
 
 ## Music Style
 Genre: ${genreContext}
 Energy: ${prefs.energy}
-Era: ${prefs.era}
 ${artistContext}
-${vocalNote}
 
 ## Instructions
 - Write in first person
-- Use the structure tags: [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro]
-- Draw from the sensory_elements and lyrical_phrases — transform them, don't copy verbatim
-- Match the emotional state of this chapter
-- Keep lyrics concise — Suno works best with shorter, punchy lyrics
-- ${prefs.allow_real_names ? 'You may use real names if they appear in the story' : 'Do NOT use real names — use metaphors or pronouns instead'}
+- Use structure tags: [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro]
+- Keep lyrics concise
+- ${prefs.allow_real_names ? 'You may use real names' : 'Do NOT use real names'}
 
-Respond with ONLY the lyrics text (with structure tags). No explanations.`;
+Respond with ONLY the lyrics text.`;
 }
 
 export function buildStylePrompt(
@@ -152,37 +224,22 @@ export function buildStylePrompt(
   lifeMap: LifeMap,
   prefs: MusicPreferences
 ): string {
-  const moodMap: Record<NarrativeRole, string> = {
+  const moodMap: Record<string, string> = {
     origin: 'nostalgic, innocent, warm',
-    disruption: 'intense, raw, urgent',
-    reflection: 'introspective, atmospheric, haunting',
     turning_point: 'building, triumphant, emotional',
     resolution: 'peaceful, hopeful, resolved',
   };
 
   const parts: string[] = [];
-
-  // Genres
   parts.push(prefs.genres.slice(0, 2).join(' '));
-
-  // Mood from narrative role
-  parts.push(moodMap[role]);
-
-  // Energy
+  parts.push(moodMap[role] || 'emotional');
   if (prefs.energy !== 'mixed') {
     parts.push(prefs.energy === 'calm' ? 'slow tempo' : prefs.energy === 'dynamic' ? 'energetic' : 'mid-tempo');
   }
-
-  // Era
   if (prefs.era === 'classic') parts.push('vintage');
   if (prefs.era === 'modern') parts.push('modern production');
-
-  // Vocal mode
   if (prefs.vocal_mode === 'instrumental') parts.push('instrumental');
-
-  // Tone color from LifeMap
   if (lifeMap.tone_profile) {
-    // Take first few descriptive words
     const toneWords = lifeMap.tone_profile.split(/[.,]/).map(s => s.trim()).filter(Boolean)[0];
     if (toneWords && toneWords.length < 40) parts.push(toneWords);
   }

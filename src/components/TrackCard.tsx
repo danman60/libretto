@@ -2,73 +2,82 @@
 
 import { useState } from 'react';
 import { AudioPlayer } from './AudioPlayer';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { NARRATIVE_ROLES } from '@/lib/types';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { MOMENT_ROLES } from '@/lib/types';
 import type { Track } from '@/lib/types';
 
 interface TrackCardProps {
   track: Track;
+  index: number; // 0, 1, 2 for cascade animation
 }
 
-export function TrackCard({ track }: TrackCardProps) {
+export function TrackCard({ track, index }: TrackCardProps) {
   const [showLyrics, setShowLyrics] = useState(false);
 
-  const roleInfo = NARRATIVE_ROLES.find((r) => r.role === track.narrative_role);
+  const momentRole = MOMENT_ROLES.find(r => r.role === track.narrative_role);
+  const isLoading = track.status !== 'complete' && track.status !== 'failed';
+  const isFailed = track.status === 'failed';
 
   return (
-    <div className="group rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors p-4 sm:p-5">
-      <div className="flex items-start gap-4">
-        {/* Track number */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-sm font-medium text-gray-500 group-hover:text-gray-300 transition-colors">
+    <div className={`track-cascade track-cascade-${index + 1} glass-card p-5 flex flex-col`}>
+      {/* Track number badge */}
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-7 h-7 rounded-full bg-[#E8A87C]/15 flex items-center justify-center text-xs font-medium text-[#E8A87C]">
           {track.track_number}
         </div>
-
         <div className="flex-1 min-w-0">
-          {/* Title + role */}
-          <div className="flex items-baseline gap-2 mb-1">
-            <h3 className="font-semibold text-white truncate">{track.title}</h3>
-            {roleInfo && (
-              <span className="text-xs text-gray-600 flex-shrink-0">
-                {roleInfo.description}
-              </span>
-            )}
-          </div>
-
-          {/* Audio player */}
-          {track.audio_url && (
-            <div className="mt-3">
-              <AudioPlayer src={track.audio_url} title={track.title} />
-            </div>
-          )}
-
-          {/* Lyrics toggle */}
-          {track.lyrics && (
-            <div className="mt-3">
-              <button
-                onClick={() => setShowLyrics(!showLyrics)}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                {showLyrics ? (
-                  <>
-                    <ChevronUp className="h-3.5 w-3.5" />
-                    Hide lyrics
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                    Show lyrics
-                  </>
-                )}
-              </button>
-              {showLyrics && (
-                <pre className="mt-3 text-sm text-gray-500 whitespace-pre-wrap font-sans leading-relaxed bg-white/[0.02] rounded-lg p-4 border border-white/[0.04]">
-                  {track.lyrics}
-                </pre>
-              )}
-            </div>
+          <h3 className="text-[#F5F0EB] font-semibold text-sm truncate">{track.title}</h3>
+          {momentRole && (
+            <p className="text-[#9B8E99] text-xs">{momentRole.label}</p>
           )}
         </div>
       </div>
+
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center gap-2 text-[#B8A9C9] text-xs py-4">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          {track.status === 'generating_lyrics' && 'Writing lyrics...'}
+          {track.status === 'lyrics_done' && 'Lyrics ready, generating audio...'}
+          {track.status === 'generating_audio' && 'Composing music...'}
+          {track.status === 'pending' && 'Waiting to begin...'}
+        </div>
+      )}
+
+      {/* Failed state */}
+      {isFailed && (
+        <p className="text-[#D4A5A5] text-xs py-2">Generation failed</p>
+      )}
+
+      {/* Audio player */}
+      {track.audio_url && track.status === 'complete' && (
+        <div className="mt-1">
+          <AudioPlayer src={track.audio_url} title={track.title} />
+        </div>
+      )}
+
+      {/* Lyrics toggle */}
+      {track.lyrics && (
+        <div className="mt-3">
+          <button
+            onClick={() => setShowLyrics(!showLyrics)}
+            className="flex items-center gap-1 text-xs text-[#9B8E99] hover:text-[#F5F0EB] transition-colors"
+          >
+            {showLyrics ? (
+              <><ChevronUp className="h-3.5 w-3.5" /> Hide lyrics</>
+            ) : (
+              <><ChevronDown className="h-3.5 w-3.5" /> Show lyrics</>
+            )}
+          </button>
+          {showLyrics && (
+            <pre className="mt-3 text-xs text-[#9B8E99] whitespace-pre-wrap leading-relaxed bg-white/[0.02] rounded-xl p-4 border border-white/[0.04]"
+              style={{ fontFamily: 'var(--font-lora)' }}
+            >
+              {track.lyrics}
+            </pre>
+          )}
+        </div>
+      )}
     </div>
   );
 }

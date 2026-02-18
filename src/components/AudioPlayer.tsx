@@ -68,27 +68,27 @@ export function AudioPlayer({ src, title }: AudioPlayerProps) {
 
       <button
         onClick={togglePlay}
-        className="h-8 w-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 hover:scale-105 transition-transform"
+        className="h-9 w-9 rounded-full bg-[#E8A87C] flex items-center justify-center flex-shrink-0 hover:brightness-110 transition-all hover:scale-105"
         aria-label={isPlaying ? `Pause ${title}` : `Play ${title}`}
       >
         {isPlaying ? (
-          <Pause className="h-3.5 w-3.5 text-black" />
+          <Pause className="h-3.5 w-3.5 text-[#0D0B0E]" />
         ) : (
-          <Play className="h-3.5 w-3.5 text-black ml-0.5" />
+          <Play className="h-3.5 w-3.5 text-[#0D0B0E] ml-0.5" />
         )}
       </button>
 
       <div className="flex-1 space-y-1">
         <div
-          className="h-1 bg-white/10 rounded-full cursor-pointer group/bar"
+          className="h-1.5 bg-white/[0.08] rounded-full cursor-pointer group/bar"
           onClick={handleSeek}
         >
           <div
-            className="h-full bg-white/60 rounded-full transition-all duration-100 group-hover/bar:bg-white"
+            className="h-full bg-[#E8A87C]/60 rounded-full transition-all duration-100 group-hover/bar:bg-[#E8A87C]"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="flex justify-between text-[10px] text-gray-600 tabular-nums">
+        <div className="flex justify-between text-[10px] text-[#9B8E99] tabular-nums">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>

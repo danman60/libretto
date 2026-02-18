@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const validSteps: IntakeStep[] = ['turning_points', 'inner_world', 'scenes'];
+    const validSteps: IntakeStep[] = [
+      'turning_points', 'inner_world', 'scenes',
+      'moment_1', 'moment_2', 'moment_3',
+    ];
     if (!validSteps.includes(step)) {
       return NextResponse.json({ error: 'Invalid step' }, { status: 400 });
     }

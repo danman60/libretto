@@ -1,40 +1,41 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Music, Pen, Share2, Disc3 } from 'lucide-react';
+import { Music, Pen, Share2 } from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
+    <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        {/* Animated aurora gradient */}
-        <div className="absolute inset-0 aurora-bg opacity-30" />
+        <div className="absolute inset-0 aurora-bg opacity-40" />
 
-        <div className="relative max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-medium tracking-widest uppercase text-gray-400 mb-8">
-            <Disc3 className="h-3.5 w-3.5" />
+        <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
+          <p className="text-[#9B8E99] text-sm tracking-widest uppercase mb-8">
             Libretto
-          </div>
+          </p>
 
-          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent leading-tight">
-            Your life.<br />Your libretto.
+          <h1
+            className="text-5xl sm:text-7xl mb-6 leading-tight"
+            style={{ fontFamily: 'var(--font-dm-serif)' }}
+          >
+            Your life,<br />in three moments
           </h1>
 
-          <p className="text-lg sm:text-xl text-gray-400 max-w-xl mx-auto mb-12 leading-relaxed">
-            Transform your life story into your own libretto &mdash; a 5-track
-            musical biography with AI-generated lyrics, music, and a cinematic narrative.
+          <p
+            className="text-lg text-[#9B8E99] max-w-md mx-auto mb-12 leading-relaxed"
+            style={{ fontFamily: 'var(--font-lora)' }}
+          >
+            Share three moments that shaped you. We&apos;ll turn them into a
+            personal musical biography — lyrics, music, and narrative, composed
+            just for you.
           </p>
 
           <Link href="/create">
-            <Button
-              size="lg"
-              className="text-base px-10 py-6 rounded-full bg-white text-black hover:bg-gray-200 font-semibold transition-all hover:scale-105"
-            >
-              Create Your Libretto
-            </Button>
+            <button className="px-10 py-4 rounded-full bg-[#E8A87C] text-[#0D0B0E] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all">
+              Begin your story
+            </button>
           </Link>
 
-          <p className="mt-6 text-xs text-gray-600">
+          <p className="mt-6 text-xs text-[#9B8E99]/50">
             Free to use. No account required.
           </p>
         </div>
@@ -42,13 +43,16 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section className="relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent" />
-        <div className="relative max-w-5xl mx-auto px-6 py-28">
-          <p className="text-xs font-medium tracking-widest uppercase text-gray-500 text-center mb-3">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.01] to-transparent" />
+        <div className="relative max-w-4xl mx-auto px-6 py-28">
+          <p className="text-[#9B8E99] text-xs tracking-widest uppercase text-center mb-3">
             How it works
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-20">
-            Three steps to your musical story
+          <h2
+            className="text-3xl text-center mb-20 text-[#F5F0EB]"
+            style={{ fontFamily: 'var(--font-dm-serif)' }}
+          >
+            Three moments become three songs
           </h2>
 
           <div className="grid md:grid-cols-3 gap-16">
@@ -56,34 +60,34 @@ export default function LandingPage() {
               {
                 icon: Pen,
                 step: '01',
-                title: 'Tell your story',
-                desc: 'Walk through a guided narrative — your turning points, inner world, and the cinematic scenes that shaped you.',
+                title: 'Share your moments',
+                desc: 'Tell us about three defining moments — where it began, what shifted everything, and where you are now.',
               },
               {
                 icon: Music,
                 step: '02',
-                title: 'AI composes',
-                desc: 'Our AI maps your emotional arc, writes personalized lyrics, and generates 5 unique tracks in your chosen style.',
+                title: 'Music takes shape',
+                desc: 'Each moment becomes a track with personalized lyrics and music, generated in real time as you write.',
               },
               {
                 icon: Share2,
                 step: '03',
                 title: 'Listen & share',
-                desc: 'Get a cinematic page with your biography, playable tracks, and lyrics — shareable with a single link.',
+                desc: 'Receive a cinematic album page with your biography, playable tracks, and a shareable link.',
               },
             ].map(({ icon: Icon, step, title, desc }) => (
               <div key={step} className="relative">
-                <div className="text-5xl font-bold text-white/[0.04] absolute -top-6 -left-2 select-none">
+                <div className="text-5xl font-bold text-[#E8A87C]/[0.06] absolute -top-6 -left-2 select-none">
                   {step}
                 </div>
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-5">
-                    <Icon className="h-5 w-5 text-gray-400" />
+                  <div className="w-12 h-12 rounded-2xl glass-card flex items-center justify-center mb-5">
+                    <Icon className="h-5 w-5 text-[#E8A87C]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
+                  <h3 className="text-lg font-semibold text-[#F5F0EB] mb-2">
                     {title}
                   </h3>
-                  <p className="text-gray-500 leading-relaxed text-sm">
+                  <p className="text-[#9B8E99] leading-relaxed text-sm" style={{ fontFamily: 'var(--font-lora)' }}>
                     {desc}
                   </p>
                 </div>
@@ -94,23 +98,26 @@ export default function LandingPage() {
       </section>
 
       {/* What you get */}
-      <section className="max-w-3xl mx-auto px-6 py-24">
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 sm:p-12">
-          <h3 className="text-xl font-semibold text-white mb-6">
+      <section className="max-w-2xl mx-auto px-6 py-24">
+        <div className="glass-card p-8 sm:p-12">
+          <h3
+            className="text-xl text-[#F5F0EB] mb-6"
+            style={{ fontFamily: 'var(--font-dm-serif)' }}
+          >
             What you&apos;ll receive
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
-              '5 original tracks with full lyrics',
+              '3 original tracks with lyrics',
               'Custom cover art from your story',
-              'A reflective biography (900+ words)',
-              'Shareable page with audio player',
-              'Emotional arc mapped across 5 chapters',
-              'Your story, never stored or shared',
+              'A reflective biography',
+              'Shareable album page',
+              'Music shaped by your emotions',
+              'Your story, never stored',
             ].map((item) => (
               <div key={item} className="flex items-start gap-3">
-                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-purple-400/60 flex-shrink-0" />
-                <span className="text-sm text-gray-400">{item}</span>
+                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#E8A87C]/60 flex-shrink-0" />
+                <span className="text-sm text-[#9B8E99]" style={{ fontFamily: 'var(--font-lora)' }}>{item}</span>
               </div>
             ))}
           </div>
@@ -118,26 +125,22 @@ export default function LandingPage() {
       </section>
 
       {/* Privacy + CTA */}
-      <section className="max-w-3xl mx-auto px-6 pb-20">
+      <section className="max-w-2xl mx-auto px-6 pb-20">
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-10">
-            Your story is personal. We automatically redact phone numbers, emails, and
-            sensitive information. No account, no tracking.
+          <p className="text-sm text-[#9B8E99]/60 mb-10" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
+            Your story is personal. We automatically redact sensitive information.
+            No account, no tracking.
           </p>
           <Link href="/create">
-            <Button
-              variant="outline"
-              size="lg"
-              className="rounded-full border-white/20 text-white hover:bg-white/10 px-8 py-5"
-            >
+            <button className="px-8 py-3 rounded-full border border-[#E8A87C]/20 text-[#E8A87C] hover:bg-[#E8A87C]/10 transition-colors text-sm">
               Get started
-            </Button>
+            </button>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-8 text-center text-xs text-gray-600">
+      <footer className="border-t border-white/[0.04] py-8 text-center text-xs text-[#9B8E99]/40">
         Libretto &copy; {new Date().getFullYear()}
       </footer>
     </main>
