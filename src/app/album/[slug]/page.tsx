@@ -174,12 +174,12 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               <img
                 src={album.cover_image_url}
                 alt={album.title}
-                className={`w-56 h-56 rounded-2xl shadow-2xl shadow-black/50 object-cover flex-shrink-0 ${
+                className={`w-44 h-44 sm:w-56 sm:h-56 rounded-2xl shadow-2xl shadow-black/50 object-cover flex-shrink-0 ${
                   revealed ? 'reveal-blur' : 'opacity-0'
                 }`}
               />
             ) : (
-              <div className="w-56 h-56 rounded-2xl glass-card flex items-center justify-center flex-shrink-0">
+              <div className="w-44 h-44 sm:w-56 sm:h-56 rounded-2xl glass-card flex items-center justify-center flex-shrink-0">
                 <div className="text-5xl text-[#E8A87C]/30" style={{ fontFamily: 'var(--font-dm-serif)' }}>
                   L
                 </div>

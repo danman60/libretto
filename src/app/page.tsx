@@ -10,7 +10,7 @@ export default function LandingPage() {
 
         <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
           <h1
-            className="text-7xl sm:text-9xl font-bold tracking-tight mb-4"
+            className="text-6xl sm:text-7xl md:text-9xl font-bold tracking-tight mb-4"
             style={{ fontFamily: 'var(--font-dm-serif)' }}
           >
             LIBRETTO
