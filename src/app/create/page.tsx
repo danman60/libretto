@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { MomentInput } from '@/components/MomentInput';
 import { TrackCard } from '@/components/TrackCard';
+import { SheetMusicBg } from '@/components/SheetMusicBg';
 import { Loader2 } from 'lucide-react';
 import type { MomentFormState, Track, Album } from '@/lib/types';
 
@@ -118,8 +119,9 @@ export default function CreatePage() {
   // Waiting screen after all 3 moments
   if (currentMoment === 4) {
     return (
-      <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
-        <div className="max-w-4xl mx-auto px-6 py-16">
+      <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB] relative overflow-hidden">
+        <SheetMusicBg />
+        <div className="relative max-w-4xl mx-auto px-6 py-16">
           <div className="text-center mb-12">
             <h2
               className="text-3xl mb-3"
@@ -152,8 +154,9 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
-      <div className="px-6 py-12">
+    <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB] relative overflow-hidden">
+      <SheetMusicBg />
+      <div className="relative px-6 py-12">
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-12">
           {[1, 2, 3].map(i => (

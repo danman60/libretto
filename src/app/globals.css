@@ -229,3 +229,42 @@
 .track-cascade-1 { animation-delay: 200ms; }
 .track-cascade-2 { animation-delay: 400ms; }
 .track-cascade-3 { animation-delay: 600ms; }
+
+/* ===== Sheet Music Background ===== */
+.sheet-music-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: rgba(240, 184, 138, 0.6);
+  filter: blur(1.5px);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 70%);
+}
+
+.sheet-music-layer {
+  position: absolute;
+  inset: 0;
+  width: 200%;
+  height: 100%;
+  min-height: 100%;
+}
+
+.sheet-music-drift-1 {
+  animation: sheet-drift-left 60s linear infinite;
+}
+
+.sheet-music-drift-2 {
+  animation: sheet-drift-right 80s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes sheet-drift-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes sheet-drift-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}

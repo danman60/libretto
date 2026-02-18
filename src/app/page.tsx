@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Music, Pen, Share2 } from 'lucide-react';
+import { SheetMusicBg } from '@/components/SheetMusicBg';
 
 export default function LandingPage() {
   return (
@@ -7,6 +8,7 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 aurora-bg opacity-40" />
+        <SheetMusicBg />
 
         <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
           <p className="text-[#9B8E99] text-sm tracking-widest uppercase mb-8">
