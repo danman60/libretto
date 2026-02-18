@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronRight, Pen, Music, Share2 } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -61,27 +61,29 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-12 md:gap-16">
             {[
               {
-                icon: Pen,
-                step: '01',
+                note: <span className="text-2xl leading-none">♪</span>,
                 title: 'Share your moments',
                 desc: 'Tell us about three defining moments — where it began, what shifted everything, and where you are now.',
               },
               {
-                icon: Music,
-                step: '02',
+                note: <span className="text-2xl leading-none">♫</span>,
                 title: 'Music takes shape',
                 desc: 'Each moment becomes a track with personalized lyrics and music, generated in real time as you write.',
               },
               {
-                icon: Share2,
-                step: '03',
+                note: (
+                  <span className="flex flex-col items-center leading-none">
+                    <span className="text-[10px] -mb-0.5">3</span>
+                    <span className="text-2xl">♫♪</span>
+                  </span>
+                ),
                 title: 'Listen & share',
                 desc: 'Receive a cinematic album page with your biography, playable tracks, and a shareable link.',
               },
-            ].map(({ icon: Icon, step, title, desc }) => (
-              <div key={step} className="flex flex-col items-center text-center md:items-start md:text-left">
-                <div className="w-14 h-14 rounded-2xl glass-card flex items-center justify-center mb-5">
-                  <span className="text-sm font-semibold text-[#E8A87C]">{step}</span>
+            ].map(({ note, title, desc }) => (
+              <div key={title} className="flex flex-col items-center text-center md:items-start md:text-left">
+                <div className="w-14 h-14 rounded-2xl glass-card flex items-center justify-center mb-5 text-[#E8A87C]">
+                  {note}
                 </div>
                 <h3 className="text-xl font-semibold text-[#F5F0EB] mb-2">
                   {title}
