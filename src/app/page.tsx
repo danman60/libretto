@@ -3,22 +3,25 @@ import { Music, Pen, Share2 } from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
+    <main className="min-h-screen text-[#F5F0EB]">
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 aurora-bg opacity-40" />
 
         <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
-          <p className="text-[#9B8E99] text-base tracking-widest uppercase mb-8">
-            Libretto
-          </p>
-
           <h1
-            className="text-6xl sm:text-8xl mb-6 leading-tight"
+            className="text-7xl sm:text-9xl font-bold tracking-tight mb-4"
             style={{ fontFamily: 'var(--font-dm-serif)' }}
           >
-            Your life,<br />in three moments
+            LIBRETTO
           </h1>
+
+          <p
+            className="text-2xl sm:text-3xl tracking-widest uppercase text-[#F0B88A] mb-6"
+            style={{ fontFamily: 'var(--font-dm-serif)' }}
+          >
+            Your life, in song
+          </p>
 
           <p
             className="text-xl text-[#9B8E99] max-w-lg mx-auto mb-12 leading-relaxed"

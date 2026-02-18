@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { MomentInput } from '@/components/MomentInput';
 import { TrackCard } from '@/components/TrackCard';
 import { Loader2 } from 'lucide-react';
@@ -118,7 +119,12 @@ export default function CreatePage() {
   // Waiting screen after all 3 moments
   if (currentMoment === 4) {
     return (
-      <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
+      <main className="min-h-screen text-[#F5F0EB]">
+        <div className="text-center pt-8 mb-4">
+          <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+            LIBRETTO
+          </Link>
+        </div>
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center mb-12">
             <h2
@@ -152,7 +158,12 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
+    <main className="min-h-screen text-[#F5F0EB]">
+      <div className="text-center pt-8 mb-4">
+        <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+          LIBRETTO
+        </Link>
+      </div>
       <div className="px-6 py-12">
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-12">

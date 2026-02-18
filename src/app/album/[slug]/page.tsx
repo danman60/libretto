@@ -3,6 +3,7 @@
 import { useEffect, useState, use, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Link from 'next/link';
 import JSZip from 'jszip';
 import { TrackCard } from '@/components/TrackCard';
 import { Share2, Check, Loader2, Download } from 'lucide-react';
@@ -117,7 +118,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#0D0B0E] flex items-center justify-center">
+      <main className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl text-[#F5F0EB] mb-3" style={{ fontFamily: 'var(--font-dm-serif)' }}>
             Libretto not found
@@ -130,7 +131,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
   if (!data) {
     return (
-      <main className="min-h-screen bg-[#0D0B0E] flex items-center justify-center">
+      <main className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3 text-[#9B8E99] text-base">
           <Loader2 className="h-5 w-5 animate-spin text-[#E8A87C]" />
           Loading...
@@ -143,7 +144,14 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
 
   return (
-    <main className="min-h-screen bg-[#0D0B0E] text-[#F5F0EB]">
+    <main className="min-h-screen text-[#F5F0EB]">
+      {/* Nav wordmark */}
+      <div className="text-center pt-8">
+        <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+          LIBRETTO
+        </Link>
+      </div>
+
       {/* Album Header */}
       <section className="relative overflow-hidden">
         {/* Background blur from cover image */}
