@@ -93,6 +93,39 @@ function inferMusicStyle(
   return { genres: genres.slice(0, 2), energy, vocal };
 }
 
+/**
+ * Check if all 3 tracks are terminal (complete/failed) and album exists.
+ * If so, finalize project status to 'complete'.
+ */
+async function maybeFinalizeProject(projectId: string): Promise<void> {
+  const db = getServiceSupabase();
+
+  const { data: tracks } = await db
+    .from('tracks')
+    .select('status')
+    .eq('project_id', projectId);
+
+  const allTerminal = tracks?.length === 3 &&
+    tracks.every((t: { status: string }) => t.status === 'complete' || t.status === 'failed');
+
+  if (!allTerminal) return;
+
+  const { data: album } = await db
+    .from('albums')
+    .select('id')
+    .eq('project_id', projectId)
+    .single();
+
+  if (!album) return;
+
+  await db.from('projects').update({
+    status: 'complete',
+    updated_at: new Date().toISOString(),
+  }).eq('id', projectId);
+
+  console.log(`[generate-track] All tracks terminal + album exists — project ${projectId} finalized`);
+}
+
 export async function generateTrackFromMoment(
   projectId: string,
   momentIndex: number,
@@ -185,6 +218,7 @@ export async function generateTrackFromMoment(
       }).eq('project_id', projectId).eq('track_number', trackNum);
 
       console.log(`[generate-track] Track ${trackNum}: Complete (${result.duration}s)`);
+      await maybeFinalizeProject(projectId);
     } catch (audioErr) {
       console.error(`[generate-track] Track ${trackNum}: Audio failed, retrying with simpler style...`);
 
@@ -204,6 +238,7 @@ export async function generateTrackFromMoment(
         }).eq('project_id', projectId).eq('track_number', trackNum);
 
         console.log(`[generate-track] Track ${trackNum}: Retry succeeded`);
+        await maybeFinalizeProject(projectId);
       } catch (retryErr) {
         console.error(`[generate-track] Track ${trackNum}: Retry also failed:`, retryErr);
         await db.from('tracks').update({
@@ -211,6 +246,7 @@ export async function generateTrackFromMoment(
           retry_count: 1,
           updated_at: new Date().toISOString(),
         }).eq('project_id', projectId).eq('track_number', trackNum);
+        await maybeFinalizeProject(projectId);
       }
     }
   } catch (err) {
