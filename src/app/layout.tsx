@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Lora, DM_Serif_Display } from "next/font/google";
+import { SheetMusicBg } from "@/components/SheetMusicBg";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,10 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${lora.variable} ${dmSerif.variable} antialiased`}
+        className={`${inter.variable} ${lora.variable} ${dmSerif.variable} antialiased bg-[#0D0B0E] relative min-h-screen`}
         style={{ fontFamily: 'var(--font-inter)' }}
       >
-        {children}
+        <SheetMusicBg />
+        <div className="relative">{children}</div>
       </body>
     </html>
   );

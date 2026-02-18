@@ -232,10 +232,11 @@
 
 /* ===== Sheet Music Background ===== */
 .sheet-music-bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  z-index: 0;
   color: rgba(240, 184, 138, 0.6);
   filter: blur(1.5px);
   mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 70%);
