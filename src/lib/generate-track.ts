@@ -33,21 +33,30 @@ async function maybeFinalizeProject(projectId: string): Promise<void> {
 
   const { data: tracks } = await db
     .from('tracks')
-    .select('status')
+    .select('status, cover_image_url')
     .eq('project_id', projectId);
 
   const allTerminal = tracks?.length === 3 &&
     tracks.every((t: { status: string }) => t.status === 'complete' || t.status === 'failed');
 
-  if (!allTerminal) return;
-
   const { data: album } = await db
     .from('albums')
-    .select('id')
+    .select('id, cover_image_url')
     .eq('project_id', projectId)
     .single();
 
-  if (!album) return;
+  // Backfill album cover if missing but a track has one
+  if (album && !album.cover_image_url) {
+    const coverTrack = tracks?.find((t: { cover_image_url: string | null }) => t.cover_image_url);
+    if (coverTrack) {
+      await db.from('albums').update({
+        cover_image_url: coverTrack.cover_image_url,
+      }).eq('id', album.id);
+      console.log(`[generate-track] Backfilled album cover from track`);
+    }
+  }
+
+  if (!allTerminal || !album) return;
 
   await db.from('projects').update({
     status: 'complete',
