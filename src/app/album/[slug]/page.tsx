@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
 import JSZip from 'jszip';
 import { TrackCard } from '@/components/TrackCard';
-import { Share2, Check, Loader2, Download } from 'lucide-react';
+import { Share2, Check, Loader2, Download, PlusCircle } from 'lucide-react';
 import type { AlbumPageData, Track } from '@/lib/types';
 
 export default function AlbumPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -25,7 +25,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       })
       .then(albumData => {
         setData(albumData);
-        // Start reveal ceremony after data loads
         setTimeout(() => setRevealed(true), 200);
       })
       .catch(() => setError('Album not found'));
@@ -73,7 +72,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       const { album, tracks } = data;
       const completeTracks = tracks.filter(t => t.status === 'complete' && t.audio_url);
 
-      // Fetch and add each track
       for (const track of completeTracks) {
         try {
           const res = await fetch(track.audio_url!);
@@ -86,7 +84,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         }
       }
 
-      // Fetch and add cover art
       if (album.cover_image_url) {
         try {
           const res = await fetch(album.cover_image_url);
@@ -98,7 +95,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         }
       }
 
-      // Generate and trigger download
       const content = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(content);
       const a = document.createElement('a');
@@ -115,6 +111,10 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       setDownloading(false);
     }
   }, [data]);
+
+  const handleCreateAnother = () => {
+    sessionStorage.removeItem('libretto_project_id');
+  };
 
   if (error) {
     return (
@@ -154,7 +154,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
       {/* Album Header */}
       <section className="relative overflow-hidden">
-        {/* Background blur from cover image */}
         {album.cover_image_url && (
           <div
             className="absolute inset-0 opacity-15 blur-3xl scale-110"
@@ -169,7 +168,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
         <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-12">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-8">
-            {/* Cover image with reveal ceremony */}
             {album.cover_image_url ? (
               <img
                 src={album.cover_image_url}
@@ -245,6 +243,26 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
             <TrackCard key={track.id} track={track} index={i} />
           ))}
         </div>
+
+        {/* Prominent download button after tracks */}
+        {hasCompleteTracks && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="inline-flex items-center gap-3 px-10 py-4 rounded-full bg-[#E8A87C] text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#E8A87C]/25 disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {downloading ? (
+                <><Loader2 className="h-5 w-5 animate-spin" /> Preparing your download...</>
+              ) : (
+                <><Download className="h-5 w-5" /> Download your album</>
+              )}
+            </button>
+            <p className="text-[#9B8E99]/50 text-xs mt-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
+              All tracks + cover art as a .zip file
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Biography */}
@@ -265,6 +283,33 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
           </div>
         </section>
       )}
+
+      {/* Bottom CTA: Download + Create Another */}
+      <section className="max-w-[680px] mx-auto px-6 py-12">
+        <div className="border-t border-white/[0.04] pt-12 flex flex-col items-center gap-4">
+          {hasCompleteTracks && (
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="inline-flex items-center gap-3 px-10 py-4 rounded-full bg-[#E8A87C] text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#E8A87C]/25 disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {downloading ? (
+                <><Loader2 className="h-5 w-5 animate-spin" /> Preparing your download...</>
+              ) : (
+                <><Download className="h-5 w-5" /> Save your album</>
+              )}
+            </button>
+          )}
+          <Link
+            href="/create"
+            onClick={handleCreateAnother}
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-[#E8A87C]/20 text-[#E8A87C] hover:bg-[#E8A87C]/10 transition-colors text-sm"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Create another libretto
+          </Link>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="border-t border-white/[0.04] py-8 text-center">

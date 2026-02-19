@@ -62,8 +62,8 @@ export default function LandingPage() {
             {[
               {
                 note: <span className="text-2xl leading-none">♪</span>,
-                title: 'Share your moments',
-                desc: 'Tell us about three defining moments — where it began, what shifted everything, and where you are now.',
+                title: 'Pick your sound',
+                desc: 'Choose your genre, era, and influences — then share three defining moments from your life.',
               },
               {
                 note: <span className="text-2xl leading-none">♫</span>,
