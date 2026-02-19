@@ -8,7 +8,28 @@ const GENRES = [
   'Hip-Hop', 'Rock', 'Electronic', 'Country', 'Jazz',
 ];
 
-const ERA_STOPS = ['60s/70s', '80s', '90s', '00s', '2010s', 'Now'];
+const ERA_LABELS = ['60s/70s', '80s', '90s', '00s', '2010s', 'Now'];
+
+function eraFromSlider(value: number): string {
+  // 0-100 maps across 6 stops (0, 20, 40, 60, 80, 100)
+  const segments = [
+    { start: 0, end: 20, labels: ['60s/70s', 'Late 70s'] },
+    { start: 20, end: 40, labels: ['80s', 'Late 80s'] },
+    { start: 40, end: 60, labels: ['90s', 'Late 90s'] },
+    { start: 60, end: 80, labels: ['00s', 'Late 00s'] },
+    { start: 80, end: 100, labels: ['2010s', 'Now'] },
+  ];
+
+  for (const seg of segments) {
+    if (value <= seg.end) {
+      const pct = (value - seg.start) / (seg.end - seg.start);
+      if (pct < 0.25) return `Early ${seg.labels[0]}`;
+      if (pct < 0.75) return seg.labels[0];
+      return seg.labels[1];
+    }
+  }
+  return 'Now';
+}
 
 interface ProfilePickerProps {
   onSubmit: (data: { genres: string[]; era: string; artistReference: string }) => void;
@@ -17,7 +38,7 @@ interface ProfilePickerProps {
 
 export function ProfilePicker({ onSubmit, isSubmitting }: ProfilePickerProps) {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [eraIndex, setEraIndex] = useState(3); // default to '00s'
+  const [eraValue, setEraValue] = useState(60); // default to '00s' region
   const [artistReference, setArtistReference] = useState('');
 
   const toggleGenre = (genre: string) => {
@@ -34,7 +55,7 @@ export function ProfilePicker({ onSubmit, isSubmitting }: ProfilePickerProps) {
     const count = Math.random() > 0.5 ? 2 : 1;
     setSelectedGenres(shuffled.slice(0, count));
     // Random era
-    setEraIndex(Math.floor(Math.random() * ERA_STOPS.length));
+    setEraValue(Math.floor(Math.random() * 101));
     // Random artist from a fun pool
     const artists = [
       'Adele', 'The Weeknd', 'Bon Iver', 'Taylor Swift', 'Frank Ocean',
@@ -45,7 +66,7 @@ export function ProfilePicker({ onSubmit, isSubmitting }: ProfilePickerProps) {
   };
 
   const canSubmit = selectedGenres.length > 0;
-  const currentEra = ERA_STOPS[eraIndex];
+  const currentEra = eraFromSlider(eraValue);
 
   return (
     <div className="gentle-fade-in max-w-[640px] mx-auto">
@@ -92,24 +113,25 @@ export function ProfilePicker({ onSubmit, isSubmitting }: ProfilePickerProps) {
           What era?
         </p>
         <div className="px-1">
+          <div className="text-center mb-3">
+            <span className="text-[#E8A87C] text-sm font-medium">{currentEra}</span>
+          </div>
           <input
             type="range"
             min={0}
-            max={ERA_STOPS.length - 1}
-            value={eraIndex}
-            onChange={e => setEraIndex(Number(e.target.value))}
+            max={100}
+            value={eraValue}
+            onChange={e => setEraValue(Number(e.target.value))}
             className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#E8A87C] bg-white/[0.1]"
             style={{
-              background: `linear-gradient(to right, #E8A87C 0%, #E8A87C ${(eraIndex / (ERA_STOPS.length - 1)) * 100}%, rgba(255,255,255,0.1) ${(eraIndex / (ERA_STOPS.length - 1)) * 100}%, rgba(255,255,255,0.1) 100%)`,
+              background: `linear-gradient(to right, #E8A87C 0%, #E8A87C ${eraValue}%, rgba(255,255,255,0.1) ${eraValue}%, rgba(255,255,255,0.1) 100%)`,
             }}
           />
           <div className="flex justify-between mt-2">
-            {ERA_STOPS.map((label, i) => (
+            {ERA_LABELS.map(label => (
               <span
                 key={label}
-                className={`text-xs transition-colors ${
-                  i === eraIndex ? 'text-[#E8A87C] font-medium' : 'text-[#B8A9C9]/50'
-                }`}
+                className="text-xs text-[#B8A9C9]/50"
               >
                 {label}
               </span>
