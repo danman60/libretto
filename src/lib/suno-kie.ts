@@ -66,7 +66,7 @@ export async function submitKieGeneration(
   stylePrompt: string,
   title: string,
   instrumental: boolean = false,
-  model: string = 'V4_5'
+  model: string = 'V5'
 ): Promise<string> {
   const body: KieGenerateRequest = {
     customMode: true,

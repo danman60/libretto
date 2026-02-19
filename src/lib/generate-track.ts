@@ -1,6 +1,6 @@
 /**
  * V2: Generate a single track from one moment.
- * AI infers music style from the story text + emotion + narrative role.
+ * Uses music_profile from project (set in step 0) + track character per narrative role.
  * ~75s total (lyrics ~10s + audio ~65s), fits in one Vercel function.
  */
 
@@ -9,7 +9,7 @@ import { callDeepSeek } from './deepseek';
 import { generateTrackViaKie } from './suno-kie';
 import { sanitizeText } from './sanitize';
 import { buildMomentLyricsPrompt, buildMomentStylePrompt } from './prompts';
-import type { Emotion, NarrativeRole } from './types';
+import type { Emotion, MusicProfile, NarrativeRole } from './types';
 
 const ROLE_MAP: Record<number, NarrativeRole> = {
   1: 'origin',
@@ -22,76 +22,6 @@ const ROLE_TITLES: Record<NarrativeRole, string> = {
   turning_point: 'The Shift',
   resolution: 'Where I Stand',
 };
-
-/**
- * Infer music style from the story content + emotion + narrative role.
- * This replaces user-facing genre/energy/vocal controls — the AI "knows" them.
- */
-function inferMusicStyle(
-  story: string,
-  emotion: Emotion,
-  role: NarrativeRole
-): { genres: string[]; energy: 'calm' | 'mid' | 'dynamic'; vocal: 'vocals' | 'instrumental' | 'mixed' } {
-  const lower = story.toLowerCase();
-
-  // --- Energy inference from narrative role + emotional intensity ---
-  const highEnergyEmotions: Emotion[] = ['anger', 'joy', 'surprise', 'pride'];
-  const lowEnergyEmotions: Emotion[] = ['grief', 'nostalgia', 'relief', 'fear'];
-
-  let energy: 'calm' | 'mid' | 'dynamic';
-  if (role === 'origin') {
-    energy = lowEnergyEmotions.includes(emotion) ? 'calm' : 'mid';
-  } else if (role === 'turning_point') {
-    energy = highEnergyEmotions.includes(emotion) ? 'dynamic' : 'mid';
-  } else {
-    // resolution — tends toward mid/calm, hopeful
-    energy = emotion === 'joy' || emotion === 'pride' ? 'mid' : 'calm';
-  }
-
-  // --- Genre inference from story keywords + emotion ---
-  const genres: string[] = [];
-
-  // Check for musical keywords in their story
-  const genreSignals: [string[], string][] = [
-    [['guitar', 'campfire', 'road', 'highway', 'truck', 'farm', 'country'], 'Folk'],
-    [['club', 'dance', 'beat', 'night out', 'party', 'rave'], 'Electronic'],
-    [['church', 'gospel', 'soul', 'mama', 'grandmother', 'prayer'], 'R&B'],
-    [['city', 'street', 'hustle', 'grind', 'blocks', 'hood'], 'Hip-Hop'],
-    [['rain', 'quiet', 'alone', 'midnight', 'whisper', 'silence'], 'Indie'],
-    [['ocean', 'mountain', 'nature', 'forest', 'river', 'stars'], 'Folk'],
-    [['fight', 'scream', 'rage', 'loud', 'rebel'], 'Rock'],
-    [['classical', 'piano', 'orchestra', 'symphony'], 'Classical'],
-  ];
-
-  for (const [keywords, genre] of genreSignals) {
-    if (keywords.some(kw => lower.includes(kw)) && !genres.includes(genre)) {
-      genres.push(genre);
-      if (genres.length >= 2) break;
-    }
-  }
-
-  // Emotion-based fallbacks if no keyword matches
-  if (genres.length === 0) {
-    const emotionGenres: Record<Emotion, string[]> = {
-      joy: ['Pop', 'Indie'],
-      grief: ['Indie', 'Folk'],
-      anger: ['Rock', 'Hip-Hop'],
-      hope: ['Pop', 'Folk'],
-      fear: ['Indie', 'Electronic'],
-      love: ['R&B', 'Pop'],
-      surprise: ['Pop', 'Electronic'],
-      nostalgia: ['Folk', 'Indie'],
-      pride: ['Pop', 'R&B'],
-      relief: ['Folk', 'Indie'],
-    };
-    genres.push(...(emotionGenres[emotion] || ['Pop', 'Indie']));
-  }
-
-  // Always vocals — these are personal stories
-  const vocal: 'vocals' | 'instrumental' | 'mixed' = 'vocals';
-
-  return { genres: genres.slice(0, 2), energy, vocal };
-}
 
 /**
  * Check if all 3 tracks are terminal (complete/failed) and album exists.
@@ -137,12 +67,17 @@ export async function generateTrackFromMoment(
   const role = ROLE_MAP[momentIndex];
   const trackNum = momentIndex;
 
-  // Infer music style from their words
-  const { genres, energy, vocal } = inferMusicStyle(story, emotion, role);
-  console.log(`[generate-track] Track ${trackNum} (${role}): inferred genres=${genres.join(',')}, energy=${energy}, vocal=${vocal}`);
+  // Load music profile from project (set in step 0)
+  const { data: project } = await db
+    .from('projects')
+    .select('music_profile')
+    .eq('id', projectId)
+    .single();
+
+  const musicProfile: MusicProfile | null = project?.music_profile || null;
+  console.log(`[generate-track] Track ${trackNum} (${role}): profile=${JSON.stringify(musicProfile)}`);
 
   try {
-    // Sanitize the story text
     const sanitizedStory = sanitizeText(story, allowNames);
 
     // Update project status
@@ -183,10 +118,10 @@ export async function generateTrackFromMoment(
     // Generate lyrics via DeepSeek (~10s)
     console.log(`[generate-track] Track ${trackNum}: Generating lyrics...`);
     const lyricsPrompt = buildMomentLyricsPrompt(
-      trackNum, role, sanitizedStory, emotion, genres, energy, vocal, allowNames
+      trackNum, role, sanitizedStory, emotion, musicProfile, allowNames
     );
     const lyrics = await callDeepSeek(lyricsPrompt, { temperature: 0.85, maxTokens: 1500 });
-    const stylePrompt = buildMomentStylePrompt(role, emotion, genres, energy, vocal);
+    const stylePrompt = buildMomentStylePrompt(role, emotion, musicProfile);
 
     await db.from('tracks').update({
       lyrics,
@@ -196,6 +131,7 @@ export async function generateTrackFromMoment(
     }).eq('project_id', projectId).eq('track_number', trackNum);
 
     console.log(`[generate-track] Track ${trackNum}: Lyrics done (${lyrics.length} chars)`);
+    console.log(`[generate-track] Track ${trackNum}: Style prompt: ${stylePrompt}`);
 
     // Generate audio via KIE (~65s)
     console.log(`[generate-track] Track ${trackNum}: Generating audio...`);
@@ -204,9 +140,8 @@ export async function generateTrackFromMoment(
       updated_at: new Date().toISOString(),
     }).eq('project_id', projectId).eq('track_number', trackNum);
 
-    const isInstrumental = vocal === 'instrumental';
     try {
-      const result = await generateTrackViaKie(lyrics, stylePrompt, ROLE_TITLES[role], isInstrumental);
+      const result = await generateTrackViaKie(lyrics, stylePrompt, ROLE_TITLES[role]);
 
       await db.from('tracks').update({
         suno_task_id: result.id,
@@ -224,8 +159,8 @@ export async function generateTrackFromMoment(
 
       // Retry with simpler style
       try {
-        const simpleStyle = genres[0] || 'pop';
-        const retryResult = await generateTrackViaKie(lyrics, simpleStyle, ROLE_TITLES[role], isInstrumental);
+        const simpleStyle = musicProfile?.genre || 'pop';
+        const retryResult = await generateTrackViaKie(lyrics, simpleStyle, ROLE_TITLES[role]);
 
         await db.from('tracks').update({
           suno_task_id: retryResult.id,

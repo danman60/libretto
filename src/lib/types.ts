@@ -1,11 +1,18 @@
 // ===== Database Types =====
 
+export interface MusicProfile {
+  genre: string;
+  era: string;
+  artist_reference?: string;
+}
+
 export interface Project {
   id: string;
   session_token: string;
   status: ProjectStatus;
   version: number;
   allow_real_names: boolean;
+  music_profile: MusicProfile | null;
   created_at: string;
   updated_at: string;
 }

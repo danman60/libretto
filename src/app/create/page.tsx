@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ProfilePicker } from '@/components/ProfilePicker';
 import { MomentInput } from '@/components/MomentInput';
 import { TrackCard } from '@/components/TrackCard';
 import { Loader2 } from 'lucide-react';
@@ -11,7 +12,8 @@ import type { MomentFormState, Track, Album } from '@/lib/types';
 export default function CreatePage() {
   const router = useRouter();
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [currentMoment, setCurrentMoment] = useState(1);
+  // step 0 = profile picker, 1-3 = moments, 4 = waiting
+  const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [album, setAlbum] = useState<Album | null>(null);
@@ -47,7 +49,6 @@ export default function CreatePage() {
         setTracks(data.tracks || []);
         if (data.album) setAlbum(data.album);
 
-        // Check if everything is done
         const allTracksComplete = data.tracks?.length === 3 &&
           data.tracks.every((t: Track) => t.status === 'complete' || t.status === 'failed');
         const hasAlbum = !!data.album;
@@ -55,7 +56,6 @@ export default function CreatePage() {
         if (allTracksComplete && hasAlbum) {
           setAllDone(true);
           clearInterval(interval);
-          // Redirect to album page after brief delay
           if (data.album.share_slug) {
             setTimeout(() => {
               router.push(`/album/${data.album.share_slug}`);
@@ -72,30 +72,52 @@ export default function CreatePage() {
 
   // Start polling once moment 1 is submitted
   useEffect(() => {
-    if (currentMoment > 1 || tracks.length > 0) {
+    if (currentStep > 1 || tracks.length > 0) {
       return pollStatus();
     }
-  }, [currentMoment, tracks.length, pollStatus]);
+  }, [currentStep, tracks.length, pollStatus]);
 
-  const handleMomentSubmit = async (data: MomentFormState) => {
-    if (!projectId || !data.emotion) return;
+  const handleProfileSubmit = async (data: { genre: string; era: string; artistReference: string }) => {
+    if (!projectId) return;
 
     setIsSubmitting(true);
     try {
-      // Fire track generation — AI infers music style from story
+      await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          genre: data.genre,
+          era: data.era,
+          artistReference: data.artistReference || undefined,
+        }),
+      });
+      setCurrentStep(1);
+    } catch (err) {
+      console.error('Profile submit failed:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleMomentSubmit = async (data: MomentFormState) => {
+    if (!projectId || !data.emotion) return;
+    const momentIndex = currentStep; // 1, 2, or 3
+
+    setIsSubmitting(true);
+    try {
       await fetch('/api/generate-track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          momentIndex: currentMoment,
+          momentIndex,
           story: data.story,
           emotion: data.emotion,
         }),
       });
 
-      // If this is moment 3, also fire meta generation
-      if (currentMoment === 3) {
+      if (momentIndex === 3) {
         await fetch('/api/generate-meta', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -103,11 +125,10 @@ export default function CreatePage() {
         });
       }
 
-      if (currentMoment < 3) {
-        setCurrentMoment(prev => prev + 1);
+      if (momentIndex < 3) {
+        setCurrentStep(prev => prev + 1);
       } else {
-        // All moments submitted — stay on page and wait for completion
-        setCurrentMoment(4); // sentinel: all submitted
+        setCurrentStep(4); // waiting screen
       }
     } catch (err) {
       console.error('Submit failed:', err);
@@ -117,7 +138,7 @@ export default function CreatePage() {
   };
 
   // Waiting screen after all 3 moments
-  if (currentMoment === 4) {
+  if (currentStep === 4) {
     return (
       <main className="min-h-screen text-[#F5F0EB]">
         <div className="text-center pt-8 mb-4">
@@ -144,7 +165,6 @@ export default function CreatePage() {
             )}
           </div>
 
-          {/* 3-column track grid */}
           {tracks.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {tracks.map((track, i) => (
@@ -157,6 +177,9 @@ export default function CreatePage() {
     );
   }
 
+  // Progress dot labels: profile(0), moment1(1), moment2(2), moment3(3)
+  const totalDots = 4;
+
   return (
     <main className="min-h-screen text-[#F5F0EB]">
       <div className="text-center pt-8 mb-4">
@@ -165,15 +188,15 @@ export default function CreatePage() {
         </Link>
       </div>
       <div className="px-6 py-12">
-        {/* Progress dots */}
+        {/* Progress dots — 4 dots now */}
         <div className="flex justify-center gap-2 mb-12">
-          {[1, 2, 3].map(i => (
+          {Array.from({ length: totalDots }, (_, i) => (
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                i === currentMoment
+                i === currentStep
                   ? 'bg-[#E8A87C] scale-125'
-                  : i < currentMoment
+                  : i < currentStep
                     ? 'bg-[#8FBC8B]'
                     : 'bg-white/[0.1]'
               }`}
@@ -182,7 +205,7 @@ export default function CreatePage() {
         </div>
 
         {/* Track status indicators between moments */}
-        {tracks.length > 0 && currentMoment <= 3 && (
+        {tracks.length > 0 && currentStep >= 1 && currentStep <= 3 && (
           <div className="max-w-[640px] mx-auto mb-8">
             <div className="flex gap-2 justify-center">
               {tracks.map(track => (
@@ -209,13 +232,23 @@ export default function CreatePage() {
           </div>
         )}
 
-        {/* Moment input */}
-        <MomentInput
-          key={currentMoment}
-          momentIndex={currentMoment}
-          onSubmit={handleMomentSubmit}
-          isSubmitting={isSubmitting}
-        />
+        {/* Step 0: Profile picker */}
+        {currentStep === 0 && (
+          <ProfilePicker
+            onSubmit={handleProfileSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
+
+        {/* Steps 1-3: Moment input */}
+        {currentStep >= 1 && currentStep <= 3 && (
+          <MomentInput
+            key={currentStep}
+            momentIndex={currentStep}
+            onSubmit={handleMomentSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
       </div>
     </main>
   );

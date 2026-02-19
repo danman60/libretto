@@ -1,31 +1,63 @@
-import type { Emotion, LifeMap, MusicPreferences, NarrativeRole } from './types';
+import type { Emotion, LifeMap, MusicPreferences, MusicProfile, NarrativeRole } from './types';
 
-// ===== V2 Prompts (3-moment flow) =====
+// ===== Track Character System =====
+
+interface TrackCharacter {
+  tempo: string;
+  key: string;
+  arrangement: string;
+  energy: string;
+}
+
+const TRACK_CHARACTERS: Record<NarrativeRole, TrackCharacter> = {
+  origin: {
+    tempo: 'slower tempo',
+    key: 'minor key lean',
+    arrangement: 'stripped-back, intimate arrangement',
+    energy: 'reflective, introspective',
+  },
+  turning_point: {
+    tempo: 'mid-to-uptempo',
+    key: 'major key',
+    arrangement: 'fuller arrangement, building production',
+    energy: 'energetic, driving',
+  },
+  resolution: {
+    tempo: 'building, anthemic tempo',
+    key: 'major key',
+    arrangement: 'full arrangement, soaring production',
+    energy: 'triumphant, cathartic, powerful',
+  },
+};
+
+// ===== V2 Prompts (3-moment flow with music profile) =====
 
 export function buildMomentLyricsPrompt(
   trackNum: number,
   role: NarrativeRole,
   story: string,
   emotion: Emotion,
-  genres: string[],
-  energy: 'calm' | 'mid' | 'dynamic',
-  vocal: 'vocals' | 'instrumental' | 'mixed',
+  profile: MusicProfile | null,
   allowNames: boolean
 ): string {
   const roleDescriptions: Record<NarrativeRole, string> = {
-    origin: 'This is the ORIGIN track — where the story begins. Focus on roots, innocence, the world before change.',
-    turning_point: 'This is the TURNING POINT track — the moment of upheaval, realization, or transformation.',
-    resolution: 'This is the RESOLUTION track — where they are now, who they have become, what they carry forward.',
+    origin: 'This is the ORIGIN track — where the story begins. Focus on roots, the world before change. Musically: slower, stripped-back, reflective.',
+    turning_point: 'This is the TURNING POINT track — the moment of upheaval, realization, or transformation. Musically: mid-to-uptempo, energetic, driving.',
+    resolution: 'This is the RESOLUTION track — where they are now, who they have become. Musically: building, anthemic, triumphant.',
   };
 
-  const vocalNote = vocal === 'instrumental'
-    ? 'This track will be INSTRUMENTAL — write evocative scene-setting text instead of sung lyrics, to guide the mood.'
+  const character = TRACK_CHARACTERS[role];
+  const genre = profile?.genre || 'Pop';
+  const era = profile?.era || 'Timeless';
+  const artistRef = profile?.artist_reference
+    ? `\nArtist reference: ${profile.artist_reference} — channel their songwriting sensibility, melodic style, and vocal energy.`
     : '';
 
-  return `You are a deeply empathetic songwriter who has just listened to someone share a defining moment from their life. You're writing Track ${trackNum} of a 3-track concept album that IS their life story.
+  return `You are a hit songwriter crafting Track ${trackNum} of a 3-track concept album that IS someone's life story. Write a CATCHY, singable song — the kind that gets stuck in your head.
 
-## Track Role
+## Track Role & Character
 ${roleDescriptions[role]}
+Tempo: ${character.tempo} | Key feel: ${character.key} | Arrangement: ${character.arrangement}
 
 ## Their Words — Read Them Carefully
 "${story}"
@@ -33,23 +65,32 @@ ${roleDescriptions[role]}
 ## The Feeling They Named
 ${emotion}
 
-## Music Style (inferred from their story)
-Genre: ${genres.join(', ') || 'Pop'}
-Energy: ${energy}
-${vocalNote}
+## Music Profile
+Genre: ${genre}
+Era: ${era}${artistRef}
 
-## How to Write This
+## Song Structure (MANDATORY)
+[Verse 1]
+[Chorus]
+[Verse 2]
+[Chorus]
+[Bridge]
+[Chorus]
 
-You must write as if you KNOW this person. Not from a distance — from inside the feeling.
+The chorus appears THREE times and must be IDENTICAL every time. Copy-paste it exactly.
 
-1. **Mirror their language.** Find the most vivid phrase, image, or detail in their story and weave it into the chorus. If they mentioned "the kitchen light" or "that highway in August" — those exact images belong in the song.
-2. **Write in first person** — this is THEIR voice singing back to them.
-3. **Structure:** [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro]
-4. **The chorus must feel like the emotional core** — the single sentence they'd whisper to themselves at 2am about this moment.
-5. **Be specific, not generic.** "The crack in the ceiling above my bed" beats "the weight of the world." Their details > your metaphors.
-6. **Emotional truth of ${emotion}** — don't explain the emotion, embody it. Show it in the rhythm, the word choice, the breathing room between lines.
-7. **Keep it concise** — under 250 words. Short lines. Let silence do work too.
-8. ${allowNames ? 'You may use real names if they appear in the story.' : 'Do NOT use real names — transform them into intimate pronouns or poetic substitutes ("you", "the one who", "that voice").'}
+## Songwriting Rules
+
+1. **HOOK:** The first line of the chorus = the hook. It should be singable, memorable, and could be the song title. Think "Someone Like You", "Shake It Off", "Lean On Me" — simple, rhythmic, emotional.
+2. **POP CRAFT:** Use short words. Natural rhymes. Rhythmic phrasing with bounce. Lines should feel good in your mouth when you sing them.
+3. **REPETITION:** The chorus is the emotional anchor — same words, same melody target, all three times.
+4. **MIRROR THEIR LANGUAGE:** Find the most vivid phrase, image, or detail in their story and weave it into the song. If they mentioned "the kitchen light" or "that highway in August" — those images belong in the song.
+5. **FIRST PERSON** — this is THEIR voice singing back to them.
+6. **BE SPECIFIC, NOT GENERIC.** "The crack in the ceiling above my bed" beats "the weight of the world." Their details > your metaphors.
+7. **GENRE CONSISTENCY:** Write in the style of ${era} ${genre}. Match the vocal energy and lyrical conventions of this genre.
+8. **EMOTIONAL TRUTH of ${emotion}** — don't explain the emotion, embody it through word choice, rhythm, and imagery.
+9. **Keep it concise** — under 280 words total. Let the music breathe.
+10. ${allowNames ? 'You may use real names if they appear in the story.' : 'Do NOT use real names — use intimate pronouns or poetic substitutes ("you", "the one who", "that voice").'}
 
 Respond with ONLY the lyrics text (with structure tags). No explanations, no preamble.`;
 }
@@ -57,15 +98,11 @@ Respond with ONLY the lyrics text (with structure tags). No explanations, no pre
 export function buildMomentStylePrompt(
   role: NarrativeRole,
   emotion: Emotion,
-  genres: string[],
-  energy: 'calm' | 'mid' | 'dynamic',
-  vocal: 'vocals' | 'instrumental' | 'mixed'
+  profile: MusicProfile | null
 ): string {
-  const moodMap: Record<NarrativeRole, string> = {
-    origin: 'nostalgic, warm, intimate',
-    turning_point: 'intense, building, emotional',
-    resolution: 'hopeful, peaceful, triumphant',
-  };
+  const character = TRACK_CHARACTERS[role];
+  const genre = profile?.genre || 'Pop';
+  const era = profile?.era || 'Timeless';
 
   const emotionMoods: Record<Emotion, string> = {
     joy: 'uplifting, bright',
@@ -73,7 +110,7 @@ export function buildMomentStylePrompt(
     anger: 'raw, powerful',
     hope: 'soaring, warm',
     fear: 'haunting, atmospheric',
-    love: 'intimate, heartfelt',
+    love: 'heartfelt, soulful',
     surprise: 'dynamic, unexpected',
     nostalgia: 'wistful, bittersweet',
     pride: 'triumphant, bold',
@@ -82,15 +119,25 @@ export function buildMomentStylePrompt(
 
   const parts: string[] = [];
 
-  parts.push(genres.slice(0, 2).join(' ') || 'Pop');
-  parts.push(moodMap[role]);
+  // Era + genre
+  if (era !== 'Timeless') parts.push(`${era} ${genre}`);
+  else parts.push(genre);
+
+  // Track character energy
+  parts.push(character.tempo);
+  parts.push(character.energy);
+  parts.push(character.key);
+
+  // Emotion mood
   parts.push(emotionMoods[emotion]);
 
-  if (energy === 'calm') parts.push('slow tempo');
-  else if (energy === 'dynamic') parts.push('energetic');
-  else parts.push('mid-tempo');
+  // Always catchy
+  parts.push('catchy, melodic, hook-driven');
 
-  if (vocal === 'instrumental') parts.push('instrumental');
+  // Artist reference as style hint
+  if (profile?.artist_reference) {
+    parts.push(`inspired by ${profile.artist_reference}`);
+  }
 
   return parts.join(', ');
 }
