@@ -9,6 +9,7 @@ import { callDeepSeek } from './deepseek';
 import { generateTrackViaKie } from './suno-kie';
 import { sanitizeText } from './sanitize';
 import { buildMomentLyricsPrompt, buildMomentStylePrompt } from './prompts';
+import { logGeneration } from './log-generation';
 import type { Emotion, MusicProfile, NarrativeRole } from './types';
 
 const ROLE_MAP: Record<number, NarrativeRole> = {
@@ -117,11 +118,19 @@ export async function generateTrackFromMoment(
 
     // Generate lyrics via DeepSeek (~10s)
     console.log(`[generate-track] Track ${trackNum}: Generating lyrics...`);
+    const lyricsStart = Date.now();
+    await logGeneration({ projectId, trackNumber: trackNum, event: 'lyrics_started', model: 'deepseek-chat' });
+
     const lyricsPrompt = buildMomentLyricsPrompt(
       trackNum, role, sanitizedStory, emotion, musicProfile, allowNames
     );
     const lyrics = await callDeepSeek(lyricsPrompt, { temperature: 0.85, maxTokens: 1500 });
     const stylePrompt = buildMomentStylePrompt(role, emotion, musicProfile);
+
+    await logGeneration({
+      projectId, trackNumber: trackNum, event: 'lyrics_done',
+      durationMs: Date.now() - lyricsStart, model: 'deepseek-chat',
+    });
 
     await db.from('tracks').update({
       lyrics,
@@ -135,6 +144,9 @@ export async function generateTrackFromMoment(
 
     // Generate audio via KIE (~65s)
     console.log(`[generate-track] Track ${trackNum}: Generating audio...`);
+    const audioStart = Date.now();
+    await logGeneration({ projectId, trackNumber: trackNum, event: 'audio_started', stylePrompt, model: 'kie-suno' });
+
     await db.from('tracks').update({
       status: 'generating_audio',
       updated_at: new Date().toISOString(),
@@ -142,6 +154,11 @@ export async function generateTrackFromMoment(
 
     try {
       const result = await generateTrackViaKie(lyrics, stylePrompt, ROLE_TITLES[role]);
+
+      await logGeneration({
+        projectId, trackNumber: trackNum, event: 'audio_done',
+        durationMs: Date.now() - audioStart, stylePrompt, model: 'kie-suno',
+      });
 
       await db.from('tracks').update({
         suno_task_id: result.id,
@@ -156,11 +173,22 @@ export async function generateTrackFromMoment(
       await maybeFinalizeProject(projectId);
     } catch (audioErr) {
       console.error(`[generate-track] Track ${trackNum}: Audio failed, retrying with simpler style...`);
+      await logGeneration({
+        projectId, trackNumber: trackNum, event: 'audio_retry',
+        durationMs: Date.now() - audioStart, stylePrompt, model: 'kie-suno',
+        errorMessage: audioErr instanceof Error ? audioErr.message : String(audioErr),
+      });
 
       // Retry with simpler style
+      const retryStart = Date.now();
       try {
         const simpleStyle = musicProfile?.genres?.[0] || 'pop';
         const retryResult = await generateTrackViaKie(lyrics, simpleStyle, ROLE_TITLES[role]);
+
+        await logGeneration({
+          projectId, trackNumber: trackNum, event: 'audio_done',
+          durationMs: Date.now() - retryStart, stylePrompt: simpleStyle, model: 'kie-suno',
+        });
 
         await db.from('tracks').update({
           suno_task_id: retryResult.id,
@@ -176,6 +204,11 @@ export async function generateTrackFromMoment(
         await maybeFinalizeProject(projectId);
       } catch (retryErr) {
         console.error(`[generate-track] Track ${trackNum}: Retry also failed:`, retryErr);
+        await logGeneration({
+          projectId, trackNumber: trackNum, event: 'failed',
+          durationMs: Date.now() - retryStart, model: 'kie-suno',
+          errorMessage: retryErr instanceof Error ? retryErr.message : String(retryErr),
+        });
         await db.from('tracks').update({
           status: 'failed',
           retry_count: 1,
@@ -186,6 +219,11 @@ export async function generateTrackFromMoment(
     }
   } catch (err) {
     console.error(`[generate-track] Track ${trackNum}: Fatal error:`, err);
+    await logGeneration({
+      projectId, trackNumber: trackNum, event: 'failed',
+      model: 'unknown',
+      errorMessage: err instanceof Error ? err.message : String(err),
+    });
     await db.from('tracks').update({
       status: 'failed',
       updated_at: new Date().toISOString(),

@@ -269,3 +269,18 @@
   0% { transform: translateX(-50%); }
   100% { transform: translateX(0); }
 }
+
+/* Vinyl spin animation */
+@keyframes vinyl-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.vinyl-spinning {
+  animation: vinyl-spin 20s linear infinite;
+}
+
+.vinyl-paused {
+  animation: vinyl-spin 20s linear infinite;
+  animation-play-state: paused;
+}

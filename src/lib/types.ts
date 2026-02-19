@@ -13,6 +13,9 @@ export interface Project {
   version: number;
   allow_real_names: boolean;
   music_profile: MusicProfile | null;
+  recipient_name: string | null;
+  gift_message: string | null;
+  is_gift: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -173,6 +176,7 @@ export interface Album {
   cover_image_url: string | null;
   biography_markdown: string | null;
   share_slug: string | null;
+  title_alternatives: { title: string; tagline: string }[] | null;
   created_at: string;
 }
 
@@ -205,6 +209,10 @@ export interface StatusResponse {
 export interface AlbumPageData {
   album: Album;
   tracks: Track[];
+  isGift: boolean;
+  recipientName: string | null;
+  giftMessage: string | null;
+  dominantEmotion: Emotion | null;
 }
 
 // ===== Generation Types =====

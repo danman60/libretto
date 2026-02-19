@@ -9,9 +9,10 @@ import type { Track } from '@/lib/types';
 interface TrackCardProps {
   track: Track;
   index: number; // 0, 1, 2 for cascade animation
+  isHighlighted?: boolean;
 }
 
-export function TrackCard({ track, index }: TrackCardProps) {
+export function TrackCard({ track, index, isHighlighted }: TrackCardProps) {
   const [showLyrics, setShowLyrics] = useState(false);
 
   const momentRole = MOMENT_ROLES.find(r => r.role === track.narrative_role);
@@ -19,7 +20,9 @@ export function TrackCard({ track, index }: TrackCardProps) {
   const isFailed = track.status === 'failed';
 
   return (
-    <div className={`track-cascade track-cascade-${index + 1} glass-card p-5 flex flex-col`}>
+    <div className={`track-cascade track-cascade-${index + 1} glass-card p-5 flex flex-col transition-all duration-300 ${
+      isHighlighted ? 'ring-1 ring-[#E8A87C]/40 shadow-lg shadow-[#E8A87C]/10' : ''
+    }`}>
       {/* Track number badge */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-8 h-8 rounded-full bg-[#E8A87C]/15 flex items-center justify-center text-sm font-medium text-[#E8A87C]">
@@ -52,7 +55,7 @@ export function TrackCard({ track, index }: TrackCardProps) {
       {/* Audio player */}
       {track.audio_url && track.status === 'complete' && (
         <div className="mt-1">
-          <AudioPlayer src={track.audio_url} title={track.title} />
+          <AudioPlayer src={track.audio_url} title={track.title} coverUrl={track.cover_image_url} />
         </div>
       )}
 

@@ -6,12 +6,17 @@ import Link from 'next/link';
 import { ProfilePicker } from '@/components/ProfilePicker';
 import { MomentInput } from '@/components/MomentInput';
 import { TrackCard } from '@/components/TrackCard';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Gift, Mic } from 'lucide-react';
 import type { MomentFormState, Track, Album } from '@/lib/types';
+
+type CreateMode = null | 'self' | 'gift';
 
 export default function CreatePage() {
   const router = useRouter();
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [mode, setMode] = useState<CreateMode>(null);
+  const [giftName, setGiftName] = useState('');
+  const [giftMessage, setGiftMessage] = useState('');
   // step 0 = profile picker, 1-3 = moments, 4 = waiting
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,22 +24,31 @@ export default function CreatePage() {
   const [album, setAlbum] = useState<Album | null>(null);
   const [allDone, setAllDone] = useState(false);
 
-  // Create session on mount
-  useEffect(() => {
+  // Create session when mode is chosen
+  const createSession = useCallback(async (isGift: boolean) => {
     const stored = sessionStorage.getItem('libretto_project_id');
     if (stored) {
       setProjectId(stored);
       return;
     }
 
-    fetch('/api/session', { method: 'POST' })
-      .then(r => r.json())
-      .then(data => {
-        setProjectId(data.projectId);
-        sessionStorage.setItem('libretto_project_id', data.projectId);
-      })
-      .catch(console.error);
-  }, []);
+    try {
+      const res = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isGift,
+          recipientName: isGift ? giftName : undefined,
+          giftMessage: isGift ? giftMessage : undefined,
+        }),
+      });
+      const data = await res.json();
+      setProjectId(data.projectId);
+      sessionStorage.setItem('libretto_project_id', data.projectId);
+    } catch (err) {
+      console.error('Session creation failed:', err);
+    }
+  }, [giftName, giftMessage]);
 
   // Poll for track status after moments submitted
   const pollStatus = useCallback(() => {
@@ -76,6 +90,20 @@ export default function CreatePage() {
       return pollStatus();
     }
   }, [currentStep, tracks.length, pollStatus]);
+
+  const handleModeSelect = async (selectedMode: 'self' | 'gift') => {
+    if (selectedMode === 'self') {
+      setMode('self');
+      await createSession(false);
+    } else {
+      setMode('gift');
+    }
+  };
+
+  const handleGiftContinue = async () => {
+    if (!giftName.trim()) return;
+    await createSession(true);
+  };
 
   const handleProfileSubmit = async (data: { genres: string[]; era: string; artistReference: string }) => {
     if (!projectId) return;
@@ -137,6 +165,109 @@ export default function CreatePage() {
     }
   };
 
+  // Mode selector (pre-step)
+  if (mode === null) {
+    return (
+      <main className="min-h-screen text-[#F5F0EB]">
+        <div className="text-center pt-8 mb-4">
+          <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+            LIBRETTO
+          </Link>
+        </div>
+        <div className="max-w-lg mx-auto px-6 py-16 text-center gentle-fade-in">
+          <h2 className="text-3xl mb-3" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+            How would you like to begin?
+          </h2>
+          <p className="text-[#9B8E99] mb-10" style={{ fontFamily: 'var(--font-lora)' }}>
+            Tell your own story, or create a musical gift for someone you love.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => handleModeSelect('self')}
+              className="glass-card p-6 text-left hover:border-[#E8A87C]/30 transition-colors group"
+            >
+              <Mic className="h-8 w-8 text-[#E8A87C] mb-3 group-hover:scale-110 transition-transform" />
+              <h3 className="text-lg font-semibold text-[#F5F0EB] mb-1">Tell your own story</h3>
+              <p className="text-sm text-[#9B8E99]">Three moments from your life become three songs.</p>
+            </button>
+
+            <button
+              onClick={() => handleModeSelect('gift')}
+              className="glass-card p-6 text-left hover:border-[#E8A87C]/30 transition-colors group"
+            >
+              <Gift className="h-8 w-8 text-[#E8A87C] mb-3 group-hover:scale-110 transition-transform" />
+              <h3 className="text-lg font-semibold text-[#F5F0EB] mb-1">Make one for someone</h3>
+              <p className="text-sm text-[#9B8E99]">Create a musical biography as a gift for someone special.</p>
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Gift name/message input (before session creation)
+  if (mode === 'gift' && !projectId) {
+    return (
+      <main className="min-h-screen text-[#F5F0EB]">
+        <div className="text-center pt-8 mb-4">
+          <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+            LIBRETTO
+          </Link>
+        </div>
+        <div className="max-w-md mx-auto px-6 py-16 gentle-fade-in">
+          <div className="text-center mb-8">
+            <Gift className="h-10 w-10 text-[#E8A87C] mx-auto mb-4" />
+            <h2 className="text-2xl mb-2" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+              Who is this for?
+            </h2>
+            <p className="text-[#9B8E99] text-sm" style={{ fontFamily: 'var(--font-lora)' }}>
+              They&apos;ll see a special unwrapping page before the album.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-[#9B8E99] mb-1.5">Recipient&apos;s name</label>
+              <input
+                type="text"
+                placeholder="e.g., Mom, Sarah, Dad"
+                value={giftName}
+                onChange={e => setGiftName(e.target.value)}
+                maxLength={100}
+                className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-[#F5F0EB] placeholder-[#9B8E99]/50 focus:outline-none focus:border-[#E8A87C]/30 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-[#9B8E99] mb-1.5">Gift message (optional)</label>
+              <textarea
+                placeholder="A personal note they'll see before unwrapping..."
+                value={giftMessage}
+                onChange={e => setGiftMessage(e.target.value)}
+                maxLength={500}
+                rows={3}
+                className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-[#F5F0EB] placeholder-[#9B8E99]/50 focus:outline-none focus:border-[#E8A87C]/30 transition-colors resize-none"
+              />
+            </div>
+            <button
+              onClick={handleGiftContinue}
+              disabled={!giftName.trim()}
+              className="w-full py-3 rounded-full bg-[#E8A87C] text-[#1A1518] font-medium hover:brightness-110 transition-all disabled:opacity-40"
+            >
+              Continue
+            </button>
+            <button
+              onClick={() => setMode(null)}
+              className="w-full py-2 text-sm text-[#9B8E99] hover:text-[#F5F0EB] transition-colors"
+            >
+              Go back
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   // Waiting screen after all 3 moments
   if (currentStep === 4) {
     return (
@@ -188,6 +319,15 @@ export default function CreatePage() {
         </Link>
       </div>
       <div className="px-6 py-12">
+        {/* Mode indicator */}
+        {mode === 'gift' && (
+          <div className="flex justify-center mb-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8A87C]/10 text-[#E8A87C] text-xs">
+              <Gift className="h-3 w-3" /> Gift for {giftName}
+            </span>
+          </div>
+        )}
+
         {/* Progress dots — 4 dots now */}
         <div className="flex justify-center gap-2 mb-12">
           {Array.from({ length: totalDots }, (_, i) => (

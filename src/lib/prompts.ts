@@ -212,7 +212,7 @@ Respond with ONLY the markdown biography text.`;
 }
 
 export function buildAlbumTitlePrompt(lifeMap: LifeMap): string {
-  return `Based on this life story analysis, generate an album title and emotional tagline.
+  return `Based on this life story analysis, generate 3 album title options with emotional taglines.
 
 Themes: ${lifeMap.themes.join(', ')}
 Emotional arc: ${lifeMap.emotional_arc.start} → ${lifeMap.emotional_arc.midpoint} → ${lifeMap.emotional_arc.resolution}
@@ -221,11 +221,15 @@ Motifs: ${lifeMap.motifs.join(', ')}
 
 Respond with ONLY valid JSON (no markdown, no code fences):
 {
-  "title": "Album Title Here",
-  "tagline": "A one-line emotional tagline"
+  "titles": [
+    { "title": "Best Title Here", "tagline": "A one-line emotional tagline" },
+    { "title": "Second Option", "tagline": "Another emotional tagline" },
+    { "title": "Third Option", "tagline": "Yet another tagline" }
+  ],
+  "recommended": 0
 }
 
-The title should be evocative, 1-4 words. The tagline should be a poetic one-liner that captures the emotional journey.`;
+Each title should be evocative, 1-4 words. Each tagline should be a poetic one-liner. The "recommended" field is the 0-based index of the best option. Make all 3 options distinct in tone — one poetic, one bold, one intimate.`;
 }
 
 // ===== V1 Legacy Prompts (kept for backward compat) =====

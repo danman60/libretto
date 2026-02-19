@@ -6,8 +6,12 @@ import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
 import JSZip from 'jszip';
 import { TrackCard } from '@/components/TrackCard';
-import { Share2, Check, Loader2, Download, PlusCircle } from 'lucide-react';
-import type { AlbumPageData, Track } from '@/lib/types';
+import { Guestbook } from '@/components/Guestbook';
+import { AlbumPlayer } from '@/components/AlbumPlayer';
+import { EMOTION_PALETTES } from '@/lib/mood-colors';
+import { generateBooklet } from '@/lib/generate-booklet';
+import { Share2, Check, Loader2, Download, PlusCircle, QrCode, Code, BookOpen } from 'lucide-react';
+import type { AlbumPageData, Track, Emotion } from '@/lib/types';
 
 export default function AlbumPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -16,6 +20,11 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const [copied, setCopied] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
+  const [generatingBooklet, setGeneratingBooklet] = useState(false);
+  const [highlightedTrack, setHighlightedTrack] = useState(-1);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     fetch(`/api/album/${slug}`)
@@ -29,6 +38,30 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       })
       .catch(() => setError('Album not found'));
   }, [slug]);
+
+  // Check if viewer is creator
+  useEffect(() => {
+    if (!data) return;
+    const storedProjectId = sessionStorage.getItem('libretto_project_id');
+    if (storedProjectId && storedProjectId === data.album.project_id) {
+      setIsCreator(true);
+    }
+  }, [data]);
+
+  // Set mood CSS variables
+  useEffect(() => {
+    if (!data?.dominantEmotion) return;
+    const palette = EMOTION_PALETTES[data.dominantEmotion as Emotion];
+    if (!palette) return;
+    document.documentElement.style.setProperty('--mood-accent', palette.accent);
+    document.documentElement.style.setProperty('--mood-bg-tint', palette.bgTint);
+    document.documentElement.style.setProperty('--mood-glow', palette.glowColor);
+    return () => {
+      document.documentElement.style.removeProperty('--mood-accent');
+      document.documentElement.style.removeProperty('--mood-bg-tint');
+      document.documentElement.style.removeProperty('--mood-glow');
+    };
+  }, [data?.dominantEmotion]);
 
   // Poll for in-progress tracks
   useEffect(() => {
@@ -62,6 +95,56 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyEmbed = async () => {
+    const embedCode = `<iframe src="${window.location.origin}/embed/${slug}" width="400" height="500" frameborder="0" allow="autoplay" style="border-radius:12px;border:1px solid rgba(255,255,255,0.08)"></iframe>`;
+    try {
+      await navigator.clipboard.writeText(embedCode);
+    } catch { /* ignore */ }
+    setEmbedCopied(true);
+    setTimeout(() => setEmbedCopied(false), 2000);
+  };
+
+  const handleBooklet = async () => {
+    if (!data) return;
+    setGeneratingBooklet(true);
+    try {
+      const blob = await generateBooklet(data.album, data.tracks);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeTitle = data.album.title.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+      a.download = `${safeTitle} - Booklet.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Booklet generation failed:', err);
+    } finally {
+      setGeneratingBooklet(false);
+    }
+  };
+
+  const handleTitleSwitch = async (index: number) => {
+    if (!data) return;
+    const projectId = sessionStorage.getItem('libretto_project_id');
+    if (!projectId) return;
+
+    try {
+      const res = await fetch(`/api/album/${slug}/title`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index, projectId }),
+      });
+      if (!res.ok) return;
+      const result = await res.json();
+      setData(prev => prev ? {
+        ...prev,
+        album: { ...prev.album, title: result.title, tagline: result.tagline },
+      } : prev);
+    } catch { /* ignore */ }
   };
 
   const handleDownload = useCallback(async () => {
@@ -144,7 +227,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
 
   return (
-    <main className="min-h-screen text-[#F5F0EB]">
+    <main className="min-h-screen text-[#F5F0EB]" style={{ background: 'var(--mood-bg-tint, transparent)' }}>
       {/* Nav wordmark */}
       <div className="text-center pt-8">
         <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
@@ -186,7 +269,10 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
             <div className="flex-1 text-center sm:text-left">
               <p className="text-sm tracking-widest text-[#9B8E99] uppercase mb-2">
-                Your Libretto
+                {data.isGift && data.recipientName
+                  ? `A gift for ${data.recipientName}`
+                  : 'Your Libretto'
+                }
               </p>
               <h1
                 className={`text-4xl sm:text-5xl mb-3 transition-opacity duration-1000 ${revealed ? 'opacity-100' : 'opacity-0'}`}
@@ -195,11 +281,29 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                 {album.title}
               </h1>
               {album.tagline && (
-                <p className="text-lg text-[#B8A9C9] italic mb-5" style={{ fontFamily: 'var(--font-lora)' }}>
+                <p className="text-lg text-[#B8A9C9] italic mb-3" style={{ fontFamily: 'var(--font-lora)' }}>
                   {album.tagline}
                 </p>
               )}
-              <div className="flex items-center gap-3 justify-center sm:justify-start">
+
+              {/* Title picker for creator */}
+              {isCreator && album.title_alternatives && album.title_alternatives.length > 1 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {album.title_alternatives.map((alt, i) => (
+                    alt.title !== album.title && (
+                      <button
+                        key={i}
+                        onClick={() => handleTitleSwitch(i)}
+                        className="text-xs px-3 py-1 rounded-full border border-white/[0.1] text-[#9B8E99] hover:text-[#E8A87C] hover:border-[#E8A87C]/30 transition-colors"
+                      >
+                        {alt.title}
+                      </button>
+                    )
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 justify-center sm:justify-start flex-wrap">
                 <span className="text-sm text-[#9B8E99]">
                   {tracks.length} track{tracks.length !== 1 ? 's' : ''}
                 </span>
@@ -212,6 +316,35 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                     <><Check className="h-4 w-4" /> Copied</>
                   ) : (
                     <><Share2 className="h-4 w-4" /> Share</>
+                  )}
+                </button>
+                <span className="text-[#9B8E99]/30">|</span>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowQR(!showQR)}
+                    className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors"
+                  >
+                    <QrCode className="h-4 w-4" /> QR
+                  </button>
+                  {showQR && (
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 glass-card p-3 shadow-xl">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&bgcolor=0D0B0E&color=F5F0EB`}
+                        alt="QR Code"
+                        className="w-[150px] h-[150px] rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+                <span className="text-[#9B8E99]/30">|</span>
+                <button
+                  onClick={handleCopyEmbed}
+                  className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors"
+                >
+                  {embedCopied ? (
+                    <><Check className="h-4 w-4" /> Copied</>
+                  ) : (
+                    <><Code className="h-4 w-4" /> Embed</>
                   )}
                 </button>
                 {hasCompleteTracks && (
@@ -228,6 +361,18 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                         <><Download className="h-4 w-4" /> Download</>
                       )}
                     </button>
+                    <span className="text-[#9B8E99]/30">|</span>
+                    <button
+                      onClick={handleBooklet}
+                      disabled={generatingBooklet}
+                      className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50"
+                    >
+                      {generatingBooklet ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> PDF...</>
+                      ) : (
+                        <><BookOpen className="h-4 w-4" /> Booklet</>
+                      )}
+                    </button>
                   </>
                 )}
               </div>
@@ -236,11 +381,26 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         </div>
       </section>
 
+      {/* Crossfade Album Player */}
+      {hasCompleteTracks && (
+        <section className="max-w-4xl mx-auto px-6">
+          <AlbumPlayer
+            tracks={tracks}
+            onTrackChange={(idx) => setHighlightedTrack(idx)}
+          />
+        </section>
+      )}
+
       {/* Tracks — 3-column grid */}
       <section className="max-w-4xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {tracks.map((track, i) => (
-            <TrackCard key={track.id} track={track} index={i} />
+            <TrackCard
+              key={track.id}
+              track={track}
+              index={i}
+              isHighlighted={highlightedTrack === i}
+            />
           ))}
         </div>
 
@@ -250,7 +410,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="inline-flex items-center gap-3 px-10 py-4 rounded-full bg-[#E8A87C] text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#E8A87C]/25 disabled:opacity-50 disabled:hover:scale-100"
+              className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100"
+              style={{ backgroundColor: 'var(--mood-accent, #E8A87C)', boxShadow: `0 10px 25px -5px var(--mood-glow, rgba(232,168,124,0.25))` }}
             >
               {downloading ? (
                 <><Loader2 className="h-5 w-5 animate-spin" /> Preparing your download...</>
@@ -284,6 +445,13 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         </section>
       )}
 
+      {/* Guestbook */}
+      <section className="max-w-[680px] mx-auto px-6 py-12">
+        <div className="border-t border-white/[0.04] pt-12">
+          <Guestbook slug={slug} />
+        </div>
+      </section>
+
       {/* Bottom CTA: Download + Create Another */}
       <section className="max-w-[680px] mx-auto px-6 py-12">
         <div className="border-t border-white/[0.04] pt-12 flex flex-col items-center gap-4">
@@ -291,7 +459,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="inline-flex items-center gap-3 px-10 py-4 rounded-full bg-[#E8A87C] text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#E8A87C]/25 disabled:opacity-50 disabled:hover:scale-100"
+              className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100"
+              style={{ backgroundColor: 'var(--mood-accent, #E8A87C)', boxShadow: `0 10px 25px -5px var(--mood-glow, rgba(232,168,124,0.25))` }}
             >
               {downloading ? (
                 <><Loader2 className="h-5 w-5 animate-spin" /> Preparing your download...</>
