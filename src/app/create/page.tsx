@@ -77,7 +77,7 @@ export default function CreatePage() {
     }
   }, [currentStep, tracks.length, pollStatus]);
 
-  const handleProfileSubmit = async (data: { genre: string; era: string; artistReference: string }) => {
+  const handleProfileSubmit = async (data: { genres: string[]; era: string; artistReference: string }) => {
     if (!projectId) return;
 
     setIsSubmitting(true);
@@ -87,7 +87,7 @@ export default function CreatePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          genre: data.genre,
+          genres: data.genres,
           era: data.era,
           artistReference: data.artistReference || undefined,
         }),

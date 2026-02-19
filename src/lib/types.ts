@@ -1,7 +1,7 @@
 // ===== Database Types =====
 
 export interface MusicProfile {
-  genre: string;
+  genres: string[];
   era: string;
   artist_reference?: string;
 }

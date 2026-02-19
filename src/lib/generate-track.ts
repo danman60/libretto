@@ -159,7 +159,7 @@ export async function generateTrackFromMoment(
 
       // Retry with simpler style
       try {
-        const simpleStyle = musicProfile?.genre || 'pop';
+        const simpleStyle = musicProfile?.genres?.[0] || 'pop';
         const retryResult = await generateTrackViaKie(lyrics, simpleStyle, ROLE_TITLES[role]);
 
         await db.from('tracks').update({

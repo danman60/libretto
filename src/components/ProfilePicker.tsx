@@ -1,34 +1,51 @@
 'use client';
 
 import { useState } from 'react';
-
-const ERAS = [
-  { value: '70s/80s', label: '70s / 80s' },
-  { value: '90s/00s', label: '90s / 00s' },
-  { value: '2010s+', label: '2010s+' },
-  { value: 'Timeless', label: 'Timeless' },
-];
+import { Shuffle } from 'lucide-react';
 
 const GENRES = [
-  { value: 'Pop', label: 'Pop' },
-  { value: 'R&B/Soul', label: 'R&B / Soul' },
-  { value: 'Folk/Indie', label: 'Folk / Indie' },
-  { value: 'Hip-Hop', label: 'Hip-Hop' },
-  { value: 'Rock', label: 'Rock' },
-  { value: 'Electronic', label: 'Electronic' },
+  'Pop', 'R&B', 'Soul', 'Folk', 'Indie',
+  'Hip-Hop', 'Rock', 'Electronic', 'Country', 'Jazz',
 ];
 
+const ERA_STOPS = ['60s/70s', '80s', '90s', '00s', '2010s', 'Now'];
+
 interface ProfilePickerProps {
-  onSubmit: (data: { genre: string; era: string; artistReference: string }) => void;
+  onSubmit: (data: { genres: string[]; era: string; artistReference: string }) => void;
   isSubmitting: boolean;
 }
 
 export function ProfilePicker({ onSubmit, isSubmitting }: ProfilePickerProps) {
-  const [genre, setGenre] = useState<string | null>(null);
-  const [era, setEra] = useState<string | null>(null);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [eraIndex, setEraIndex] = useState(3); // default to '00s'
   const [artistReference, setArtistReference] = useState('');
 
-  const canSubmit = genre !== null && era !== null;
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres(prev =>
+      prev.includes(genre)
+        ? prev.filter(g => g !== genre)
+        : [...prev, genre]
+    );
+  };
+
+  const handleSurpriseMe = () => {
+    // Pick 1-2 random genres
+    const shuffled = [...GENRES].sort(() => Math.random() - 0.5);
+    const count = Math.random() > 0.5 ? 2 : 1;
+    setSelectedGenres(shuffled.slice(0, count));
+    // Random era
+    setEraIndex(Math.floor(Math.random() * ERA_STOPS.length));
+    // Random artist from a fun pool
+    const artists = [
+      'Adele', 'The Weeknd', 'Bon Iver', 'Taylor Swift', 'Frank Ocean',
+      'Fleetwood Mac', 'Billie Eilish', 'Kendrick Lamar', 'Amy Winehouse',
+      'Radiohead', 'Stevie Wonder', 'Lana Del Rey', 'Prince', 'SZA',
+    ];
+    setArtistReference(artists[Math.floor(Math.random() * artists.length)]);
+  };
+
+  const canSubmit = selectedGenres.length > 0;
+  const currentEra = ERA_STOPS[eraIndex];
 
   return (
     <div className="gentle-fade-in max-w-[640px] mx-auto">
@@ -43,58 +60,68 @@ export function ProfilePicker({ onSubmit, isSubmitting }: ProfilePickerProps) {
           How do you hear your story?
         </h2>
         <p className="text-[#A89DAF] text-base leading-relaxed max-w-md mx-auto" style={{ fontFamily: 'var(--font-lora)' }}>
-          Pick the sound and era that feels like home. This shapes the entire album.
+          Tag the vibes. Pick as many as you want.
         </p>
       </div>
 
-      {/* Genre picker */}
+      {/* Genre tags — multi-select */}
       <div className="mb-10">
         <p className="text-[#A89DAF] text-sm mb-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-          What genre feels like your story?
+          What does it sound like?
         </p>
         <div className="flex flex-wrap gap-2">
-          {GENRES.map(g => (
+          {GENRES.map(genre => (
             <button
-              key={g.value}
-              onClick={() => setGenre(g.value)}
-              className={`px-5 py-2.5 rounded-full text-sm transition-all ${
-                genre === g.value
-                  ? 'bg-[#E8A87C] text-[#1A1518] font-medium shadow-lg shadow-[#E8A87C]/20'
+              key={genre}
+              onClick={() => toggleGenre(genre)}
+              className={`px-4 py-2 rounded-full text-sm transition-all duration-200 ${
+                selectedGenres.includes(genre)
+                  ? 'bg-[#E8A87C] text-[#1A1518] font-medium shadow-lg shadow-[#E8A87C]/20 scale-105'
                   : 'bg-white/[0.05] text-[#B8A9C9] hover:bg-white/[0.1] hover:text-[#F5F0EB]'
               }`}
             >
-              {g.label}
+              {genre}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Era picker */}
+      {/* Era slider */}
       <div className="mb-10">
         <p className="text-[#A89DAF] text-sm mb-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-          What era does it belong to?
+          What era?
         </p>
-        <div className="flex flex-wrap gap-2">
-          {ERAS.map(e => (
-            <button
-              key={e.value}
-              onClick={() => setEra(e.value)}
-              className={`px-5 py-2.5 rounded-full text-sm transition-all ${
-                era === e.value
-                  ? 'bg-[#E8A87C] text-[#1A1518] font-medium shadow-lg shadow-[#E8A87C]/20'
-                  : 'bg-white/[0.05] text-[#B8A9C9] hover:bg-white/[0.1] hover:text-[#F5F0EB]'
-              }`}
-            >
-              {e.label}
-            </button>
-          ))}
+        <div className="px-1">
+          <input
+            type="range"
+            min={0}
+            max={ERA_STOPS.length - 1}
+            value={eraIndex}
+            onChange={e => setEraIndex(Number(e.target.value))}
+            className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#E8A87C] bg-white/[0.1]"
+            style={{
+              background: `linear-gradient(to right, #E8A87C 0%, #E8A87C ${(eraIndex / (ERA_STOPS.length - 1)) * 100}%, rgba(255,255,255,0.1) ${(eraIndex / (ERA_STOPS.length - 1)) * 100}%, rgba(255,255,255,0.1) 100%)`,
+            }}
+          />
+          <div className="flex justify-between mt-2">
+            {ERA_STOPS.map((label, i) => (
+              <span
+                key={label}
+                className={`text-xs transition-colors ${
+                  i === eraIndex ? 'text-[#E8A87C] font-medium' : 'text-[#B8A9C9]/50'
+                }`}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Artist reference (optional) */}
       <div className="mb-10">
         <p className="text-[#A89DAF] text-sm mb-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-          Name an artist who sounds like your story (optional)
+          Who does it sound like? (optional)
         </p>
         <div className="listening-pulse rounded-[20px] transition-shadow duration-500">
           <input
@@ -108,10 +135,17 @@ export function ProfilePicker({ onSubmit, isSubmitting }: ProfilePickerProps) {
         </div>
       </div>
 
-      {/* Submit */}
-      <div className="text-center">
+      {/* Buttons */}
+      <div className="flex items-center justify-center gap-4">
         <button
-          onClick={() => canSubmit && !isSubmitting && onSubmit({ genre: genre!, era: era!, artistReference })}
+          onClick={handleSurpriseMe}
+          className="flex items-center gap-2 px-6 py-4 rounded-full text-sm font-medium transition-all bg-white/[0.05] text-[#B8A9C9] hover:bg-white/[0.1] hover:text-[#F5F0EB] hover:scale-[1.02]"
+        >
+          <Shuffle className="w-4 h-4" />
+          Surprise me
+        </button>
+        <button
+          onClick={() => canSubmit && !isSubmitting && onSubmit({ genres: selectedGenres, era: currentEra, artistReference })}
           disabled={!canSubmit || isSubmitting}
           className={`px-10 py-4 rounded-full text-base font-medium transition-all ${
             canSubmit && !isSubmitting

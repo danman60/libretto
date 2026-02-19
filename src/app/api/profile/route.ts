@@ -3,16 +3,16 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { projectId, genre, era, artistReference } = await request.json();
+    const { projectId, genres, era, artistReference } = await request.json();
 
-    if (!projectId || !genre || !era) {
+    if (!projectId || !genres?.length || !era) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const db = getServiceSupabase();
 
     const musicProfile = {
-      genre,
+      genres,
       era,
       ...(artistReference ? { artist_reference: artistReference } : {}),
     };

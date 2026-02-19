@@ -47,7 +47,7 @@ export function buildMomentLyricsPrompt(
   };
 
   const character = TRACK_CHARACTERS[role];
-  const genre = profile?.genre || 'Pop';
+  const genres = profile?.genres?.length ? profile.genres.join(', ') : 'Pop';
   const era = profile?.era || 'Timeless';
   const artistRef = profile?.artist_reference
     ? `\nArtist reference: ${profile.artist_reference} — channel their songwriting sensibility, melodic style, and vocal energy.`
@@ -66,7 +66,7 @@ Tempo: ${character.tempo} | Key feel: ${character.key} | Arrangement: ${characte
 ${emotion}
 
 ## Music Profile
-Genre: ${genre}
+Genre: ${genres}
 Era: ${era}${artistRef}
 
 ## Song Structure (MANDATORY)
@@ -87,7 +87,7 @@ The chorus appears THREE times and must be IDENTICAL every time. Copy-paste it e
 4. **MIRROR THEIR LANGUAGE:** Find the most vivid phrase, image, or detail in their story and weave it into the song. If they mentioned "the kitchen light" or "that highway in August" — those images belong in the song.
 5. **FIRST PERSON** — this is THEIR voice singing back to them.
 6. **BE SPECIFIC, NOT GENERIC.** "The crack in the ceiling above my bed" beats "the weight of the world." Their details > your metaphors.
-7. **GENRE CONSISTENCY:** Write in the style of ${era} ${genre}. Match the vocal energy and lyrical conventions of this genre.
+7. **GENRE CONSISTENCY:** Write in the style of ${era} ${genres}. Match the vocal energy and lyrical conventions of this genre.
 8. **EMOTIONAL TRUTH of ${emotion}** — don't explain the emotion, embody it through word choice, rhythm, and imagery.
 9. **Keep it concise** — under 280 words total. Let the music breathe.
 10. ${allowNames ? 'You may use real names if they appear in the story.' : 'Do NOT use real names — use intimate pronouns or poetic substitutes ("you", "the one who", "that voice").'}
@@ -101,7 +101,7 @@ export function buildMomentStylePrompt(
   profile: MusicProfile | null
 ): string {
   const character = TRACK_CHARACTERS[role];
-  const genre = profile?.genre || 'Pop';
+  const genres = profile?.genres?.length ? profile.genres.join(', ') : 'Pop';
   const era = profile?.era || 'Timeless';
 
   const emotionMoods: Record<Emotion, string> = {
@@ -119,9 +119,9 @@ export function buildMomentStylePrompt(
 
   const parts: string[] = [];
 
-  // Era + genre
-  if (era !== 'Timeless') parts.push(`${era} ${genre}`);
-  else parts.push(genre);
+  // Era + genres
+  if (era !== 'Timeless') parts.push(`${era} ${genres}`);
+  else parts.push(genres);
 
   // Track character energy
   parts.push(character.tempo);
