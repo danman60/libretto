@@ -65,7 +65,11 @@ export function Guestbook({ slug }: GuestbookProps) {
 
   return (
     <div>
-      <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-6">Guestbook</h2>
+      <h2 className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-6"
+        style={{ fontFamily: 'var(--font-oswald)' }}
+      >
+        Guestbook
+      </h2>
 
       <form onSubmit={handleSubmit} className="mb-8 space-y-3">
         <input
@@ -74,7 +78,8 @@ export function Guestbook({ slug }: GuestbookProps) {
           value={name}
           onChange={e => setName(e.target.value)}
           maxLength={50}
-          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-[#F5F0EB] placeholder-[#9B8E99]/50 focus:outline-none focus:border-[#E8A87C]/30 transition-colors"
+          className="w-full bg-[#1A0F1E]/50 border border-[#C9A84C]/15 rounded-xl px-4 py-2.5 text-sm text-[#F2E8D5] placeholder-[#F2E8D5]/30 focus:outline-none focus:border-[#C9A84C]/40 transition-colors"
+          style={{ fontFamily: 'var(--font-cormorant)' }}
         />
         <div className="flex gap-2">
           <textarea
@@ -83,32 +88,35 @@ export function Guestbook({ slug }: GuestbookProps) {
             onChange={e => setMessage(e.target.value)}
             maxLength={500}
             rows={2}
-            className="flex-1 bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-[#F5F0EB] placeholder-[#9B8E99]/50 focus:outline-none focus:border-[#E8A87C]/30 transition-colors resize-none"
+            className="flex-1 bg-[#1A0F1E]/50 border border-[#C9A84C]/15 rounded-xl px-4 py-2.5 text-sm text-[#F2E8D5] placeholder-[#F2E8D5]/30 focus:outline-none focus:border-[#C9A84C]/40 transition-colors resize-none"
+            style={{ fontFamily: 'var(--font-cormorant)' }}
           />
           <button
             type="submit"
             disabled={submitting || !name.trim() || !message.trim()}
-            className="self-end h-10 w-10 rounded-xl bg-[#E8A87C] flex items-center justify-center flex-shrink-0 hover:brightness-110 transition-all disabled:opacity-40"
+            className="self-end h-10 w-10 rounded-xl bg-[#C9A84C] flex items-center justify-center flex-shrink-0 hover:brightness-110 transition-all disabled:opacity-40"
           >
             {submitting ? (
-              <Loader2 className="h-4 w-4 text-[#0D0B0E] animate-spin" />
+              <Loader2 className="h-4 w-4 text-[#08070A] animate-spin" />
             ) : (
-              <Send className="h-4 w-4 text-[#0D0B0E]" />
+              <Send className="h-4 w-4 text-[#08070A]" />
             )}
           </button>
         </div>
-        {error && <p className="text-[#D4A5A5] text-xs">{error}</p>}
+        {error && <p className="text-[#6B1D2A] text-xs">{error}</p>}
       </form>
 
       {comments.length > 0 && (
         <div className="space-y-4">
           {comments.map(comment => (
-            <div key={comment.id} className="bg-white/[0.03] rounded-xl px-4 py-3 border border-white/[0.04]">
+            <div key={comment.id} className="bg-[#1A0F1E]/30 rounded-xl px-4 py-3 border border-[#C9A84C]/10">
               <div className="flex items-baseline justify-between mb-1">
-                <span className="text-sm font-medium text-[#B8A9C9]">{comment.author_name}</span>
-                <span className="text-[10px] text-[#9B8E99]/50">{formatDate(comment.created_at)}</span>
+                <span className="text-sm font-medium text-[#C9A84C]" style={{ fontFamily: 'var(--font-playfair)' }}>
+                  {comment.author_name}
+                </span>
+                <span className="text-[10px] text-[#F2E8D5]/30">{formatDate(comment.created_at)}</span>
               </div>
-              <p className="text-sm text-[#A89DAF] leading-relaxed" style={{ fontFamily: 'var(--font-lora)' }}>
+              <p className="text-sm text-[#F2E8D5]/60 leading-relaxed" style={{ fontFamily: 'var(--font-cormorant)' }}>
                 {comment.message}
               </p>
             </div>

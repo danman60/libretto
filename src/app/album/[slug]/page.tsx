@@ -198,10 +198,12 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-3xl text-[#F5F0EB] mb-3" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+          <h1 className="text-3xl text-[#F2E8D5] mb-3" style={{ fontFamily: 'var(--font-playfair)' }}>
             Show not found
           </h1>
-          <p className="text-[#9B8E99] text-base">This show may have been removed or the link is incorrect.</p>
+          <p className="text-[#F2E8D5]/50 text-base" style={{ fontFamily: 'var(--font-cormorant)' }}>
+            This show may have been removed or the link is incorrect.
+          </p>
         </div>
       </main>
     );
@@ -210,8 +212,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   if (!data) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-3 text-[#9B8E99] text-base">
-          <Loader2 className="h-5 w-5 animate-spin text-[#E8A87C]" />
+        <div className="flex items-center gap-3 text-[#F2E8D5]/50 text-base">
+          <Loader2 className="h-5 w-5 animate-spin text-[#C9A84C]" />
           Loading...
         </div>
       </main>
@@ -224,10 +226,10 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
 
   return (
-    <main className="min-h-screen text-[#F5F0EB]" style={{ background: 'var(--mood-bg-tint, transparent)' }}>
+    <main className="min-h-screen text-[#F2E8D5]" style={{ background: 'var(--mood-bg-tint, transparent)' }}>
       {/* Nav */}
       <div className="text-center pt-8">
-        <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+        <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
           LIBRETTO
         </Link>
       </div>
@@ -244,7 +246,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
             }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0D0B0E]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#08070A]" />
 
         <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-12">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-8">
@@ -252,20 +254,22 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               <img
                 src={album.cover_image_url}
                 alt={album.title}
-                className={`w-44 h-44 sm:w-56 sm:h-56 rounded-2xl shadow-2xl shadow-black/50 object-cover flex-shrink-0 ${
+                className={`w-44 h-44 sm:w-56 sm:h-56 rounded-2xl shadow-2xl shadow-black/50 object-cover flex-shrink-0 border border-[#C9A84C]/20 ${
                   revealed ? 'reveal-blur' : 'opacity-0'
                 }`}
               />
             ) : (
               <div className="w-44 h-44 sm:w-56 sm:h-56 rounded-2xl glass-card flex items-center justify-center flex-shrink-0">
-                <div className="text-5xl text-[#E8A87C]/30" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+                <div className="text-5xl gold-text-static" style={{ fontFamily: 'var(--font-playfair)' }}>
                   L
                 </div>
               </div>
             )}
 
             <div className="flex-1 text-center sm:text-left">
-              <p className="text-sm tracking-widest text-[#9B8E99] uppercase mb-2">
+              <p className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-2"
+                style={{ fontFamily: 'var(--font-oswald)' }}
+              >
                 {isMusical ? 'A Libretto Musical' : (
                   data.isGift && data.recipientName
                     ? `A gift for ${data.recipientName}`
@@ -274,12 +278,12 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               </p>
               <h1
                 className={`text-4xl sm:text-5xl mb-3 transition-opacity duration-1000 ${revealed ? 'opacity-100' : 'opacity-0'}`}
-                style={{ fontFamily: 'var(--font-dm-serif)' }}
+                style={{ fontFamily: 'var(--font-playfair)' }}
               >
                 {album.title}
               </h1>
               {album.tagline && (
-                <p className="text-lg text-[#B8A9C9] italic mb-3" style={{ fontFamily: 'var(--font-lora)' }}>
+                <p className="text-lg text-[#F2E8D5]/60 italic mb-3" style={{ fontFamily: 'var(--font-cormorant)' }}>
                   {album.tagline}
                 </p>
               )}
@@ -292,7 +296,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                       <button
                         key={i}
                         onClick={() => handleTitleSwitch(i)}
-                        className="text-xs px-3 py-1 rounded-full border border-white/[0.1] text-[#9B8E99] hover:text-[#E8A87C] hover:border-[#E8A87C]/30 transition-colors"
+                        className="text-xs px-3 py-1 rounded-full border border-[#C9A84C]/15 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/40 transition-colors"
+                        style={{ fontFamily: 'var(--font-oswald)' }}
                       >
                         {alt.title}
                       </button>
@@ -302,40 +307,40 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               )}
 
               <div className="flex items-center gap-3 justify-center sm:justify-start flex-wrap">
-                <span className="text-sm text-[#9B8E99]">
+                <span className="text-sm text-[#F2E8D5]/40" style={{ fontFamily: 'var(--font-oswald)' }}>
                   {tracks.length} song{tracks.length !== 1 ? 's' : ''}
                 </span>
-                <span className="text-[#9B8E99]/30">|</span>
-                <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors">
+                <span className="text-[#C9A84C]/20">|</span>
+                <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">
                   {copied ? <><Check className="h-4 w-4" /> Copied</> : <><Share2 className="h-4 w-4" /> Share</>}
                 </button>
-                <span className="text-[#9B8E99]/30">|</span>
+                <span className="text-[#C9A84C]/20">|</span>
                 <div className="relative">
-                  <button onClick={() => setShowQR(!showQR)} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors">
+                  <button onClick={() => setShowQR(!showQR)} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">
                     <QrCode className="h-4 w-4" /> QR
                   </button>
                   {showQR && (
                     <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 glass-card p-3 shadow-xl">
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&bgcolor=0D0B0E&color=F5F0EB`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&bgcolor=08070A&color=F2E8D5`}
                         alt="QR Code"
                         className="w-[150px] h-[150px] rounded"
                       />
                     </div>
                   )}
                 </div>
-                <span className="text-[#9B8E99]/30">|</span>
-                <button onClick={handleCopyEmbed} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors">
+                <span className="text-[#C9A84C]/20">|</span>
+                <button onClick={handleCopyEmbed} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">
                   {embedCopied ? <><Check className="h-4 w-4" /> Copied</> : <><Code className="h-4 w-4" /> Embed</>}
                 </button>
                 {hasCompleteTracks && (
                   <>
-                    <span className="text-[#9B8E99]/30">|</span>
-                    <button onClick={handleDownload} disabled={downloading} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50">
+                    <span className="text-[#C9A84C]/20">|</span>
+                    <button onClick={handleDownload} disabled={downloading} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors disabled:opacity-50">
                       {downloading ? <><Loader2 className="h-4 w-4 animate-spin" /> Zipping...</> : <><Download className="h-4 w-4" /> Download</>}
                     </button>
-                    <span className="text-[#9B8E99]/30">|</span>
-                    <button onClick={handleBooklet} disabled={generatingBooklet} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50">
+                    <span className="text-[#C9A84C]/20">|</span>
+                    <button onClick={handleBooklet} disabled={generatingBooklet} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors disabled:opacity-50">
                       {generatingBooklet ? <><Loader2 className="h-4 w-4 animate-spin" /> PDF...</> : <><BookOpen className="h-4 w-4" /> Playbill</>}
                     </button>
                   </>
@@ -378,11 +383,13 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
           {/* Legacy: Biography */}
           {album.biography_markdown && (
             <section className="max-w-[680px] mx-auto px-6 py-12">
-              <div className="border-t border-white/[0.04] pt-12">
-                <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-6">The Story</h2>
+              <div className="border-t border-[#C9A84C]/10 pt-12">
+                <h2 className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-6" style={{ fontFamily: 'var(--font-oswald)' }}>
+                  The Story
+                </h2>
                 <div
-                  className="text-[#A89DAF] text-base space-y-4 [&_h1]:text-[#F5F0EB] [&_h1]:text-2xl [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[#F5F0EB] [&_h2]:text-xl [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-[#B8A9C9] [&_h3]:text-lg [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:text-[#B8A9C9] [&_em]:text-[#B8A9C9] [&_hr]:border-white/[0.06] [&_hr]:my-8"
-                  style={{ fontFamily: 'var(--font-lora)', lineHeight: '1.8' }}
+                  className="text-[#F2E8D5]/60 text-base space-y-4 [&_h1]:text-[#F2E8D5] [&_h1]:text-2xl [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[#F2E8D5] [&_h2]:text-xl [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-[#C9A84C] [&_h3]:text-lg [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:text-[#C9A84C] [&_em]:text-[#F2E8D5]/70 [&_hr]:border-[#C9A84C]/10 [&_hr]:my-8"
+                  style={{ fontFamily: 'var(--font-cormorant)', lineHeight: '1.8' }}
                 >
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{album.biography_markdown}</ReactMarkdown>
                 </div>
@@ -398,12 +405,12 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50"
-            style={{ backgroundColor: 'var(--mood-accent, #E8A87C)', boxShadow: `0 10px 25px -5px var(--mood-glow, rgba(232,168,124,0.25))` }}
+            className="inline-flex items-center gap-3 px-10 py-4 rounded-full bg-[#C9A84C] text-[#08070A] text-base font-semibold hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#C9A84C]/30 disabled:opacity-50 tracking-wide uppercase"
+            style={{ fontFamily: 'var(--font-oswald)' }}
           >
             {downloading ? <><Loader2 className="h-5 w-5 animate-spin" /> Preparing download...</> : <><Download className="h-5 w-5" /> Download your {isMusical ? 'show' : 'album'}</>}
           </button>
-          <p className="text-[#9B8E99]/50 text-xs mt-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
+          <p className="text-[#F2E8D5]/30 text-xs mt-3" style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}>
             All tracks + cover art as a .zip file
           </p>
         </section>
@@ -411,18 +418,19 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
       {/* Guestbook */}
       <section className="max-w-[680px] mx-auto px-6 py-12">
-        <div className="border-t border-white/[0.04] pt-12">
+        <div className="border-t border-[#C9A84C]/10 pt-12">
           <Guestbook slug={slug} />
         </div>
       </section>
 
       {/* Bottom CTA */}
       <section className="max-w-[680px] mx-auto px-6 py-12">
-        <div className="border-t border-white/[0.04] pt-12 flex flex-col items-center gap-4">
+        <div className="border-t border-[#C9A84C]/10 pt-12 flex flex-col items-center gap-4">
           <Link
             href="/create"
             onClick={handleCreateAnother}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-[#E8A87C]/20 text-[#E8A87C] hover:bg-[#E8A87C]/10 transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-colors text-sm tracking-wide"
+            style={{ fontFamily: 'var(--font-oswald)' }}
           >
             <PlusCircle className="h-4 w-4" />
             Create another show
@@ -431,9 +439,9 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.04] py-8 text-center">
-        <p className="text-sm text-[#9B8E99]/40">
-          Made with <a href="/" className="text-[#9B8E99]/60 hover:text-[#E8A87C] transition-colors">Libretto</a>
+      <footer className="border-t border-[#C9A84C]/10 py-8 text-center">
+        <p className="text-sm text-[#F2E8D5]/30">
+          Made with <a href="/" className="text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">Libretto</a>
         </p>
       </footer>
     </main>

@@ -41,40 +41,37 @@ export function CurtainLoader({ tracks, isComplete }: CurtainLoaderProps) {
     <div className="text-center gentle-fade-in">
       <div className="mb-8">
         {isComplete ? (
-          <h2
-            className="text-3xl mb-3 text-[#F5F0EB]"
-            style={{ fontFamily: 'var(--font-dm-serif)' }}
+          <h2 className="text-3xl mb-3 gold-text-static"
+            style={{ fontFamily: 'var(--font-playfair)', fontStyle: 'italic' }}
           >
             Your show is ready
           </h2>
         ) : (
           <>
-            <h2
-              className="text-3xl mb-3 text-[#F5F0EB]"
-              style={{ fontFamily: 'var(--font-dm-serif)' }}
+            <h2 className="text-3xl mb-3 text-[#F2E8D5]"
+              style={{ fontFamily: 'var(--font-playfair)', fontStyle: 'italic' }}
             >
               Creating your musical
             </h2>
-            <p
-              className="text-[#9B8E99] text-lg mb-6 min-h-[28px] transition-opacity duration-500"
-              style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}
+            <p className="text-[#F2E8D5]/50 text-lg mb-6 min-h-[28px] transition-opacity duration-500"
+              style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
             >
               {LOADING_MESSAGES[messageIndex]}
             </p>
-            <Loader2 className="h-6 w-6 animate-spin text-[#E8A87C] mx-auto" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#C9A84C] mx-auto" />
           </>
         )}
       </div>
 
       {/* Progress bar */}
       <div className="max-w-md mx-auto mb-8">
-        <div className="flex justify-between text-xs text-[#9B8E99] mb-2">
-          <span>Songs completed</span>
+        <div className="flex justify-between text-xs text-[#F2E8D5]/40 mb-2" style={{ fontFamily: 'var(--font-oswald)' }}>
+          <span className="tracking-wider uppercase">Songs completed</span>
           <span>{completedCount} / {totalCount}</span>
         </div>
-        <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
+        <div className="h-2 bg-[#1A0F1E] rounded-full overflow-hidden border border-[#C9A84C]/10">
           <div
-            className="h-full rounded-full bg-[#E8A87C] transition-all duration-1000 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8C872] transition-all duration-1000 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -88,19 +85,21 @@ export function CurtainLoader({ tracks, isComplete }: CurtainLoaderProps) {
               key={track.id}
               className={`glass-card px-3 py-2 text-xs ${
                 track.status === 'complete'
-                  ? 'border-[#8FBC8B]/30'
+                  ? 'border-[#C9A84C]/30'
                   : track.status === 'failed'
-                    ? 'border-[#D4A5A5]/30'
+                    ? 'border-[#6B1D2A]/50'
                     : ''
               }`}
             >
-              <div className="font-medium text-[#F5F0EB] truncate">{track.title}</div>
+              <div className="font-medium text-[#F2E8D5] truncate" style={{ fontFamily: 'var(--font-playfair)' }}>
+                {track.title}
+              </div>
               <div className={
-                track.status === 'complete' ? 'text-[#8FBC8B]' :
-                track.status === 'failed' ? 'text-[#D4A5A5]' :
-                track.status === 'generating_audio' ? 'text-[#E8A87C]' :
-                track.status === 'generating_lyrics' ? 'text-[#B8A9C9]' :
-                'text-[#9B8E99]'
+                track.status === 'complete' ? 'text-[#C9A84C]' :
+                track.status === 'failed' ? 'text-[#6B1D2A]' :
+                track.status === 'generating_audio' ? 'text-[#E8C872]' :
+                track.status === 'generating_lyrics' ? 'text-[#F2E8D5]/50' :
+                'text-[#F2E8D5]/30'
               }>
                 {track.status === 'complete' ? 'Ready' :
                  track.status === 'failed' ? 'Failed' :

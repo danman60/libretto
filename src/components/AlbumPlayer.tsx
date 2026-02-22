@@ -48,7 +48,7 @@ export function AlbumPlayer({ tracks, onTrackChange }: AlbumPlayerProps) {
     next.volume = 0;
     next.play().catch(() => {});
 
-    const steps = 60; // 3s at 50ms intervals
+    const steps = 60;
     let step = 0;
 
     crossfadeTimerRef.current = setInterval(() => {
@@ -75,7 +75,6 @@ export function AlbumPlayer({ tracks, onTrackChange }: AlbumPlayerProps) {
 
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
-      // Start crossfade 3s before end
       if (audio.duration && audio.currentTime >= audio.duration - 3 && !crossfadeTimerRef.current) {
         startCrossfade();
       }
@@ -161,36 +160,37 @@ export function AlbumPlayer({ tracks, onTrackChange }: AlbumPlayerProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={handlePlayAll}
-          className="h-11 w-11 rounded-full flex items-center justify-center flex-shrink-0 hover:brightness-110 transition-all hover:scale-105"
-          style={{ backgroundColor: 'var(--mood-accent, #E8A87C)' }}
+          className="h-11 w-11 rounded-full flex items-center justify-center flex-shrink-0 bg-[#C9A84C] hover:brightness-110 transition-all hover:scale-105"
         >
           {isPlaying ? (
-            <Pause className="h-4 w-4 text-[#0D0B0E]" />
+            <Pause className="h-4 w-4 text-[#08070A]" />
           ) : (
-            <Play className="h-4 w-4 text-[#0D0B0E] ml-0.5" />
+            <Play className="h-4 w-4 text-[#08070A] ml-0.5" />
           )}
         </button>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between mb-1">
-            <span className="text-sm text-[#F5F0EB] truncate">{currentTrack?.title || 'Play All'}</span>
-            <span className="text-[10px] text-[#9B8E99] tabular-nums ml-2 flex-shrink-0">
+            <span className="text-sm text-[#F2E8D5] truncate" style={{ fontFamily: 'var(--font-playfair)' }}>
+              {currentTrack?.title || 'Play All'}
+            </span>
+            <span className="text-[10px] text-[#F2E8D5]/40 tabular-nums ml-2 flex-shrink-0" style={{ fontFamily: 'var(--font-oswald)' }}>
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
-          <div className="h-1.5 bg-white/[0.08] rounded-full">
+          <div className="h-1.5 bg-[#1A0F1E] rounded-full border border-[#C9A84C]/10">
             <div
-              className="h-full rounded-full transition-all duration-100"
-              style={{ width: `${progress}%`, backgroundColor: 'var(--mood-accent, #E8A87C)', opacity: 0.7 }}
+              className="h-full rounded-full transition-all duration-100 bg-gradient-to-r from-[#C9A84C] to-[#E8C872]"
+              style={{ width: `${progress}%`, opacity: 0.7 }}
             />
           </div>
         </div>
 
         <button
           onClick={handleSkip}
-          className="h-8 w-8 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0 hover:bg-white/[0.15] transition-colors"
+          className="h-8 w-8 rounded-full bg-[#1A0F1E] border border-[#C9A84C]/15 flex items-center justify-center flex-shrink-0 hover:border-[#C9A84C]/30 transition-colors"
         >
-          <SkipForward className="h-3.5 w-3.5 text-[#9B8E99]" />
+          <SkipForward className="h-3.5 w-3.5 text-[#F2E8D5]/50" />
         </button>
       </div>
     </div>

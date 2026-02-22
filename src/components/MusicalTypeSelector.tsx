@@ -17,13 +17,17 @@ export function MusicalTypeSelector({ selected, onSelect }: MusicalTypeSelectorP
           onClick={() => onSelect(type.id)}
           className={`glass-card p-4 text-left transition-all duration-200 group ${
             selected === type.id
-              ? 'ring-2 ring-[#E8A87C] shadow-lg shadow-[#E8A87C]/10 border-[#E8A87C]/30'
-              : 'hover:border-[#E8A87C]/20'
+              ? 'ring-2 ring-[#C9A84C] shadow-lg shadow-[#C9A84C]/20 border-[#C9A84C]/40'
+              : 'hover:border-[#C9A84C]/25'
           }`}
         >
           <div className="text-2xl mb-2">{type.icon}</div>
-          <h3 className="text-[#F5F0EB] font-semibold text-sm mb-0.5">{type.label}</h3>
-          <p className="text-[#9B8E99] text-xs leading-snug">{type.tagline}</p>
+          <h3 className="text-[#F2E8D5] font-semibold text-sm mb-0.5" style={{ fontFamily: 'var(--font-playfair)' }}>
+            {type.label}
+          </h3>
+          <p className="text-[#F2E8D5]/40 text-xs leading-snug" style={{ fontFamily: 'var(--font-cormorant)' }}>
+            {type.tagline}
+          </p>
         </button>
       ))}
     </div>

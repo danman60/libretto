@@ -66,7 +66,6 @@ export default function CreatePage() {
     const openingNumber = tracks.find(t => t.track_number === 1 && t.status === 'complete' && t.audio_url);
     if (openingNumber) {
       firstTrackPlayed.current = true;
-      // Don't actually autoplay — just note it's ready. The playbill page will handle playback.
     }
   }, [tracks]);
 
@@ -75,7 +74,6 @@ export default function CreatePage() {
 
     setIsSubmitting(true);
     try {
-      // Create session with musical type + idea
       const sessionRes = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,7 +84,6 @@ export default function CreatePage() {
       setProjectId(newProjectId);
       sessionStorage.setItem('libretto_project_id', newProjectId);
 
-      // Trigger generation
       await fetch('/api/generate-track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,9 +101,9 @@ export default function CreatePage() {
   // Loading screen
   if (step === 'loading') {
     return (
-      <main className="min-h-screen text-[#F5F0EB]">
+      <main className="min-h-screen text-[#F2E8D5]">
         <div className="text-center pt-8 mb-4">
-          <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+          <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
             LIBRETTO
           </Link>
         </div>
@@ -114,7 +111,7 @@ export default function CreatePage() {
           <CurtainLoader tracks={tracks} isComplete={allDone} />
           {allDone && album?.share_slug && (
             <div className="text-center mt-6">
-              <p className="text-[#9B8E99] text-sm">Redirecting to your playbill...</p>
+              <p className="text-[#F2E8D5]/50 text-sm">Redirecting to your playbill...</p>
             </div>
           )}
         </div>
@@ -124,9 +121,9 @@ export default function CreatePage() {
 
   // Create form
   return (
-    <main className="min-h-screen text-[#F5F0EB]">
+    <main className="min-h-screen text-[#F2E8D5]">
       <div className="text-center pt-8 mb-4">
-        <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+        <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
           LIBRETTO
         </Link>
       </div>
@@ -134,13 +131,12 @@ export default function CreatePage() {
       <div className="max-w-2xl mx-auto px-6 py-8 gentle-fade-in">
         {/* Step 1: Choose your musical type */}
         <div className="text-center mb-8">
-          <h2
-            className="text-3xl mb-2"
-            style={{ fontFamily: 'var(--font-dm-serif)' }}
+          <h2 className="text-3xl mb-2"
+            style={{ fontFamily: 'var(--font-playfair)', fontStyle: 'italic' }}
           >
             What kind of show?
           </h2>
-          <p className="text-[#9B8E99]" style={{ fontFamily: 'var(--font-lora)' }}>
+          <p className="text-[#F2E8D5]/50" style={{ fontFamily: 'var(--font-cormorant)' }}>
             Pick a style. We&apos;ll handle the rest.
           </p>
         </div>
@@ -150,9 +146,8 @@ export default function CreatePage() {
         {/* Step 2: Enter your idea */}
         {musicalType && (
           <div className="mt-10 gentle-fade-in">
-            <label
-              className="block text-lg text-[#F5F0EB] mb-3"
-              style={{ fontFamily: 'var(--font-dm-serif)' }}
+            <label className="block text-lg text-[#F2E8D5] mb-3"
+              style={{ fontFamily: 'var(--font-playfair)', fontStyle: 'italic' }}
             >
               What&apos;s your show about?
             </label>
@@ -162,18 +157,19 @@ export default function CreatePage() {
               placeholder="A janitor at a space station who discovers she's the last person who remembers Earth's music..."
               rows={3}
               maxLength={500}
-              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-[#F5F0EB] placeholder-[#9B8E99]/50 focus:outline-none focus:border-[#E8A87C]/30 transition-colors resize-none listening-pulse"
-              style={{ fontFamily: 'var(--font-lora)' }}
+              className="w-full bg-[#1A0F1E]/50 border border-[#C9A84C]/15 rounded-xl px-4 py-3 text-[#F2E8D5] placeholder-[#F2E8D5]/30 focus:outline-none focus:border-[#C9A84C]/40 transition-colors resize-none"
+              style={{ fontFamily: 'var(--font-cormorant)' }}
             />
             <div className="flex items-center justify-between mt-2">
-              <span className="text-xs text-[#9B8E99]/50">{idea.length}/500</span>
+              <span className="text-xs text-[#F2E8D5]/30">{idea.length}/500</span>
             </div>
 
             <div className="mt-8 text-center">
               <button
                 onClick={handleCreate}
                 disabled={!idea.trim() || isSubmitting}
-                className="px-12 py-4 rounded-full bg-[#E8A87C] text-[#0D0B0E] text-lg font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#E8A87C]/20 disabled:opacity-40 disabled:hover:scale-100"
+                className="px-12 py-4 rounded-full bg-[#C9A84C] text-[#08070A] text-lg font-semibold hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#C9A84C]/30 disabled:opacity-40 disabled:hover:scale-100 tracking-wide uppercase"
+                style={{ fontFamily: 'var(--font-oswald)' }}
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
@@ -184,7 +180,7 @@ export default function CreatePage() {
                   'Create My Show'
                 )}
               </button>
-              <p className="mt-4 text-sm text-[#9B8E99]/50">
+              <p className="mt-4 text-sm text-[#F2E8D5]/30" style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}>
                 6 original songs, a full playbill, and cover art — in about 2 minutes.
               </p>
             </div>

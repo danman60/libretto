@@ -89,29 +89,28 @@ export function AudioPlayer({ src, title, coverUrl }: AudioPlayerProps) {
       ) : (
         <button
           onClick={togglePlay}
-          className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 hover:brightness-110 transition-all hover:scale-105"
-          style={{ backgroundColor: 'var(--mood-accent, #E8A87C)' }}
+          className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 bg-[#C9A84C] hover:brightness-110 transition-all hover:scale-105"
           aria-label={isPlaying ? `Pause ${title}` : `Play ${title}`}
         >
           {isPlaying ? (
-            <Pause className="h-3.5 w-3.5 text-[#0D0B0E]" />
+            <Pause className="h-3.5 w-3.5 text-[#08070A]" />
           ) : (
-            <Play className="h-3.5 w-3.5 text-[#0D0B0E] ml-0.5" />
+            <Play className="h-3.5 w-3.5 text-[#08070A] ml-0.5" />
           )}
         </button>
       )}
 
       <div className="flex-1 space-y-1">
         <div
-          className="h-1.5 bg-white/[0.08] rounded-full cursor-pointer group/bar"
+          className="h-1.5 bg-[#1A0F1E] rounded-full cursor-pointer group/bar border border-[#C9A84C]/10"
           onClick={handleSeek}
         >
           <div
-            className="h-full rounded-full transition-all duration-100 group-hover/bar:opacity-100"
-            style={{ width: `${progress}%`, backgroundColor: 'var(--mood-accent, #E8A87C)', opacity: 0.6 }}
+            className="h-full rounded-full transition-all duration-100 bg-gradient-to-r from-[#C9A84C] to-[#E8C872] group-hover/bar:opacity-100"
+            style={{ width: `${progress}%`, opacity: 0.6 }}
           />
         </div>
-        <div className="flex justify-between text-[10px] text-[#9B8E99] tabular-nums">
+        <div className="flex justify-between text-[10px] text-[#F2E8D5]/40 tabular-nums" style={{ fontFamily: 'var(--font-oswald)' }}>
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>

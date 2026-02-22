@@ -18,14 +18,17 @@ export function PlaybillView({ playbill, tracks, showTitle, showTagline, highlig
   return (
     <div className="space-y-12">
       {/* Synopsis */}
-      <section>
-        <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-4">Synopsis</h2>
-        <p className="text-xs text-[#B8A9C9] mb-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
+      <section className="playbill-card p-8">
+        <h2 className="text-sm tracking-[0.3em] text-[#6B1D2A] uppercase mb-4"
+          style={{ fontFamily: 'var(--font-oswald)' }}
+        >
+          Synopsis
+        </h2>
+        <p className="text-xs text-[#1A0F1E]/60 mb-3" style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}>
           {playbill.setting}
         </p>
-        <div
-          className="text-[#A89DAF] text-base leading-relaxed space-y-3"
-          style={{ fontFamily: 'var(--font-lora)', lineHeight: '1.8' }}
+        <div className="text-[#1A0F1E]/80 text-base leading-relaxed space-y-3"
+          style={{ fontFamily: 'var(--font-cormorant)', lineHeight: '1.8' }}
         >
           {playbill.synopsis.split('\n').filter(Boolean).map((paragraph, i) => (
             <p key={i}>{paragraph}</p>
@@ -36,12 +39,18 @@ export function PlaybillView({ playbill, tracks, showTitle, showTagline, highlig
       {/* Cast of Characters */}
       {playbill.characters.length > 0 && (
         <section>
-          <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-4">Cast of Characters</h2>
+          <h2 className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-4"
+            style={{ fontFamily: 'var(--font-oswald)' }}
+          >
+            Cast of Characters
+          </h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {playbill.characters.map((char, i) => (
               <div key={i} className="glass-card px-4 py-3">
-                <div className="font-semibold text-[#F5F0EB] text-sm">{char.name}</div>
-                <div className="text-[#9B8E99] text-xs mt-0.5" style={{ fontFamily: 'var(--font-lora)' }}>
+                <div className="font-semibold text-[#F2E8D5] text-sm" style={{ fontFamily: 'var(--font-playfair)' }}>
+                  {char.name}
+                </div>
+                <div className="text-[#F2E8D5]/50 text-xs mt-0.5" style={{ fontFamily: 'var(--font-cormorant)' }}>
                   {char.description}
                 </div>
               </div>
@@ -52,11 +61,19 @@ export function PlaybillView({ playbill, tracks, showTitle, showTagline, highlig
 
       {/* Musical Numbers */}
       <section>
-        <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-6">Musical Numbers</h2>
+        <h2 className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-6"
+          style={{ fontFamily: 'var(--font-oswald)' }}
+        >
+          Musical Numbers
+        </h2>
 
         {/* Act I */}
         <div className="mb-6">
-          <h3 className="text-xs tracking-widest text-[#E8A87C] uppercase mb-3">Act I</h3>
+          <h3 className="text-xs tracking-[0.3em] text-[#C9A84C] uppercase mb-3"
+            style={{ fontFamily: 'var(--font-oswald)' }}
+          >
+            Act I
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {act1Tracks.map((track, i) => (
               <SongCard
@@ -71,15 +88,21 @@ export function PlaybillView({ playbill, tracks, showTitle, showTagline, highlig
         </div>
 
         {/* Intermission */}
-        <div className="flex items-center gap-4 my-8">
-          <div className="flex-1 h-px bg-white/[0.06]" />
-          <span className="text-xs tracking-widest text-[#9B8E99] uppercase">Intermission</span>
-          <div className="flex-1 h-px bg-white/[0.06]" />
+        <div className="intermission-divider my-8">
+          <span className="text-xs tracking-[0.3em] text-[#C9A84C]/60 uppercase whitespace-nowrap"
+            style={{ fontFamily: 'var(--font-oswald)' }}
+          >
+            Intermission
+          </span>
         </div>
 
         {/* Act II */}
         <div>
-          <h3 className="text-xs tracking-widest text-[#E8A87C] uppercase mb-3">Act II</h3>
+          <h3 className="text-xs tracking-[0.3em] text-[#C9A84C] uppercase mb-3"
+            style={{ fontFamily: 'var(--font-oswald)' }}
+          >
+            Act II
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {act2Tracks.map((track, i) => (
               <SongCard

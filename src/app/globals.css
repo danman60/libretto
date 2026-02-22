@@ -7,10 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-oswald);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-dm-serif);
-  --font-body: var(--font-lora);
+  --font-serif: var(--font-playfair);
+  --font-body: var(--font-cormorant);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,84 +48,54 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* Libretto V2 Warm Palette — brighter/warmer variant */
-  --color-warm-bg: #141117;
-  --color-warm-card: rgba(55, 38, 62, 0.55);
-  --color-warm-amber: #F0B88A;
-  --color-warm-lavender: #C8BBDA;
-  --color-warm-rose: #E0B5B5;
-  --color-warm-text: #FAF5F0;
-  --color-warm-muted: #AEA1AB;
-  --color-warm-sage: #9ECC9B;
+  /* ===== Broadway Palette ===== */
+  --color-theater-black: #08070A;
+  --color-theater-deep: #0E0C12;
+  --color-gold: #C9A84C;
+  --color-gold-light: #E8C872;
+  --color-gold-dim: #8A7434;
+  --color-cream: #F2E8D5;
+  --color-cream-muted: #B8AD9A;
+  --color-burgundy: #6B1D2A;
+  --color-burgundy-light: #8E2E3E;
+  --color-spotlight: #FFFDF5;
+  --color-velvet: #1A0F1E;
+  --color-stage-wood: #2A1F16;
 }
 
 :root {
-  --radius: 1.25rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --radius: 0.5rem;
+  --background: oklch(0.06 0.01 285);
+  --foreground: oklch(0.92 0.02 80);
+  --card: oklch(0.12 0.01 285);
+  --card-foreground: oklch(0.92 0.02 80);
+  --popover: oklch(0.12 0.01 285);
+  --popover-foreground: oklch(0.92 0.02 80);
+  --primary: oklch(0.75 0.1 80);
+  --primary-foreground: oklch(0.1 0.01 285);
+  --secondary: oklch(0.15 0.01 285);
+  --secondary-foreground: oklch(0.85 0.02 80);
+  --muted: oklch(0.18 0.01 285);
+  --muted-foreground: oklch(0.65 0.02 80);
+  --accent: oklch(0.75 0.1 80);
+  --accent-foreground: oklch(0.1 0.01 285);
+  --destructive: oklch(0.45 0.18 15);
+  --border: oklch(0.75 0.08 80 / 15%);
+  --input: oklch(0.75 0.08 80 / 12%);
+  --ring: oklch(0.75 0.1 80);
+  --chart-1: oklch(0.75 0.1 80);
+  --chart-2: oklch(0.45 0.15 15);
+  --chart-3: oklch(0.85 0.04 80);
+  --chart-4: oklch(0.55 0.08 15);
+  --chart-5: oklch(0.65 0.06 80);
+  --sidebar: oklch(0.1 0.01 285);
+  --sidebar-foreground: oklch(0.85 0.02 80);
+  --sidebar-primary: oklch(0.75 0.1 80);
+  --sidebar-primary-foreground: oklch(0.1 0.01 285);
+  --sidebar-accent: oklch(0.15 0.01 285);
+  --sidebar-accent-foreground: oklch(0.85 0.02 80);
+  --sidebar-border: oklch(0.75 0.08 80 / 15%);
+  --sidebar-ring: oklch(0.75 0.1 80);
 }
 
 @layer base {
@@ -137,23 +107,199 @@
   }
 }
 
-/* ===== Libretto V2 Design System ===== */
+/* ===== BROADWAY DESIGN SYSTEM ===== */
 
-/* Glassmorphism card */
+/* Theater texture — subtle noise over the dark background */
+.theater-texture {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ===== MARQUEE CARD ===== */
+/* Replaces glass-card with a theatrical card with gold border + art deco corners */
 .glass-card {
-  background: rgba(55, 38, 62, 0.55);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(240, 184, 138, 0.12);
-  border-radius: 20px;
+  background: linear-gradient(165deg, rgba(14, 12, 18, 0.95), rgba(26, 15, 30, 0.9));
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 4px;
+  position: relative;
 }
 
-/* Listening pulse on focused textarea */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(201, 168, 76, 0.08);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Playbill card — cream paper aesthetic for playbill sections */
+.playbill-card {
+  background: linear-gradient(175deg, #F2E8D5 0%, #E8DCC6 50%, #F0E4CF 100%);
+  border: 2px solid #C9A84C;
+  border-radius: 2px;
+  color: #1A0F1E;
+  position: relative;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.playbill-card::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  pointer-events: none;
+}
+
+/* ===== MARQUEE BORDER ===== */
+/* Animated dots of light around a container */
+.marquee-border {
+  position: relative;
+  padding: 3px;
+}
+
+.marquee-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #C9A84C 0px, #C9A84C 4px,
+    transparent 4px, transparent 12px
+  );
+  mask-image: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 2px;
+  border-radius: 4px;
+  animation: marquee-chase 2s linear infinite;
+}
+
+@keyframes marquee-chase {
+  0% { background-position: 0 0; }
+  100% { background-position: 48px 0; }
+}
+
+/* ===== SPOTLIGHT EFFECT ===== */
+.spotlight {
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 0%,
+    rgba(232, 200, 114, 0.08) 0%,
+    rgba(232, 200, 114, 0.02) 40%,
+    transparent 70%
+  );
+}
+
+.spotlight-hero {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 20%,
+    rgba(232, 200, 114, 0.12) 0%,
+    rgba(201, 168, 76, 0.04) 35%,
+    transparent 65%
+  );
+}
+
+/* ===== GOLD TEXT SHIMMER ===== */
+.gold-text {
+  background: linear-gradient(
+    135deg,
+    #8A7434 0%,
+    #C9A84C 25%,
+    #E8C872 50%,
+    #C9A84C 75%,
+    #8A7434 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gold-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes gold-shimmer {
+  0% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+  100% { background-position: 0% center; }
+}
+
+.gold-text-static {
+  background: linear-gradient(135deg, #C9A84C 0%, #E8C872 40%, #C9A84C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== ART DECO DIVIDER ===== */
+.art-deco-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.art-deco-divider::before,
+.art-deco-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C9A84C, transparent);
+}
+
+.art-deco-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.4), transparent);
+}
+
+/* ===== CURTAIN ANIMATION ===== */
+.curtain-rise {
+  animation: curtain-up 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes curtain-up {
+  0% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+/* Curtain close → open for the loader */
+.curtain-open-left {
+  animation: curtain-left 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.curtain-open-right {
+  animation: curtain-right 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes curtain-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-105%); }
+}
+
+@keyframes curtain-right {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(105%); }
+}
+
+/* ===== LISTENING PULSE (Broadway gold) ===== */
 .listening-pulse:focus-within {
-  box-shadow: 0 0 0 2px rgba(240, 184, 138, 0.2), 0 0 50px rgba(240, 184, 138, 0.1);
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.3), 0 0 40px rgba(201, 168, 76, 0.08);
+  border-color: rgba(201, 168, 76, 0.4);
 }
 
-/* Album reveal blur ceremony */
+/* ===== ALBUM REVEAL ===== */
 .reveal-blur {
   filter: blur(20px);
   opacity: 0;
@@ -165,7 +311,7 @@
   100% { filter: blur(0); opacity: 1; transform: scale(1); }
 }
 
-/* Gentle fade-in for moment transitions */
+/* ===== GENTLE FADE IN ===== */
 .gentle-fade-in {
   animation: gentle-fade 600ms ease-out;
 }
@@ -175,46 +321,25 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Warm aurora gradient (amber/lavender) — brighter */
-.aurora-bg {
-  background: linear-gradient(
-    -45deg,
-    rgba(240, 184, 138, 0.25),
-    rgba(200, 187, 218, 0.2),
-    rgba(224, 181, 181, 0.22),
-    rgba(240, 184, 138, 0.18)
-  );
-  background-size: 400% 400%;
-  animation: aurora-shift 18s ease infinite;
+/* ===== STAGE ENTRANCE — staggered from below ===== */
+.stage-enter {
+  opacity: 0;
+  animation: stage-entrance 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes aurora-shift {
-  0% { background-position: 0% 50%; }
-  25% { background-position: 100% 25%; }
-  50% { background-position: 100% 50%; }
-  75% { background-position: 0% 75%; }
-  100% { background-position: 0% 50%; }
+@keyframes stage-entrance {
+  0% { opacity: 0; transform: translateY(30px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Quote fade animation */
-@keyframes quote-fade {
-  0% { opacity: 0; transform: translateY(4px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-4px); }
-}
+.stage-enter-1 { animation-delay: 100ms; }
+.stage-enter-2 { animation-delay: 200ms; }
+.stage-enter-3 { animation-delay: 300ms; }
+.stage-enter-4 { animation-delay: 400ms; }
+.stage-enter-5 { animation-delay: 500ms; }
+.stage-enter-6 { animation-delay: 600ms; }
 
-.quote-animate {
-  animation: quote-fade 8s ease-in-out;
-}
-
-/* Letter reveal for album title */
-@keyframes letter-reveal {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* Track cascade entrance */
+/* ===== TRACK CASCADE ===== */
 .track-cascade {
   opacity: 0;
   animation: cascade-in 500ms ease-out forwards;
@@ -225,55 +350,50 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Stagger delays for tracks */
 .track-cascade-1 { animation-delay: 200ms; }
-.track-cascade-2 { animation-delay: 400ms; }
-.track-cascade-3 { animation-delay: 600ms; }
+.track-cascade-2 { animation-delay: 350ms; }
+.track-cascade-3 { animation-delay: 500ms; }
 .track-cascade-4 { animation-delay: 200ms; }
-.track-cascade-5 { animation-delay: 400ms; }
-.track-cascade-6 { animation-delay: 600ms; }
+.track-cascade-5 { animation-delay: 350ms; }
+.track-cascade-6 { animation-delay: 500ms; }
 
-/* ===== Sheet Music Background ===== */
-.sheet-music-bg {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-  color: rgba(240, 184, 138, 0.6);
-  filter: blur(1.5px);
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 70%);
+/* ===== MARQUEE TITLE ===== */
+/* The big hero title with letter-spacing and gold treatment */
+.marquee-title {
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-weight: 900;
+  text-shadow:
+    0 0 40px rgba(201, 168, 76, 0.3),
+    0 0 80px rgba(201, 168, 76, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.sheet-music-layer {
-  position: absolute;
-  inset: 0;
-  width: 200%;
-  height: 100%;
-  min-height: 100%;
+/* ===== INTERMISSION DIVIDER ===== */
+.intermission-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
 }
 
-.sheet-music-drift-1 {
-  animation: sheet-drift-left 60s linear infinite;
+.intermission-divider::before,
+.intermission-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C9A84C, transparent);
 }
 
-.sheet-music-drift-2 {
-  animation: sheet-drift-right 80s linear infinite;
-  opacity: 0.7;
+/* ===== OVERTURE GRADIENT — hero background ===== */
+.overture-bg {
+  background:
+    radial-gradient(ellipse 100% 80% at 50% 10%, rgba(107, 29, 42, 0.15), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 30% 60%, rgba(201, 168, 76, 0.05), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(201, 168, 76, 0.03), transparent 50%);
 }
 
-@keyframes sheet-drift-left {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes sheet-drift-right {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
-
-/* Vinyl spin animation */
+/* ===== VINYL / PLAYBACK ===== */
 @keyframes vinyl-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -286,4 +406,40 @@
 .vinyl-paused {
   animation: vinyl-spin 20s linear infinite;
   animation-play-state: paused;
+}
+
+/* ===== QUOTE FADE ===== */
+@keyframes quote-fade {
+  0% { opacity: 0; transform: translateY(4px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+
+.quote-animate {
+  animation: quote-fade 8s ease-in-out;
+}
+
+/* ===== SELECTION COLOR ===== */
+::selection {
+  background: rgba(201, 168, 76, 0.3);
+  color: #F2E8D5;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08070A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 76, 0.4);
 }
