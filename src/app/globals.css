@@ -369,6 +369,12 @@
     0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+@media (max-width: 639px) {
+  .marquee-title {
+    letter-spacing: 0.1em;
+  }
+}
+
 /* ===== INTERMISSION DIVIDER ===== */
 .intermission-divider {
   display: flex;

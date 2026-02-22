@@ -103,7 +103,7 @@ export default function CreatePage() {
     return (
       <main className="min-h-screen text-[#F2E8D5]">
         <div className="text-center pt-8 mb-4">
-          <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
+          <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
             BROADWAYIFY
           </Link>
         </div>
@@ -123,7 +123,7 @@ export default function CreatePage() {
   return (
     <main className="min-h-screen text-[#F2E8D5]">
       <div className="text-center pt-8 mb-4">
-        <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
           BROADWAYIFY
         </Link>
       </div>
@@ -142,6 +142,12 @@ export default function CreatePage() {
         </div>
 
         <MusicalTypeSelector selected={musicalType} onSelect={setMusicalType} />
+
+        {!musicalType && (
+          <p className="text-center text-sm text-[#F2E8D5]/30 mt-6" style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}>
+            Tap a genre to continue
+          </p>
+        )}
 
         {/* Step 2: Enter your idea */}
         {musicalType && (

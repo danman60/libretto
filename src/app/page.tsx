@@ -8,8 +8,8 @@ export default function LandingPage() {
       <section className="relative overflow-hidden spotlight-hero">
         <div className="absolute inset-0 overture-bg opacity-50" />
 
-        <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
-          <h1 className="marquee-title text-6xl sm:text-7xl md:text-9xl font-black mb-4"
+        <div className="relative max-w-3xl mx-auto px-6 pt-20 sm:pt-32 pb-24 text-center">
+          <h1 className="marquee-title text-[2.5rem] sm:text-7xl md:text-9xl font-black mb-4"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
             BROADWAYIFY
@@ -31,12 +31,11 @@ export default function LandingPage() {
             generate cover art — in about two minutes.
           </p>
 
-          <Link href="/create">
-            <button className="px-12 py-4 rounded-full bg-[#C9A84C] text-[#08070A] text-lg font-semibold hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#C9A84C]/30 tracking-wide uppercase"
-              style={{ fontFamily: 'var(--font-oswald)' }}
-            >
-              Create a show
-            </button>
+          <Link href="/create"
+            className="inline-block px-12 py-4 rounded-full bg-[#C9A84C] text-[#08070A] text-lg font-semibold hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#C9A84C]/30 tracking-wide uppercase"
+            style={{ fontFamily: 'var(--font-oswald)' }}
+          >
+            Create a show
           </Link>
 
           <p className="mt-6 text-sm text-[#F2E8D5]/30">
@@ -131,12 +130,11 @@ export default function LandingPage() {
           <p className="text-base text-[#F2E8D5]/40 mb-10" style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}>
             Every show is unique. No two playbills are alike.
           </p>
-          <Link href="/create">
-            <button className="px-10 py-3.5 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-colors text-base tracking-wide"
-              style={{ fontFamily: 'var(--font-oswald)' }}
-            >
-              Get started
-            </button>
+          <Link href="/create"
+            className="inline-block px-10 py-3.5 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-colors text-base tracking-wide"
+            style={{ fontFamily: 'var(--font-oswald)' }}
+          >
+            Get started
           </Link>
         </div>
       </section>

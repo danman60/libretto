@@ -229,7 +229,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     <main className="min-h-screen text-[#F2E8D5]" style={{ background: 'var(--mood-bg-tint, transparent)' }}>
       {/* Nav */}
       <div className="text-center pt-8">
-        <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
           BROADWAYIFY
         </Link>
       </div>
@@ -261,7 +261,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
             ) : (
               <div className="w-44 h-44 sm:w-56 sm:h-56 rounded-2xl glass-card flex items-center justify-center flex-shrink-0">
                 <div className="text-5xl gold-text-static" style={{ fontFamily: 'var(--font-playfair)' }}>
-                  L
+                  B
                 </div>
               </div>
             )}
@@ -296,7 +296,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                       <button
                         key={i}
                         onClick={() => handleTitleSwitch(i)}
-                        className="text-xs px-3 py-1 rounded-full border border-[#C9A84C]/15 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/40 transition-colors"
+                        className="text-xs px-4 py-2 min-h-[44px] rounded-full border border-[#C9A84C]/15 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/40 transition-colors flex items-center"
                         style={{ fontFamily: 'var(--font-oswald)' }}
                       >
                         {alt.title}
@@ -306,21 +306,19 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                 </div>
               )}
 
-              <div className="flex items-center gap-3 justify-center sm:justify-start flex-wrap">
-                <span className="text-sm text-[#F2E8D5]/40" style={{ fontFamily: 'var(--font-oswald)' }}>
-                  {tracks.length} song{tracks.length !== 1 ? 's' : ''}
-                </span>
-                <span className="text-[#C9A84C]/20">|</span>
-                <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">
+              <p className="text-sm text-[#F2E8D5]/40 mb-3" style={{ fontFamily: 'var(--font-oswald)' }}>
+                {tracks.length} song{tracks.length !== 1 ? 's' : ''}
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                <button onClick={handleShare} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors">
                   {copied ? <><Check className="h-4 w-4" /> Copied</> : <><Share2 className="h-4 w-4" /> Share</>}
                 </button>
-                <span className="text-[#C9A84C]/20">|</span>
                 <div className="relative">
-                  <button onClick={() => setShowQR(!showQR)} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">
+                  <button onClick={() => setShowQR(!showQR)} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors">
                     <QrCode className="h-4 w-4" /> QR
                   </button>
                   {showQR && (
-                    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 glass-card p-3 shadow-xl">
+                    <div className="absolute top-full mt-2 left-0 sm:left-1/2 sm:-translate-x-1/2 z-50 glass-card p-3 shadow-xl">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&bgcolor=08070A&color=F2E8D5`}
                         alt="QR Code"
@@ -329,18 +327,15 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                     </div>
                   )}
                 </div>
-                <span className="text-[#C9A84C]/20">|</span>
-                <button onClick={handleCopyEmbed} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">
+                <button onClick={handleCopyEmbed} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors">
                   {embedCopied ? <><Check className="h-4 w-4" /> Copied</> : <><Code className="h-4 w-4" /> Embed</>}
                 </button>
                 {hasCompleteTracks && (
                   <>
-                    <span className="text-[#C9A84C]/20">|</span>
-                    <button onClick={handleDownload} disabled={downloading} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors disabled:opacity-50">
-                      {downloading ? <><Loader2 className="h-4 w-4 animate-spin" /> Zipping...</> : <><Download className="h-4 w-4" /> Download</>}
+                    <button onClick={handleDownload} disabled={downloading} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors disabled:opacity-50">
+                      {downloading ? <><Loader2 className="h-4 w-4 animate-spin" /> Zipping...</> : <><Download className="h-4 w-4" /> ZIP</>}
                     </button>
-                    <span className="text-[#C9A84C]/20">|</span>
-                    <button onClick={handleBooklet} disabled={generatingBooklet} className="flex items-center gap-1.5 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors disabled:opacity-50">
+                    <button onClick={handleBooklet} disabled={generatingBooklet} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors disabled:opacity-50">
                       {generatingBooklet ? <><Loader2 className="h-4 w-4 animate-spin" /> PDF...</> : <><BookOpen className="h-4 w-4" /> Playbill</>}
                     </button>
                   </>
