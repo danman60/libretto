@@ -178,7 +178,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       const a = document.createElement('a');
       a.href = url;
       const safeTitle = album.title.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
-      a.download = `${safeTitle} - Libretto.zip`;
+      a.download = `${safeTitle} - Broadwayify.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -230,7 +230,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       {/* Nav */}
       <div className="text-center pt-8">
         <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
-          LIBRETTO
+          BROADWAYIFY
         </Link>
       </div>
 
@@ -270,10 +270,10 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               <p className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-2"
                 style={{ fontFamily: 'var(--font-oswald)' }}
               >
-                {isMusical ? 'A Libretto Musical' : (
+                {isMusical ? 'A Broadwayify Musical' : (
                   data.isGift && data.recipientName
                     ? `A gift for ${data.recipientName}`
-                    : 'Your Libretto'
+                    : 'Your Broadwayify'
                 )}
               </p>
               <h1
@@ -441,7 +441,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       {/* Footer */}
       <footer className="border-t border-[#C9A84C]/10 py-8 text-center">
         <p className="text-sm text-[#F2E8D5]/30">
-          Made with <a href="/" className="text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">Libretto</a>
+          Made with <a href="/" className="text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">Broadwayify</a>
         </p>
       </footer>
     </main>

@@ -12,7 +12,7 @@ export default function LandingPage() {
           <h1 className="marquee-title text-6xl sm:text-7xl md:text-9xl font-black mb-4"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
-            LIBRETTO
+            BROADWAYIFY
           </h1>
 
           <div className="art-deco-divider my-6" />
@@ -143,7 +143,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-[#C9A84C]/10 py-8 text-center text-xs text-[#F2E8D5]/30">
-        Libretto &copy; {new Date().getFullYear()}
+        Broadwayify &copy; {new Date().getFullYear()}
       </footer>
     </main>
   );

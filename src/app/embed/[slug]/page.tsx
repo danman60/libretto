@@ -64,7 +64,7 @@ export default function EmbedPage({ params }: { params: Promise<{ slug: string }
           target="_blank"
           className="text-xs text-[#9B8E99]/50 hover:text-[#E8A87C] transition-colors"
         >
-          View full album on Libretto
+          View full album on Broadwayify
         </a>
       </div>
     </div>

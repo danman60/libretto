@@ -23,7 +23,7 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "LIBRETTO — Turn your idea into a Broadway musical",
+  title: "BROADWAYIFY — Turn your idea into a Broadway musical",
   description: "Pick a musical style, describe your show in one sentence. Get 6 original songs, a full playbill, and cover art in minutes.",
 };
 

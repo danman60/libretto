@@ -104,7 +104,7 @@ export default function CreatePage() {
       <main className="min-h-screen text-[#F2E8D5]">
         <div className="text-center pt-8 mb-4">
           <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
-            LIBRETTO
+            BROADWAYIFY
           </Link>
         </div>
         <div className="max-w-2xl mx-auto px-6 py-16">
@@ -124,7 +124,7 @@ export default function CreatePage() {
     <main className="min-h-screen text-[#F2E8D5]">
       <div className="text-center pt-8 mb-4">
         <Link href="/" className="marquee-title text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
-          LIBRETTO
+          BROADWAYIFY
         </Link>
       </div>
 

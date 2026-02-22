@@ -32,7 +32,7 @@ export async function generateBooklet(album: Album, tracks: Track[]): Promise<Bl
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('Made with Libretto', pageW / 2, 280, { align: 'center' });
+  doc.text('Made with Broadwayify', pageW / 2, 280, { align: 'center' });
 
   // Track listing page
   doc.addPage();

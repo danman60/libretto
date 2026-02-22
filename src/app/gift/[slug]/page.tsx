@@ -45,7 +45,7 @@ export default function GiftPage({ params }: { params: Promise<{ slug: string }>
     <main className="min-h-screen text-[#F5F0EB] flex flex-col items-center justify-center px-6">
       <div className="text-center mb-4">
         <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
-          LIBRETTO
+          BROADWAYIFY
         </Link>
       </div>
 
@@ -82,7 +82,7 @@ export default function GiftPage({ params }: { params: Promise<{ slug: string }>
           {unwrapping ? (
             <><Loader2 className="h-5 w-5 animate-spin" /> Opening...</>
           ) : (
-            <><Gift className="h-5 w-5" /> Unwrap your Libretto</>
+            <><Gift className="h-5 w-5" /> Unwrap your Broadwayify</>
           )}
         </button>
       </div>
