@@ -20,21 +20,21 @@ export default function LandingPage() {
             className="text-2xl sm:text-3xl tracking-widest uppercase text-[#F0B88A] mb-6"
             style={{ fontFamily: 'var(--font-dm-serif)' }}
           >
-            Your life, in song
+            Turn your idea into a Broadway musical
           </p>
 
           <p
             className="text-xl text-[#9B8E99] max-w-lg mx-auto mb-12 leading-relaxed"
             style={{ fontFamily: 'var(--font-lora)' }}
           >
-            Share three moments that shaped you. We&apos;ll turn them into a
-            personal musical biography — lyrics, music, and narrative, composed
-            just for you.
+            Pick a style, describe your show in one sentence.
+            We&apos;ll compose 6 original songs, write a full playbill, and
+            generate cover art — in about two minutes.
           </p>
 
           <Link href="/create">
             <button className="px-12 py-4 rounded-full bg-[#E8A87C] text-[#0D0B0E] text-lg font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#E8A87C]/20">
-              Begin your story
+              Create a show
             </button>
           </Link>
 
@@ -55,41 +55,30 @@ export default function LandingPage() {
             className="text-4xl text-center mb-20 text-[#F5F0EB]"
             style={{ fontFamily: 'var(--font-dm-serif)' }}
           >
-            Three moments become three songs
+            From idea to opening night
           </h2>
 
           <div className="grid md:grid-cols-3 gap-12 md:gap-16">
             {[
               {
-                note: <span className="text-2xl leading-none">♪</span>,
-                title: 'Pick your sound',
-                desc: 'Choose your genre, era, and influences — then share three defining moments from your life.',
+                icon: '🎭',
+                title: 'Pick your genre',
+                desc: 'Classic Broadway, Rock Opera, Hip-Hop Musical, Disney-style — choose the tradition that fits your vision.',
               },
               {
-                note: <span className="text-2xl leading-none">♫</span>,
-                title: 'Music takes shape',
-                desc: 'Each moment becomes a track with personalized lyrics and music, generated in real time as you write.',
+                icon: '✍️',
+                title: 'Describe your show',
+                desc: 'One sentence is all it takes. Our AI dramaturg expands it into characters, a setting, and a full dramatic arc.',
               },
               {
-                note: (
-                  <svg width="28" height="24" viewBox="0 0 28 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="4" y="2" width="20" height="2.5" rx="1" />
-                    <rect x="4" y="5.5" width="20" height="2.5" rx="1" />
-                    <rect x="4" y="2" width="2" height="18" />
-                    <rect x="13" y="2" width="2" height="18" />
-                    <rect x="22" y="2" width="2" height="18" />
-                    <ellipse cx="2.5" cy="21" rx="3.5" ry="2.5" transform="rotate(-15 2.5 21)" />
-                    <ellipse cx="11.5" cy="21" rx="3.5" ry="2.5" transform="rotate(-15 11.5 21)" />
-                    <ellipse cx="20.5" cy="21" rx="3.5" ry="2.5" transform="rotate(-15 20.5 21)" />
-                  </svg>
-                ),
-                title: 'Listen & share',
-                desc: 'Receive a cinematic album page with your biography, playable tracks, and a shareable link.',
+                icon: '🎶',
+                title: 'Get your playbill',
+                desc: '6 original songs across two acts, a cast of characters, synopsis, and cover art — ready to share.',
               },
-            ].map(({ note, title, desc }) => (
+            ].map(({ icon, title, desc }) => (
               <div key={title} className="flex flex-col items-center text-center md:items-start md:text-left">
-                <div className="w-14 h-14 rounded-2xl glass-card flex items-center justify-center mb-5 text-[#E8A87C]">
-                  {note}
+                <div className="w-14 h-14 rounded-2xl glass-card flex items-center justify-center mb-5 text-2xl">
+                  {icon}
                 </div>
                 <h3 className="text-xl font-semibold text-[#F5F0EB] mb-2">
                   {title}
@@ -114,12 +103,12 @@ export default function LandingPage() {
           </h3>
           <div className="grid sm:grid-cols-2 gap-5">
             {[
-              '3 original tracks with lyrics',
-              'Custom cover art from your story',
-              'A reflective biography',
-              'Shareable album page',
-              'Music shaped by your emotions',
-              'Your story, never stored',
+              '6 original songs with lyrics',
+              'Full playbill with synopsis & cast',
+              'Custom cover art',
+              'Shareable show page',
+              'Two acts with intermission',
+              'Download all tracks as ZIP',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3">
                 <ChevronRight className="w-4 h-4 text-[#E8A87C]/60 flex-shrink-0" />
@@ -130,12 +119,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Privacy + CTA */}
+      {/* CTA */}
       <section className="max-w-2xl mx-auto px-6 pb-16">
         <div className="text-center">
           <p className="text-base text-[#9B8E99]/60 mb-10" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-            Your story is personal. We automatically redact sensitive information.
-            No account, no tracking.
+            Every show is unique. No two playbills are alike.
           </p>
           <Link href="/create">
             <button className="px-10 py-3.5 rounded-full border border-[#E8A87C]/20 text-[#E8A87C] hover:bg-[#E8A87C]/10 transition-colors text-base">

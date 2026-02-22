@@ -225,10 +225,13 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Stagger delays for 3 tracks */
+/* Stagger delays for tracks */
 .track-cascade-1 { animation-delay: 200ms; }
 .track-cascade-2 { animation-delay: 400ms; }
 .track-cascade-3 { animation-delay: 600ms; }
+.track-cascade-4 { animation-delay: 200ms; }
+.track-cascade-5 { animation-delay: 400ms; }
+.track-cascade-6 { animation-delay: 600ms; }
 
 /* ===== Sheet Music Background ===== */
 .sheet-music-bg {

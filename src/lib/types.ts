@@ -1,16 +1,39 @@
+// ===== Musical Types =====
+
+export type MusicalType =
+  | 'classic-broadway'
+  | 'rock-opera'
+  | 'jukebox'
+  | 'disney-style'
+  | 'hip-hop-musical'
+  | 'romantic-musical';
+
+export type SongRole =
+  | 'opening-number'
+  | 'i-want-song'
+  | 'confrontation'
+  | 'act-ii-opening'
+  | 'eleven-oclock'
+  | 'finale';
+
 // ===== Database Types =====
 
-export interface MusicProfile {
-  genres: string[];
-  era: string;
-  artist_reference?: string;
-}
+export type ProjectStatus =
+  | 'intake'
+  | 'enriching'
+  | 'generating_music'
+  | 'complete'
+  | 'failed';
 
 export interface Project {
   id: string;
   session_token: string;
   status: ProjectStatus;
   version: number;
+  musical_type: MusicalType | null;
+  idea: string | null;
+  backstory: string | null;
+  // Legacy fields (kept for backward compat)
   allow_real_names: boolean;
   music_profile: MusicProfile | null;
   recipient_name: string | null;
@@ -20,124 +43,10 @@ export interface Project {
   updated_at: string;
 }
 
-export type ProjectStatus =
-  | 'intake'
-  | 'processing'
-  | 'moments_in_progress'
-  | 'generating_meta'
-  | 'generating_music'
-  | 'complete'
-  | 'failed';
-
-export interface StoryIntake {
-  id: string;
-  project_id: string;
-  step: IntakeStep;
-  content: TurningPointsContent | InnerWorldContent | ScenesContent | MomentContent;
-  created_at: string;
-}
-
-export type IntakeStep = 'turning_points' | 'inner_world' | 'scenes' | 'moment_1' | 'moment_2' | 'moment_3';
-
-export interface TurningPointsContent {
-  text: string;
-}
-
-export interface InnerWorldContent {
-  text: string;
-}
-
-export interface Scene {
-  location: string;
-  who_was_present: string;
-  what_changed: string;
-  dominant_emotion: Emotion;
-}
-
-export interface ScenesContent {
-  scenes: Scene[];
-}
-
-export type Emotion =
-  | 'joy'
-  | 'grief'
-  | 'anger'
-  | 'hope'
-  | 'fear'
-  | 'love'
-  | 'surprise'
-  | 'nostalgia'
-  | 'pride'
-  | 'relief';
-
-// ===== V2: Moment Types =====
-
-export type NarrativeRole = 'origin' | 'turning_point' | 'resolution';
-
-export interface MomentContent {
-  story: string;
-  emotion: Emotion;
-}
-
-export interface MomentFormState {
-  story: string;
-  emotion: Emotion | null;
-}
-
-export const MOMENT_ROLES: { index: number; role: NarrativeRole; label: string; prompt: string; subtitle: string }[] = [
-  { index: 1, role: 'origin', label: 'Where it all began', prompt: 'Where it all began', subtitle: 'The roots of your story — the people, places, and feelings that set everything in motion.' },
-  { index: 2, role: 'turning_point', label: 'The moment everything shifted', prompt: 'The moment everything shifted', subtitle: 'The event, realization, or encounter that changed your direction forever.' },
-  { index: 3, role: 'resolution', label: 'Where your story lands', prompt: 'Where your story lands', subtitle: 'Where you are now — who you\'ve become, what you carry, and what you hope for.' },
-];
-
-// ===== V1 Legacy Types =====
-
-export interface MusicPreferences {
-  id: string;
-  project_id: string;
+export interface MusicProfile {
   genres: string[];
-  artists: string[];
-  favorite_songs: string[];
-  vocal_mode: 'vocals' | 'instrumental' | 'mixed';
-  energy: 'calm' | 'mid' | 'dynamic' | 'mixed';
-  era: 'classic' | 'modern' | 'mixed';
-  allow_real_names: boolean;
-  created_at: string;
-}
-
-export interface GeneratedContent {
-  id: string;
-  project_id: string;
-  content_type: 'lifemap' | 'biography';
-  content: LifeMap | BiographyContent;
-  llm_model: string | null;
-  prompt_used: string | null;
-  created_at: string;
-}
-
-export interface BiographyContent {
-  markdown: string;
-}
-
-export interface LifeMapChapter {
-  title: string;
-  summary: string;
-  emotional_state: string;
-  timeframe: string;
-}
-
-export interface LifeMap {
-  chapters: LifeMapChapter[];
-  emotional_arc: {
-    start: string;
-    midpoint: string;
-    resolution: string;
-  };
-  themes: string[];
-  motifs: string[];
-  sensory_elements: string[];
-  lyrical_phrases: string[];
-  tone_profile: string;
+  era: string;
+  artist_reference?: string;
 }
 
 export type TrackStatus =
@@ -155,6 +64,7 @@ export interface Track {
   moment_index: number | null;
   title: string;
   narrative_role: NarrativeRole;
+  song_role: SongRole | null;
   lyrics: string | null;
   style_prompt: string | null;
   suno_task_id: string | null;
@@ -175,27 +85,52 @@ export interface Album {
   tagline: string | null;
   cover_image_url: string | null;
   biography_markdown: string | null;
+  playbill_content: PlaybillContent | null;
   share_slug: string | null;
   title_alternatives: { title: string; tagline: string }[] | null;
   created_at: string;
 }
 
-// ===== Form State Types =====
+// ===== Playbill Content =====
 
-export interface IntakeFormState {
-  turningPoints: string;
-  innerWorld: string;
-  scenes: Scene[];
+export interface PlaybillContent {
+  synopsis: string;
+  setting: string;
+  characters: PlaybillCharacter[];
+  acts: PlaybillAct[];
 }
 
-export interface MusicPreferencesForm {
-  genres: string[];
-  artists: string[];
-  favoriteSongs: string[];
-  vocalMode: 'vocals' | 'instrumental' | 'mixed';
-  energy: 'calm' | 'mid' | 'dynamic' | 'mixed';
-  era: 'classic' | 'modern' | 'mixed';
-  allowRealNames: boolean;
+export interface PlaybillCharacter {
+  name: string;
+  description: string;
+}
+
+export interface PlaybillAct {
+  name: string; // "Act I" or "Act II"
+  songs: PlaybillSong[];
+}
+
+export interface PlaybillSong {
+  number: number;
+  title: string;
+  song_role: SongRole;
+}
+
+// ===== Enrichment (DeepSeek output) =====
+
+export interface ShowConcept {
+  title_options: { title: string; tagline: string }[];
+  recommended_title: number;
+  setting: string;
+  synopsis: string;
+  characters: { name: string; description: string; arc: string }[];
+  emotional_arc: {
+    act_i: string;
+    intermission_turn: string;
+    act_ii: string;
+  };
+  themes: string[];
+  tone: string;
 }
 
 // ===== API Response Types =====
@@ -209,26 +144,63 @@ export interface StatusResponse {
 export interface AlbumPageData {
   album: Album;
   tracks: Track[];
+  musicalType: MusicalType | null;
+  // Legacy compat
   isGift: boolean;
   recipientName: string | null;
   giftMessage: string | null;
   dominantEmotion: Emotion | null;
 }
 
-// ===== Generation Types =====
+// ===== Legacy Types (kept for old album rendering) =====
 
-export const NARRATIVE_ROLES_V1: { role: NarrativeRole | 'disruption' | 'reflection'; label: string; description: string }[] = [
-  { role: 'origin', label: 'Origin', description: 'Where it all began' },
-  { role: 'disruption', label: 'Disruption', description: 'The conflict or challenge' },
-  { role: 'reflection', label: 'Reflection', description: 'The inner world' },
-  { role: 'turning_point', label: 'Turning Point', description: 'The shift' },
-  { role: 'resolution', label: 'Resolution', description: 'Where you are now' },
+export type Emotion =
+  | 'joy'
+  | 'grief'
+  | 'anger'
+  | 'hope'
+  | 'fear'
+  | 'love'
+  | 'surprise'
+  | 'nostalgia'
+  | 'pride'
+  | 'relief';
+
+export type NarrativeRole = 'origin' | 'turning_point' | 'resolution';
+
+export interface MomentContent {
+  story: string;
+  emotion: Emotion;
+}
+
+export interface LifeMap {
+  chapters: { title: string; summary: string; emotional_state: string; timeframe: string }[];
+  emotional_arc: { start: string; midpoint: string; resolution: string };
+  themes: string[];
+  motifs: string[];
+  sensory_elements: string[];
+  lyrical_phrases: string[];
+  tone_profile: string;
+}
+
+export interface GeneratedContent {
+  id: string;
+  project_id: string;
+  content_type: 'lifemap' | 'biography';
+  content: LifeMap | { markdown: string };
+  llm_model: string | null;
+  prompt_used: string | null;
+  created_at: string;
+}
+
+// Legacy form types
+export type IntakeStep = 'turning_points' | 'inner_world' | 'scenes' | 'moment_1' | 'moment_2' | 'moment_3';
+
+export const MOMENT_ROLES: { index: number; role: NarrativeRole; label: string; prompt: string; subtitle: string }[] = [
+  { index: 1, role: 'origin', label: 'Where it all began', prompt: 'Where it all began', subtitle: 'The roots of your story.' },
+  { index: 2, role: 'turning_point', label: 'The moment everything shifted', prompt: 'The moment everything shifted', subtitle: 'The event that changed your direction.' },
+  { index: 3, role: 'resolution', label: 'Where your story lands', prompt: 'Where your story lands', subtitle: 'Where you are now.' },
 ];
-
-export const GENRES = [
-  'Pop', 'Rock', 'Indie', 'Folk', 'R&B',
-  'Hip-Hop', 'Electronic', 'Country', 'Jazz', 'Classical',
-] as const;
 
 export const EMOTIONS: Emotion[] = [
   'joy', 'grief', 'anger', 'hope', 'fear',

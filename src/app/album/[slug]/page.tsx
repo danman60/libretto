@@ -5,13 +5,14 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
 import JSZip from 'jszip';
+import { PlaybillView } from '@/components/PlaybillView';
 import { TrackCard } from '@/components/TrackCard';
 import { Guestbook } from '@/components/Guestbook';
 import { AlbumPlayer } from '@/components/AlbumPlayer';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
 import { generateBooklet } from '@/lib/generate-booklet';
 import { Share2, Check, Loader2, Download, PlusCircle, QrCode, Code, BookOpen } from 'lucide-react';
-import type { AlbumPageData, Track, Emotion } from '@/lib/types';
+import type { AlbumPageData, Track, Emotion, PlaybillContent } from '@/lib/types';
 
 export default function AlbumPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -39,7 +40,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       .catch(() => setError('Album not found'));
   }, [slug]);
 
-  // Check if viewer is creator
   useEffect(() => {
     if (!data) return;
     const storedProjectId = sessionStorage.getItem('libretto_project_id');
@@ -48,7 +48,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     }
   }, [data]);
 
-  // Set mood CSS variables
+  // Set mood CSS variables for legacy albums
   useEffect(() => {
     if (!data?.dominantEmotion) return;
     const palette = EMOTION_PALETTES[data.dominantEmotion as Emotion];
@@ -115,7 +115,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       const a = document.createElement('a');
       a.href = url;
       const safeTitle = data.album.title.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
-      a.download = `${safeTitle} - Booklet.pdf`;
+      a.download = `${safeTitle} - Playbill.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -159,12 +159,9 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         try {
           const res = await fetch(track.audio_url!);
           const blob = await res.blob();
-          const ext = track.audio_url!.includes('.mp3') ? 'mp3' : 'mp3';
           const safeName = track.title.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
-          zip.file(`${String(track.track_number).padStart(2, '0')} - ${safeName}.${ext}`, blob);
-        } catch {
-          // Skip failed downloads
-        }
+          zip.file(`${String(track.track_number).padStart(2, '0')} - ${safeName}.mp3`, blob);
+        } catch { /* skip */ }
       }
 
       if (album.cover_image_url) {
@@ -173,9 +170,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
           const blob = await res.blob();
           const ext = album.cover_image_url.includes('.png') ? 'png' : 'jpg';
           zip.file(`cover.${ext}`, blob);
-        } catch {
-          // Skip if cover fails
-        }
+        } catch { /* skip */ }
       }
 
       const content = await zip.generateAsync({ type: 'blob' });
@@ -204,9 +199,9 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       <main className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl text-[#F5F0EB] mb-3" style={{ fontFamily: 'var(--font-dm-serif)' }}>
-            Libretto not found
+            Show not found
           </h1>
-          <p className="text-[#9B8E99] text-base">This libretto may have been removed or the link is incorrect.</p>
+          <p className="text-[#9B8E99] text-base">This show may have been removed or the link is incorrect.</p>
         </div>
       </main>
     );
@@ -224,18 +219,20 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   }
 
   const { album, tracks } = data;
+  const isMusical = !!data.musicalType && !!album.playbill_content;
+  const playbill = album.playbill_content as PlaybillContent | null;
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
 
   return (
     <main className="min-h-screen text-[#F5F0EB]" style={{ background: 'var(--mood-bg-tint, transparent)' }}>
-      {/* Nav wordmark */}
+      {/* Nav */}
       <div className="text-center pt-8">
         <Link href="/" className="text-2xl font-bold tracking-tight text-[#F5F0EB]/60 hover:text-[#F5F0EB] transition-colors" style={{ fontFamily: 'var(--font-dm-serif)' }}>
           LIBRETTO
         </Link>
       </div>
 
-      {/* Album Header */}
+      {/* Header */}
       <section className="relative overflow-hidden">
         {album.cover_image_url && (
           <div
@@ -269,10 +266,11 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
             <div className="flex-1 text-center sm:text-left">
               <p className="text-sm tracking-widest text-[#9B8E99] uppercase mb-2">
-                {data.isGift && data.recipientName
-                  ? `A gift for ${data.recipientName}`
-                  : 'Your Libretto'
-                }
+                {isMusical ? 'A Libretto Musical' : (
+                  data.isGift && data.recipientName
+                    ? `A gift for ${data.recipientName}`
+                    : 'Your Libretto'
+                )}
               </p>
               <h1
                 className={`text-4xl sm:text-5xl mb-3 transition-opacity duration-1000 ${revealed ? 'opacity-100' : 'opacity-0'}`}
@@ -305,25 +303,15 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
               <div className="flex items-center gap-3 justify-center sm:justify-start flex-wrap">
                 <span className="text-sm text-[#9B8E99]">
-                  {tracks.length} track{tracks.length !== 1 ? 's' : ''}
+                  {tracks.length} song{tracks.length !== 1 ? 's' : ''}
                 </span>
                 <span className="text-[#9B8E99]/30">|</span>
-                <button
-                  onClick={handleShare}
-                  className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors"
-                >
-                  {copied ? (
-                    <><Check className="h-4 w-4" /> Copied</>
-                  ) : (
-                    <><Share2 className="h-4 w-4" /> Share</>
-                  )}
+                <button onClick={handleShare} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors">
+                  {copied ? <><Check className="h-4 w-4" /> Copied</> : <><Share2 className="h-4 w-4" /> Share</>}
                 </button>
                 <span className="text-[#9B8E99]/30">|</span>
                 <div className="relative">
-                  <button
-                    onClick={() => setShowQR(!showQR)}
-                    className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors"
-                  >
+                  <button onClick={() => setShowQR(!showQR)} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors">
                     <QrCode className="h-4 w-4" /> QR
                   </button>
                   {showQR && (
@@ -337,41 +325,18 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                   )}
                 </div>
                 <span className="text-[#9B8E99]/30">|</span>
-                <button
-                  onClick={handleCopyEmbed}
-                  className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors"
-                >
-                  {embedCopied ? (
-                    <><Check className="h-4 w-4" /> Copied</>
-                  ) : (
-                    <><Code className="h-4 w-4" /> Embed</>
-                  )}
+                <button onClick={handleCopyEmbed} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors">
+                  {embedCopied ? <><Check className="h-4 w-4" /> Copied</> : <><Code className="h-4 w-4" /> Embed</>}
                 </button>
                 {hasCompleteTracks && (
                   <>
                     <span className="text-[#9B8E99]/30">|</span>
-                    <button
-                      onClick={handleDownload}
-                      disabled={downloading}
-                      className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50"
-                    >
-                      {downloading ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> Zipping...</>
-                      ) : (
-                        <><Download className="h-4 w-4" /> Download</>
-                      )}
+                    <button onClick={handleDownload} disabled={downloading} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50">
+                      {downloading ? <><Loader2 className="h-4 w-4 animate-spin" /> Zipping...</> : <><Download className="h-4 w-4" /> Download</>}
                     </button>
                     <span className="text-[#9B8E99]/30">|</span>
-                    <button
-                      onClick={handleBooklet}
-                      disabled={generatingBooklet}
-                      className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50"
-                    >
-                      {generatingBooklet ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> PDF...</>
-                      ) : (
-                        <><BookOpen className="h-4 w-4" /> Booklet</>
-                      )}
+                    <button onClick={handleBooklet} disabled={generatingBooklet} className="flex items-center gap-1.5 text-sm text-[#9B8E99] hover:text-[#E8A87C] transition-colors disabled:opacity-50">
+                      {generatingBooklet ? <><Loader2 className="h-4 w-4 animate-spin" /> PDF...</> : <><BookOpen className="h-4 w-4" /> Playbill</>}
                     </button>
                   </>
                 )}
@@ -381,67 +346,66 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         </div>
       </section>
 
-      {/* Crossfade Album Player */}
+      {/* Album Player */}
       {hasCompleteTracks && (
         <section className="max-w-4xl mx-auto px-6">
-          <AlbumPlayer
-            tracks={tracks}
-            onTrackChange={(idx) => setHighlightedTrack(idx)}
-          />
+          <AlbumPlayer tracks={tracks} onTrackChange={(idx) => setHighlightedTrack(idx)} />
         </section>
       )}
 
-      {/* Tracks — 3-column grid */}
-      <section className="max-w-4xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {tracks.map((track, i) => (
-            <TrackCard
-              key={track.id}
-              track={track}
-              index={i}
-              isHighlighted={highlightedTrack === i}
-            />
-          ))}
-        </div>
-
-        {/* Prominent download button after tracks */}
-        {hasCompleteTracks && (
-          <div className="mt-8 text-center">
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100"
-              style={{ backgroundColor: 'var(--mood-accent, #E8A87C)', boxShadow: `0 10px 25px -5px var(--mood-glow, rgba(232,168,124,0.25))` }}
-            >
-              {downloading ? (
-                <><Loader2 className="h-5 w-5 animate-spin" /> Preparing your download...</>
-              ) : (
-                <><Download className="h-5 w-5" /> Download your album</>
-              )}
-            </button>
-            <p className="text-[#9B8E99]/50 text-xs mt-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
-              All tracks + cover art as a .zip file
-            </p>
-          </div>
-        )}
-      </section>
-
-      {/* Biography */}
-      {album.biography_markdown && (
-        <section className="max-w-[680px] mx-auto px-6 py-12">
-          <div className="border-t border-white/[0.04] pt-12">
-            <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-6">
-              The Story
-            </h2>
-            <div
-              className="text-[#A89DAF] text-base space-y-4 [&_h1]:text-[#F5F0EB] [&_h1]:text-2xl [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[#F5F0EB] [&_h2]:text-xl [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-[#B8A9C9] [&_h3]:text-lg [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:text-[#B8A9C9] [&_em]:text-[#B8A9C9] [&_hr]:border-white/[0.06] [&_hr]:my-8 [&_a]:text-[#E8A87C] [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-[#E8A87C]/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#9B8E99]/80"
-              style={{ fontFamily: 'var(--font-lora)', lineHeight: '1.8' }}
-            >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {album.biography_markdown}
-              </ReactMarkdown>
+      {/* Content: Playbill or Legacy */}
+      {isMusical && playbill ? (
+        <section className="max-w-4xl mx-auto px-6 py-8">
+          <PlaybillView
+            playbill={playbill}
+            tracks={tracks}
+            showTitle={album.title}
+            showTagline={album.tagline}
+            highlightedTrack={highlightedTrack}
+          />
+        </section>
+      ) : (
+        <>
+          {/* Legacy: 3-column track grid */}
+          <section className="max-w-4xl mx-auto px-6 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {tracks.map((track, i) => (
+                <TrackCard key={track.id} track={track} index={i} isHighlighted={highlightedTrack === i} />
+              ))}
             </div>
-          </div>
+          </section>
+
+          {/* Legacy: Biography */}
+          {album.biography_markdown && (
+            <section className="max-w-[680px] mx-auto px-6 py-12">
+              <div className="border-t border-white/[0.04] pt-12">
+                <h2 className="text-sm tracking-widest text-[#9B8E99] uppercase mb-6">The Story</h2>
+                <div
+                  className="text-[#A89DAF] text-base space-y-4 [&_h1]:text-[#F5F0EB] [&_h1]:text-2xl [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[#F5F0EB] [&_h2]:text-xl [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-[#B8A9C9] [&_h3]:text-lg [&_h3]:mt-4 [&_h3]:mb-2 [&_strong]:text-[#B8A9C9] [&_em]:text-[#B8A9C9] [&_hr]:border-white/[0.06] [&_hr]:my-8"
+                  style={{ fontFamily: 'var(--font-lora)', lineHeight: '1.8' }}
+                >
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{album.biography_markdown}</ReactMarkdown>
+                </div>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* Download CTA */}
+      {hasCompleteTracks && (
+        <section className="max-w-4xl mx-auto px-6 py-8 text-center">
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50"
+            style={{ backgroundColor: 'var(--mood-accent, #E8A87C)', boxShadow: `0 10px 25px -5px var(--mood-glow, rgba(232,168,124,0.25))` }}
+          >
+            {downloading ? <><Loader2 className="h-5 w-5 animate-spin" /> Preparing download...</> : <><Download className="h-5 w-5" /> Download your {isMusical ? 'show' : 'album'}</>}
+          </button>
+          <p className="text-[#9B8E99]/50 text-xs mt-3" style={{ fontFamily: 'var(--font-lora)', fontStyle: 'italic' }}>
+            All tracks + cover art as a .zip file
+          </p>
         </section>
       )}
 
@@ -452,30 +416,16 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         </div>
       </section>
 
-      {/* Bottom CTA: Download + Create Another */}
+      {/* Bottom CTA */}
       <section className="max-w-[680px] mx-auto px-6 py-12">
         <div className="border-t border-white/[0.04] pt-12 flex flex-col items-center gap-4">
-          {hasCompleteTracks && (
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-[#1A1518] text-base font-medium hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100"
-              style={{ backgroundColor: 'var(--mood-accent, #E8A87C)', boxShadow: `0 10px 25px -5px var(--mood-glow, rgba(232,168,124,0.25))` }}
-            >
-              {downloading ? (
-                <><Loader2 className="h-5 w-5 animate-spin" /> Preparing your download...</>
-              ) : (
-                <><Download className="h-5 w-5" /> Save your album</>
-              )}
-            </button>
-          )}
           <Link
             href="/create"
             onClick={handleCreateAnother}
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-[#E8A87C]/20 text-[#E8A87C] hover:bg-[#E8A87C]/10 transition-colors text-sm"
           >
             <PlusCircle className="h-4 w-4" />
-            Create another libretto
+            Create another show
           </Link>
         </div>
       </section>
@@ -483,10 +433,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       {/* Footer */}
       <footer className="border-t border-white/[0.04] py-8 text-center">
         <p className="text-sm text-[#9B8E99]/40">
-          Made with{' '}
-          <a href="/" className="text-[#9B8E99]/60 hover:text-[#E8A87C] transition-colors">
-            Libretto
-          </a>
+          Made with <a href="/" className="text-[#9B8E99]/60 hover:text-[#E8A87C] transition-colors">Libretto</a>
         </p>
       </footer>
     </main>

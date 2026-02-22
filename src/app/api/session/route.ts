@@ -1,34 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { randomUUID } from 'crypto';
+import type { MusicalType } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
-  console.log('[api/session] POST - Creating new V2 session');
+  console.log('[api/session] POST - Creating new session');
   try {
     const db = getServiceSupabase();
     const sessionToken = randomUUID();
 
-    // Parse optional gift fields from body
+    let musicalType: MusicalType | null = null;
+    let idea: string | null = null;
+    // Legacy fields
     let isGift = false;
     let recipientName: string | null = null;
     let giftMessage: string | null = null;
 
     try {
       const body = await request.json();
+      musicalType = body.musicalType || null;
+      idea = body.idea || null;
       if (body.isGift) {
         isGift = true;
         recipientName = body.recipientName || null;
         giftMessage = body.giftMessage || null;
       }
     } catch {
-      // No body or invalid JSON — that's fine, defaults apply
+      // No body or invalid JSON
     }
 
     const { data, error } = await db
       .from('projects')
       .insert({
         session_token: sessionToken,
-        version: 2,
+        version: 3,
+        musical_type: musicalType,
+        idea,
         is_gift: isGift,
         recipient_name: recipientName,
         gift_message: giftMessage,
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
     }
 
-    console.log('[api/session] Created V2 project:', data.id, isGift ? '(gift)' : '');
+    console.log('[api/session] Created project:', data.id, musicalType ? `(${musicalType})` : '');
     return NextResponse.json({
       projectId: data.id,
       sessionToken: data.session_token,

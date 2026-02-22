@@ -21,8 +21,8 @@ const dmSerif = DM_Serif_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Libretto — Your life, in three moments",
-  description: "Transform three moments from your life into a personal musical biography with AI-generated lyrics, music, and narrative.",
+  title: "Libretto — Turn your idea into a Broadway musical",
+  description: "Pick a musical style, describe your show in one sentence. Get 6 original songs, a full playbill, and cover art in minutes.",
 };
 
 export default function RootLayout({
