@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // Fetch tracks with album info
     let query = db
       .from('tracks')
-      .select('*, albums!inner(title, share_slug, project_id)', { count: 'exact' })
+      .select('*, albums(title, share_slug, project_id)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch generation logs for these tracks' projects
-    const projectIds = [...new Set((tracks || []).map((t: { albums: { project_id: string } }) => t.albums.project_id))];
+    const projectIds = [...new Set((tracks || []).map((t: { albums: { project_id: string } | null }) => t.albums?.project_id).filter(Boolean))];
 
     let logs: Record<string, unknown[]> = {};
     if (projectIds.length > 0) {
