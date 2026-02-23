@@ -361,6 +361,7 @@
 /* The big hero title with letter-spacing and gold treatment */
 .marquee-title {
   letter-spacing: 0.25em;
+  text-indent: 0.25em;
   text-transform: uppercase;
   font-weight: 900;
   text-shadow:
@@ -372,6 +373,7 @@
 @media (max-width: 639px) {
   .marquee-title {
     letter-spacing: 0.1em;
+    text-indent: 0.1em;
   }
 }
 
@@ -448,4 +450,192 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(201, 168, 76, 0.4);
+}
+
+/* ===== PLAYBILL COVER ===== */
+.playbill-cover {
+  aspect-ratio: 5.5 / 8.5;
+  max-width: 360px;
+  margin: 0 auto;
+  cursor: pointer;
+  perspective: 1200px;
+  transition: transform 0.3s ease;
+}
+
+.playbill-cover:hover {
+  transform: scale(1.02);
+}
+
+.playbill-cover-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 3px solid #C9A84C;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(201, 168, 76, 0.3),
+    inset 0 0 60px rgba(0, 0, 0, 0.2);
+  background: #0E0C12;
+}
+
+/* ===== PLAYBILL SPREAD ===== */
+.playbill-spread {
+  background: linear-gradient(175deg, #F5F0E6 0%, #EDE5D3 50%, #F3EDE0 100%);
+  border: 2px solid #C9A84C;
+  border-radius: 2px;
+  color: #1A0F1E;
+  position: relative;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.playbill-spread::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+/* Paper grain texture overlay */
+.playbill-spread::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+.playbill-page {
+  padding: 2rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .playbill-page {
+    padding: 2.5rem 2rem;
+  }
+}
+
+/* Spine divider between left and right pages */
+.playbill-spine {
+  position: relative;
+}
+
+.playbill-spine::before {
+  content: '';
+  position: absolute;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(201, 168, 76, 0.3), transparent);
+}
+
+/* Section headers inside playbill */
+.playbill-section-header {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: #1A0F1E;
+  position: relative;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.playbill-section-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #C9A84C, rgba(201, 168, 76, 0.2));
+}
+
+/* Intermission divider inside playbill spread */
+.playbill-intermission {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 0;
+}
+
+.playbill-intermission::before,
+.playbill-intermission::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.5), transparent);
+}
+
+/* ===== PLAYBILL OPEN ANIMATION ===== */
+@keyframes playbill-open {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.playbill-spread-enter {
+  animation: playbill-open 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes playbill-cover-exit {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+}
+
+.playbill-cover-exit {
+  animation: playbill-cover-exit 400ms ease-in forwards;
+}
+
+/* ===== GENERATE BUTTON ===== */
+.generate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid #C9A84C;
+  border-radius: 4px;
+  background: transparent;
+  color: #C9A84C;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.generate-btn:hover {
+  background: rgba(201, 168, 76, 0.12);
+  box-shadow: 0 0 12px rgba(201, 168, 76, 0.15);
+}
+
+/* Playbill-context generate button (dark text on cream) */
+.generate-btn-playbill {
+  border-color: #8A7434;
+  color: #8A7434;
+}
+
+.generate-btn-playbill:hover {
+  background: rgba(201, 168, 76, 0.15);
+  color: #6B5A28;
 }
