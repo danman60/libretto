@@ -361,7 +361,6 @@
 /* The big hero title with letter-spacing and gold treatment */
 .marquee-title {
   letter-spacing: 0.15em;
-  text-indent: 0.15em;
   text-transform: uppercase;
   font-weight: 900;
   text-shadow:
@@ -373,7 +372,6 @@
 @media (max-width: 639px) {
   .marquee-title {
     letter-spacing: 0.08em;
-    text-indent: 0.08em;
   }
 }
 
