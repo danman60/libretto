@@ -452,7 +452,7 @@
   background: rgba(201, 168, 76, 0.4);
 }
 
-/* ===== PLAYBILL COVER ===== */
+/* ===== PLAYBILL COVER (legacy) ===== */
 .playbill-cover {
   aspect-ratio: 5.5 / 8.5;
   max-width: 360px;
@@ -478,6 +478,58 @@
     0 0 0 1px rgba(201, 168, 76, 0.3),
     inset 0 0 60px rgba(0, 0, 0, 0.2);
   background: #0E0C12;
+}
+
+/* ===== PROGRAMME COVER ===== */
+/* Full theatrical programme poster — Moulin Rouge / vintage Broadway style */
+.programme-cover {
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 5.5 / 8.5;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.programme-cover:hover {
+  transform: scale(1.02) translateY(-4px);
+}
+
+.programme-cover-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 3px solid #C9A84C;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(201, 168, 76, 0.4),
+    0 0 80px rgba(201, 168, 76, 0.08),
+    inset 0 0 80px rgba(0, 0, 0, 0.15);
+  background: #0E0C12;
+}
+
+/* Inner gold inset border */
+.programme-cover-frame::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.programme-cover-art {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .programme-cover {
+    max-width: 420px;
+  }
 }
 
 /* ===== PLAYBILL SPREAD ===== */
