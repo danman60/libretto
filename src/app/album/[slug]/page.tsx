@@ -282,16 +282,23 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   if (isMusical && playbill) {
     return (
       <main className="min-h-screen text-[#F2E8D5]">
+        {/* Red velvet curtain backdrop */}
+        <div className={`curtain-backdrop ${programmeOpen ? 'curtain-open' : ''}`}>
+          <div className="curtain-panel curtain-panel-left" />
+          <div className="curtain-panel curtain-panel-right" />
+          <div className="curtain-valance" />
+        </div>
+
         {/* Cover state */}
         {!programmeOpen && (
           <>
-            <div className="text-center pt-8">
+            <div className="relative z-10 text-center pt-8">
               <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
                 BROADWAYIFY
               </Link>
             </div>
 
-            <section className="flex flex-col items-center justify-center px-6 py-12 min-h-[calc(100vh-120px)]">
+            <section className="relative z-10 flex flex-col items-center justify-center px-6 py-12 min-h-[calc(100vh-120px)]">
               <div
                 className="programme-cover cursor-pointer gentle-fade-in"
                 onClick={() => setProgrammeOpen(true)}
@@ -364,7 +371,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
         {/* Interior state — with page flip entrance */}
         {programmeOpen && (
-          <div className="programme-flip-in">
+          <div className="programme-flip-in relative z-10">
             {/* Nav */}
             <div className="flex items-center justify-between px-6 pt-6">
               <button

@@ -361,7 +361,7 @@
 /* The big hero title with letter-spacing and gold treatment */
 .marquee-title {
   letter-spacing: 0.15em;
-  margin-right: -0.15em; /* cancel trailing letter-spacing for true centering */
+  text-indent: 0.15em; /* balance trailing letter-spacing for true visual centering */
   text-transform: uppercase;
   font-weight: 900;
   text-shadow:
@@ -373,7 +373,7 @@
 @media (max-width: 639px) {
   .marquee-title {
     letter-spacing: 0.08em;
-    margin-right: -0.08em;
+    text-indent: 0.08em;
   }
 }
 
@@ -712,4 +712,130 @@
 
 .programme-flip-in {
   animation: programme-flip 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ===== RED VELVET CURTAIN ===== */
+/* Theatrical curtain background that parts when the programme opens */
+
+.curtain-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.curtain-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 52%; /* slight overlap in center */
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.08) 0px,
+      transparent 3px,
+      transparent 40px,
+      rgba(0, 0, 0, 0.05) 42px,
+      transparent 44px,
+      transparent 80px
+    ),
+    radial-gradient(ellipse 120% 100% at 50% 0%, #8B1A1A 0%, #5C0E0E 40%, #3A0808 80%, #1A0404 100%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.5);
+  transition: transform 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.curtain-panel-left {
+  left: 0;
+  transform: translateX(0);
+  border-right: 2px solid rgba(139, 26, 26, 0.3);
+}
+
+.curtain-panel-right {
+  right: 0;
+  transform: translateX(0);
+  border-left: 2px solid rgba(139, 26, 26, 0.3);
+}
+
+/* Subtle flowing animation — gentle sway of the fabric */
+.curtain-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      95deg,
+      transparent 0px,
+      rgba(180, 40, 40, 0.06) 20px,
+      transparent 40px,
+      rgba(120, 15, 15, 0.04) 60px,
+      transparent 80px
+    );
+  animation: curtain-flow 8s ease-in-out infinite alternate;
+}
+
+.curtain-panel-right::before {
+  animation-delay: -4s;
+  animation-direction: alternate-reverse;
+}
+
+/* Gold fringe along the bottom */
+.curtain-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    #C9A84C 0px, #C9A84C 3px,
+    transparent 3px, transparent 8px
+  );
+  opacity: 0.4;
+}
+
+/* Gold valance across the top */
+.curtain-valance {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 25% 100% at 25% 100%, transparent 0%, rgba(0, 0, 0, 0.15) 100%),
+    radial-gradient(ellipse 25% 100% at 75% 100%, transparent 0%, rgba(0, 0, 0, 0.15) 100%),
+    linear-gradient(180deg, #5C0E0E 0%, #8B1A1A 40%, #6B1515 100%);
+  border-bottom: 3px solid rgba(201, 168, 76, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  transition: opacity 0.8s ease;
+}
+
+/* When open — panels slide away */
+.curtain-open .curtain-panel-left {
+  transform: translateX(-105%);
+}
+
+.curtain-open .curtain-panel-right {
+  transform: translateX(105%);
+}
+
+.curtain-open .curtain-valance {
+  opacity: 0;
+}
+
+@keyframes curtain-flow {
+  0% {
+    transform: translateX(-2px) skewX(-0.3deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(2px) skewX(0.3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-1px) skewX(-0.2deg);
+    opacity: 0.8;
+  }
 }
