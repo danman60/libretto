@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { after } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
-import { generateShow } from '@/lib/generate-show';
+import {
+  doEnrichment,
+  createPlaceholders,
+  generateLyricsOnly,
+  generatePlaybillAndAlbum,
+} from '@/lib/generate-show';
+import type { MusicalType, ShowConcept } from '@/lib/types';
 
 export const maxDuration = 300; // 5 minutes
 
 /**
  * POST /api/generate-track
- * Now serves as the single trigger for show generation.
- * Accepts { projectId } and fires generateShow() in background.
+ * Orchestrator: enrichment -> placeholders -> playbill+album (get slug) ->
+ * track 1 lyrics -> fire track 1 audio (fire-and-forget).
+ * Returns share_slug so frontend can redirect immediately.
  */
 export async function POST(request: NextRequest) {
   console.log('[api/generate-track] POST - Triggering show generation');
@@ -22,7 +28,6 @@ export async function POST(request: NextRequest) {
 
     const db = getServiceSupabase();
 
-    // Verify project exists and has musical_type + idea
     const { data: project } = await db
       .from('projects')
       .select('id, musical_type, idea, status')
@@ -37,22 +42,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project missing musical_type or idea' }, { status: 400 });
     }
 
-    // Don't re-trigger if already generating
     if (project.status !== 'intake') {
       return NextResponse.json({ error: 'Generation already started' }, { status: 409 });
     }
 
-    console.log(`[api/generate-track] Firing show generation for ${projectId} (${project.musical_type})`);
+    const musicalType = project.musical_type as MusicalType;
 
-    after(async () => {
-      try {
-        await generateShow(projectId);
-      } catch (err) {
-        console.error('[api/generate-track:after] Error:', err);
-      }
+    console.log(`[api/generate-track] Starting orchestration for ${projectId} (${musicalType})`);
+
+    // Step 1: Enrichment (~23s)
+    let concept: ShowConcept;
+    try {
+      concept = await doEnrichment(projectId, project.idea, musicalType);
+    } catch (err) {
+      console.error('[api/generate-track] Enrichment failed:', err);
+      await db.from('projects').update({ status: 'failed' }).eq('id', projectId);
+      return NextResponse.json({ error: 'Enrichment failed' }, { status: 500 });
+    }
+
+    // Step 2: Create 6 track placeholders
+    await createPlaceholders(projectId, musicalType);
+
+    // Step 3: Generate playbill + album immediately (gives us share_slug)
+    let shareSlug: string;
+    try {
+      shareSlug = await generatePlaybillAndAlbum(projectId, concept, musicalType);
+    } catch (err) {
+      console.error('[api/generate-track] Playbill/album failed:', err);
+      return NextResponse.json({ error: 'Album creation failed' }, { status: 500 });
+    }
+
+    // Step 4: Generate lyrics for track 1 only
+    console.log('[api/generate-track] Generating track 1 lyrics...');
+    await generateLyricsOnly(projectId, 1, concept, musicalType);
+
+    // Step 5: Fire /api/generate-song for track 1 only (fire-and-forget)
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+
+    console.log('[api/generate-track] Firing track 1 audio generation...');
+    fetch(`${baseUrl}/api/generate-song`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId, trackNumber: 1 }),
+    }).catch(err => {
+      console.error('[api/generate-track] Failed to fire track 1:', err);
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, share_slug: shareSlug });
   } catch (err) {
     console.error('[api/generate-track] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

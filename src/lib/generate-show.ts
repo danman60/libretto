@@ -1,13 +1,16 @@
 /**
- * V3: Generate a full Broadway musical from a type + idea.
+ * V4: Parallel generation + freemium model.
  *
- * Pipeline:
- * 1. Enrich idea via DeepSeek → ShowConcept → save backstory
+ * Pipeline (orchestrator in /api/generate-track):
+ * 1. Enrich idea via DeepSeek -> ShowConcept -> save backstory
  * 2. Create 6 track placeholders
- * 3. Generate Opening Number first (lyrics → audio, ~65s)
- * 4. Fire remaining 5 songs in parallel (~65s)
- * 5. Generate playbill meta in parallel with songs 2-6
- * Total: ~130s, well within Vercel's 300s limit.
+ * 3. Generate lyrics for ALL 6 in parallel via DeepSeek (~15s total)
+ * 4. Set tracks 1-6 to lyrics_complete
+ * 5. Fire /api/generate-song for track 1 only (fire-and-forget)
+ * 6. Fire generatePlaybillAndAlbum via after() (~10s)
+ * 7. Return { success: true }
+ *
+ * Per-track audio generation handled by /api/generate-song calling generateSingleSong().
  */
 
 import { getServiceSupabase } from './supabase';
@@ -32,7 +35,86 @@ function generateSlug(): string {
   return slug;
 }
 
-async function generateSingleSong(
+// ===== Exported helpers for orchestrator =====
+
+/**
+ * Enrich a user's idea into a full ShowConcept via DeepSeek.
+ * Saves backstory to project and generated_content.
+ */
+export async function doEnrichment(
+  projectId: string,
+  idea: string,
+  musicalType: MusicalType
+): Promise<ShowConcept> {
+  const db = getServiceSupabase();
+  const config = getMusicalTypeConfig(musicalType);
+
+  await db.from('projects').update({
+    status: 'enriching',
+    updated_at: new Date().toISOString(),
+  }).eq('id', projectId);
+
+  const enrichStart = Date.now();
+  await logGeneration({ projectId, event: 'enrichment_started', model: 'deepseek-chat' });
+
+  const concept = await callDeepSeekJSON<ShowConcept>(
+    buildEnrichmentPrompt(idea, config)
+  );
+
+  await logGeneration({
+    projectId, event: 'enrichment_done',
+    durationMs: Date.now() - enrichStart, model: 'deepseek-chat',
+  });
+
+  console.log('[generate-show] Enrichment done:', concept.title_options[0]?.title);
+
+  // Save backstory
+  await db.from('projects').update({
+    backstory: JSON.stringify(concept),
+    status: 'generating_music',
+    updated_at: new Date().toISOString(),
+  }).eq('id', projectId);
+
+  // Save to generated_content for reference
+  await db.from('generated_content').insert({
+    project_id: projectId,
+    content_type: 'lifemap', // reusing the type
+    content: concept,
+    llm_model: 'deepseek-chat',
+  });
+
+  return concept;
+}
+
+/**
+ * Create 6 track placeholders in the database.
+ */
+export async function createPlaceholders(
+  projectId: string,
+  musicalType: MusicalType
+): Promise<void> {
+  const db = getServiceSupabase();
+  const songRoles = getSongRoles(musicalType);
+
+  for (let i = 0; i < 6; i++) {
+    await db.from('tracks').insert({
+      project_id: projectId,
+      track_number: i + 1,
+      title: songRoles[i].label,
+      narrative_role: 'origin', // legacy field, not used for musicals
+      song_role: songRoles[i].role,
+      status: 'pending',
+    });
+  }
+
+  console.log('[generate-show] Created 6 track placeholders');
+}
+
+/**
+ * Generate lyrics only for a single track (no audio).
+ * Sets status to lyrics_complete when done.
+ */
+export async function generateLyricsOnly(
   projectId: string,
   trackNumber: number,
   concept: ShowConcept,
@@ -44,13 +126,11 @@ async function generateSingleSong(
   const songConfig = songRoles[trackNumber - 1];
 
   try {
-    // Update track to generating_lyrics
     await db.from('tracks').update({
       status: 'generating_lyrics',
       updated_at: new Date().toISOString(),
     }).eq('project_id', projectId).eq('track_number', trackNumber);
 
-    // Generate lyrics
     console.log(`[generate-show] Song ${trackNumber} (${songConfig.role}): Generating lyrics...`);
     const lyricsStart = Date.now();
     await logGeneration({ projectId, trackNumber, event: 'lyrics_started', model: 'deepseek-chat' });
@@ -69,11 +149,86 @@ async function generateSingleSong(
     await db.from('tracks').update({
       lyrics,
       style_prompt: stylePrompt,
-      status: 'lyrics_done',
+      status: 'lyrics_complete',
       updated_at: new Date().toISOString(),
     }).eq('project_id', projectId).eq('track_number', trackNumber);
 
-    console.log(`[generate-show] Song ${trackNumber}: Lyrics done (${lyrics.length} chars)`);
+    console.log(`[generate-show] Song ${trackNumber}: Lyrics complete (${lyrics.length} chars)`);
+  } catch (err) {
+    console.error(`[generate-show] Song ${trackNumber}: Lyrics generation failed:`, err);
+    await logGeneration({
+      projectId, trackNumber, event: 'failed',
+      errorMessage: err instanceof Error ? err.message : String(err),
+    });
+    await db.from('tracks').update({
+      status: 'failed',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+  }
+}
+
+/**
+ * Generate audio for a single track that already has lyrics.
+ * Called by /api/generate-song endpoint. Handles lyrics->audio->complete.
+ */
+export async function generateSingleSong(
+  projectId: string,
+  trackNumber: number,
+  concept: ShowConcept,
+  musicalType: MusicalType
+): Promise<void> {
+  const db = getServiceSupabase();
+  const config = getMusicalTypeConfig(musicalType);
+  const songRoles = getSongRoles(musicalType);
+  const songConfig = songRoles[trackNumber - 1];
+
+  try {
+    // Check if track already has lyrics (lyrics_complete state)
+    const { data: track } = await db
+      .from('tracks')
+      .select('lyrics, style_prompt, status')
+      .eq('project_id', projectId)
+      .eq('track_number', trackNumber)
+      .single();
+
+    let lyrics = track?.lyrics;
+    let stylePrompt = track?.style_prompt;
+
+    // If lyrics not yet generated, generate them first
+    if (!lyrics) {
+      await db.from('tracks').update({
+        status: 'generating_lyrics',
+        updated_at: new Date().toISOString(),
+      }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+      console.log(`[generate-show] Song ${trackNumber} (${songConfig.role}): Generating lyrics...`);
+      const lyricsStart = Date.now();
+      await logGeneration({ projectId, trackNumber, event: 'lyrics_started', model: 'deepseek-chat' });
+
+      lyrics = await callDeepSeek(
+        buildSongLyricsPrompt(songConfig, trackNumber, concept, config),
+        { temperature: 0.85, maxTokens: 1500 }
+      );
+      stylePrompt = buildSongStylePrompt(songConfig, config);
+
+      await logGeneration({
+        projectId, trackNumber, event: 'lyrics_done',
+        durationMs: Date.now() - lyricsStart, model: 'deepseek-chat',
+      });
+
+      await db.from('tracks').update({
+        lyrics,
+        style_prompt: stylePrompt,
+        status: 'lyrics_done',
+        updated_at: new Date().toISOString(),
+      }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+      console.log(`[generate-show] Song ${trackNumber}: Lyrics done (${lyrics.length} chars)`);
+    }
+
+    if (!stylePrompt) {
+      stylePrompt = buildSongStylePrompt(songConfig, config);
+    }
 
     // Generate audio via KIE
     console.log(`[generate-show] Song ${trackNumber}: Generating audio...`);
@@ -105,7 +260,6 @@ async function generateSingleSong(
       console.log(`[generate-show] Song ${trackNumber}: Complete (${result.duration}s)`);
     } catch (audioErr) {
       console.error(`[generate-show] Song ${trackNumber}: Audio failed, retrying simpler...`);
-      // Retry with simpler style
       try {
         const simpleStyle = config.style_overview.split(',')[0] || 'broadway';
         const retryResult = await generateTrackViaKie(lyrics, simpleStyle, songConfig.label);
@@ -143,11 +297,11 @@ async function generateSingleSong(
   }
 }
 
-async function generatePlaybillAndAlbum(
+export async function generatePlaybillAndAlbum(
   projectId: string,
   concept: ShowConcept,
   musicalType: MusicalType
-): Promise<void> {
+): Promise<string> {
   const db = getServiceSupabase();
   const config = getMusicalTypeConfig(musicalType);
 
@@ -187,7 +341,7 @@ async function generatePlaybillAndAlbum(
       project_id: projectId,
       title: albumTitle,
       tagline: albumTagline,
-      biography_markdown: null, // No biography for musicals — use playbill
+      biography_markdown: null,
       playbill_content: playbill,
       share_slug: shareSlug,
       cover_image_url: firstTrack?.cover_image_url || null,
@@ -195,9 +349,9 @@ async function generatePlaybillAndAlbum(
     });
 
     console.log('[generate-show] Album created with slug:', shareSlug);
+    return shareSlug;
   } catch (err) {
     console.error('[generate-show] Playbill/album creation failed:', err);
-    // Create a minimal album so the user still gets a result
     const shareSlug = generateSlug();
     const recommended = concept.recommended_title ?? 0;
     await db.from('albums').insert({
@@ -207,10 +361,11 @@ async function generatePlaybillAndAlbum(
       share_slug: shareSlug,
       title_alternatives: concept.title_options,
     });
+    return shareSlug;
   }
 }
 
-async function maybeFinalizeProject(projectId: string): Promise<void> {
+export async function maybeFinalizeProject(projectId: string): Promise<void> {
   const db = getServiceSupabase();
 
   const { data: tracks } = await db
@@ -246,13 +401,13 @@ async function maybeFinalizeProject(projectId: string): Promise<void> {
 }
 
 /**
- * Main orchestrator: generate a full Broadway musical.
+ * Legacy orchestrator — kept for reference but no longer called.
+ * New flow uses /api/generate-track (orchestrator) + /api/generate-song (per-track worker).
  */
 export async function generateShow(projectId: string): Promise<void> {
   const db = getServiceSupabase();
 
   try {
-    // Load project
     const { data: project } = await db
       .from('projects')
       .select('id, musical_type, idea')
@@ -266,86 +421,21 @@ export async function generateShow(projectId: string): Promise<void> {
     }
 
     const musicalType = project.musical_type as MusicalType;
-    const idea = project.idea;
-    const config = getMusicalTypeConfig(musicalType);
+    const concept = await doEnrichment(projectId, project.idea, musicalType);
+    await createPlaceholders(projectId, musicalType);
 
-    // Step 1: Enrich idea → ShowConcept
-    console.log('[generate-show] Step 1: Enriching idea...');
-    await db.from('projects').update({
-      status: 'enriching',
-      updated_at: new Date().toISOString(),
-    }).eq('id', projectId);
+    // Generate all lyrics in parallel
+    await Promise.allSettled(
+      [1, 2, 3, 4, 5, 6].map(n => generateLyricsOnly(projectId, n, concept, musicalType))
+    );
 
-    const enrichStart = Date.now();
-    await logGeneration({ projectId, event: 'enrichment_started', model: 'deepseek-chat' });
+    // Generate all audio in parallel
+    await Promise.allSettled(
+      [1, 2, 3, 4, 5, 6].map(n => generateSingleSong(projectId, n, concept, musicalType))
+    );
 
-    let concept: ShowConcept;
-    try {
-      concept = await callDeepSeekJSON<ShowConcept>(
-        buildEnrichmentPrompt(idea, config)
-      );
-      await logGeneration({
-        projectId, event: 'enrichment_done',
-        durationMs: Date.now() - enrichStart, model: 'deepseek-chat',
-      });
-      console.log('[generate-show] Enrichment done:', concept.title_options[0]?.title);
-    } catch (err) {
-      console.error('[generate-show] Enrichment failed:', err);
-      await db.from('projects').update({ status: 'failed' }).eq('id', projectId);
-      return;
-    }
-
-    // Save backstory
-    await db.from('projects').update({
-      backstory: JSON.stringify(concept),
-      status: 'generating_music',
-      updated_at: new Date().toISOString(),
-    }).eq('id', projectId);
-
-    // Save to generated_content for reference
-    await db.from('generated_content').insert({
-      project_id: projectId,
-      content_type: 'lifemap', // reusing the type
-      content: concept,
-      llm_model: 'deepseek-chat',
-    });
-
-    // Step 2: Create 6 track placeholders
-    console.log('[generate-show] Step 2: Creating 6 track placeholders...');
-    const songRoles = getSongRoles(musicalType);
-
-    for (let i = 0; i < 6; i++) {
-      await db.from('tracks').insert({
-        project_id: projectId,
-        track_number: i + 1,
-        title: songRoles[i].label,
-        narrative_role: 'origin', // legacy field, not used for musicals
-        song_role: songRoles[i].role,
-        status: 'pending',
-      });
-    }
-
-    // Step 3: Generate Opening Number FIRST
-    console.log('[generate-show] Step 3: Generating Opening Number...');
-    await generateSingleSong(projectId, 1, concept, musicalType);
-
-    // Step 4: Fire remaining 5 songs + playbill in parallel
-    console.log('[generate-show] Step 4: Generating songs 2-6 + playbill in parallel...');
-    const parallelTasks = [
-      generateSingleSong(projectId, 2, concept, musicalType),
-      generateSingleSong(projectId, 3, concept, musicalType),
-      generateSingleSong(projectId, 4, concept, musicalType),
-      generateSingleSong(projectId, 5, concept, musicalType),
-      generateSingleSong(projectId, 6, concept, musicalType),
-      generatePlaybillAndAlbum(projectId, concept, musicalType),
-    ];
-
-    await Promise.allSettled(parallelTasks);
-
-    // Step 5: Finalize
-    console.log('[generate-show] Step 5: Finalizing...');
+    await generatePlaybillAndAlbum(projectId, concept, musicalType);
     await maybeFinalizeProject(projectId);
-
   } catch (err) {
     console.error('[generate-show] Fatal error:', err);
     await logGeneration({

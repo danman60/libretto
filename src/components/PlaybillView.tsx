@@ -9,113 +9,144 @@ interface PlaybillViewProps {
   showTitle: string;
   showTagline: string | null;
   highlightedTrack: number;
+  lockedTrackNumbers?: Set<number>;
+  onGenerateTrack?: (trackNumber: number) => void;
 }
 
-export function PlaybillView({ playbill, tracks, showTitle, showTagline, highlightedTrack }: PlaybillViewProps) {
+export function PlaybillView({ playbill, tracks, showTitle, showTagline, highlightedTrack, lockedTrackNumbers, onGenerateTrack }: PlaybillViewProps) {
   const act1Tracks = tracks.filter(t => t.track_number <= 3);
   const act2Tracks = tracks.filter(t => t.track_number >= 4);
 
   return (
-    <div className="space-y-12">
-      {/* Synopsis */}
-      <section className="playbill-card p-8">
-        <h2 className="text-sm tracking-[0.3em] text-[#6B1D2A] uppercase mb-4"
-          style={{ fontFamily: 'var(--font-oswald)' }}
-        >
-          Synopsis
-        </h2>
-        <p className="text-xs text-[#1A0F1E]/60 mb-3" style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}>
-          {playbill.setting}
-        </p>
-        <div className="text-[#1A0F1E]/80 text-base leading-relaxed space-y-3"
-          style={{ fontFamily: 'var(--font-cormorant)', lineHeight: '1.8' }}
-        >
-          {playbill.synopsis.split('\n').filter(Boolean).map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
-        </div>
-      </section>
+    <div className="playbill-spread playbill-spread-enter">
+      <div className="grid grid-cols-1 md:grid-cols-2">
+        {/* Left Page */}
+        <div className="playbill-page border-b md:border-b-0 md:border-r border-[#C9A84C]/15">
+          {/* Title block */}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-3xl text-[#1A0F1E] mb-1"
+              style={{ fontFamily: 'var(--font-playfair)' }}
+            >
+              {showTitle}
+            </h2>
+            <p className="text-xs tracking-[0.2em] uppercase text-[#8A7434]"
+              style={{ fontFamily: 'var(--font-oswald)' }}
+            >
+              A Musical in Two Acts
+            </p>
+          </div>
 
-      {/* Cast of Characters */}
-      {playbill.characters.length > 0 && (
-        <section>
-          <h2 className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-4"
-            style={{ fontFamily: 'var(--font-oswald)' }}
-          >
-            Cast of Characters
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {playbill.characters.map((char, i) => (
-              <div key={i} className="glass-card px-4 py-3">
-                <div className="font-semibold text-[#F2E8D5] text-sm" style={{ fontFamily: 'var(--font-playfair)' }}>
-                  {char.name}
-                </div>
-                <div className="text-[#F2E8D5]/50 text-xs mt-0.5" style={{ fontFamily: 'var(--font-cormorant)' }}>
-                  {char.description}
-                </div>
+          {/* Synopsis */}
+          <div className="mb-6">
+            <div className="playbill-section-header" style={{ fontFamily: 'var(--font-oswald)' }}>
+              Synopsis
+            </div>
+            <div className="text-sm text-[#1A0F1E]/75 leading-relaxed"
+              style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic', lineHeight: '1.7' }}
+            >
+              {playbill.synopsis.split('\n').filter(Boolean).map((paragraph, i) => (
+                <p key={i} className={i > 0 ? 'mt-2' : ''}>{paragraph}</p>
+              ))}
+            </div>
+          </div>
+
+          {/* Cast of Characters */}
+          {playbill.characters.length > 0 && (
+            <div className="mb-4">
+              <div className="playbill-section-header" style={{ fontFamily: 'var(--font-oswald)' }}>
+                Cast of Characters
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                {playbill.characters.map((char, i) => (
+                  <div key={i}>
+                    <span className="text-sm font-bold text-[#1A0F1E]"
+                      style={{ fontFamily: 'var(--font-playfair)' }}
+                    >
+                      {char.name}
+                    </span>
+                    <span className="text-xs text-[#1A0F1E]/50 ml-1"
+                      style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
+                    >
+                      {char.description}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* Musical Numbers */}
-      <section>
-        <h2 className="text-sm tracking-[0.3em] text-[#C9A84C]/60 uppercase mb-6"
-          style={{ fontFamily: 'var(--font-oswald)' }}
-        >
-          Musical Numbers
-        </h2>
-
-        {/* Act I */}
-        <div className="mb-6">
-          <h3 className="text-xs tracking-[0.3em] text-[#C9A84C] uppercase mb-3"
-            style={{ fontFamily: 'var(--font-oswald)' }}
-          >
-            Act I
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {act1Tracks.map((track, i) => (
-              <SongCard
-                key={track.id}
-                track={track}
-                index={i}
-                isHighlighted={highlightedTrack === i}
-                isNowPlaying={highlightedTrack === i}
-              />
-            ))}
+          {/* Setting */}
+          <div className="mt-auto pt-4 border-t border-[#C9A84C]/15">
+            <p className="text-xs text-[#1A0F1E]/50"
+              style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
+            >
+              {playbill.setting}
+            </p>
           </div>
         </div>
 
-        {/* Intermission */}
-        <div className="intermission-divider my-8">
-          <span className="text-xs tracking-[0.3em] text-[#C9A84C]/60 uppercase whitespace-nowrap"
-            style={{ fontFamily: 'var(--font-oswald)' }}
-          >
-            Intermission
-          </span>
-        </div>
+        {/* Right Page */}
+        <div className="playbill-page playbill-spine">
+          <div className="playbill-section-header" style={{ fontFamily: 'var(--font-oswald)' }}>
+            Musical Numbers
+          </div>
 
-        {/* Act II */}
-        <div>
-          <h3 className="text-xs tracking-[0.3em] text-[#C9A84C] uppercase mb-3"
-            style={{ fontFamily: 'var(--font-oswald)' }}
-          >
-            Act II
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {act2Tracks.map((track, i) => (
-              <SongCard
-                key={track.id}
-                track={track}
-                index={i}
-                isHighlighted={highlightedTrack === i + 3}
-                isNowPlaying={highlightedTrack === i + 3}
-              />
-            ))}
+          {/* Act I */}
+          <div className="mb-2">
+            <h4 className="text-[10px] tracking-[0.25em] uppercase text-[#8A7434] mb-1"
+              style={{ fontFamily: 'var(--font-oswald)' }}
+            >
+              Act I
+            </h4>
+            <div className="divide-y divide-[#C9A84C]/10">
+              {act1Tracks.map((track, i) => (
+                <SongCard
+                  key={track.id}
+                  track={track}
+                  index={i}
+                  isHighlighted={highlightedTrack === i}
+                  isNowPlaying={highlightedTrack === i}
+                  isLocked={lockedTrackNumbers?.has(track.track_number)}
+                  onGenerateTrack={onGenerateTrack}
+                  variant="playbill"
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Intermission */}
+          <div className="playbill-intermission">
+            <span className="text-[10px] tracking-[0.3em] uppercase whitespace-nowrap"
+              style={{ fontFamily: 'var(--font-oswald)', color: '#8A7434' }}
+            >
+              Intermission
+            </span>
+          </div>
+
+          {/* Act II */}
+          <div>
+            <h4 className="text-[10px] tracking-[0.25em] uppercase text-[#8A7434] mb-1"
+              style={{ fontFamily: 'var(--font-oswald)' }}
+            >
+              Act II
+            </h4>
+            <div className="divide-y divide-[#C9A84C]/10">
+              {act2Tracks.map((track, i) => (
+                <SongCard
+                  key={track.id}
+                  track={track}
+                  index={i}
+                  isHighlighted={highlightedTrack === i + 3}
+                  isNowPlaying={highlightedTrack === i + 3}
+                  isLocked={lockedTrackNumbers?.has(track.track_number)}
+                  onGenerateTrack={onGenerateTrack}
+                  variant="playbill"
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
