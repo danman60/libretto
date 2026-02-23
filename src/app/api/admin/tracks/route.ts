@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
     let query = db
       .from('tracks')
       .select('*, albums!inner(title, share_slug, project_id)', { count: 'exact' })
-      .eq('status', 'complete')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AudioPlayer } from './AudioPlayer';
 import { ChevronDown, ChevronUp, Loader2, Lock, Music, RotateCcw } from 'lucide-react';
 import type { Track, SongRole } from '@/lib/types';
@@ -13,6 +13,112 @@ const SONG_ROLE_LABELS: Record<SongRole, string> = {
   'eleven-oclock': 'Eleven O\'Clock Number',
   'finale': 'Finale',
 };
+
+// Estimated duration for each generation phase (seconds)
+const LYRICS_EST_SECONDS = 15;
+const AUDIO_EST_SECONDS = 75;
+
+function GenerationProgress({ phase }: { phase: 'lyrics' | 'audio' }) {
+  const [elapsed, setElapsed] = useState(0);
+  const startRef = useRef(Date.now());
+
+  useEffect(() => {
+    startRef.current = Date.now();
+    setElapsed(0);
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const estTotal = phase === 'lyrics' ? LYRICS_EST_SECONDS : AUDIO_EST_SECONDS;
+  // Asymptotic progress: never reaches 100%, slows down as it approaches
+  const rawProgress = elapsed / estTotal;
+  const displayProgress = Math.min(95, rawProgress < 1
+    ? rawProgress * 85
+    : 85 + (1 - Math.exp(-(rawProgress - 1) * 2)) * 10
+  );
+
+  const label = phase === 'lyrics' ? 'Writing lyrics...' : 'Composing music...';
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  const timeStr = minutes > 0
+    ? `${minutes}:${seconds.toString().padStart(2, '0')}`
+    : `${seconds}s`;
+
+  return (
+    <div className="mt-2">
+      <div className="flex items-center justify-between mb-1">
+        <span className="flex items-center gap-1.5 text-xs text-[#8A7434]">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          {label}
+        </span>
+        <span className="text-[10px] text-[#1A0F1E]/40 tabular-nums"
+          style={{ fontFamily: 'var(--font-oswald)' }}
+        >
+          {timeStr}
+        </span>
+      </div>
+      <div className="h-1.5 bg-[#1A0F1E]/10 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8C872] transition-all duration-1000 ease-out"
+          style={{ width: `${displayProgress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Dark variant progress bar
+function GenerationProgressDark({ phase }: { phase: 'lyrics' | 'audio' }) {
+  const [elapsed, setElapsed] = useState(0);
+  const startRef = useRef(Date.now());
+
+  useEffect(() => {
+    startRef.current = Date.now();
+    setElapsed(0);
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const estTotal = phase === 'lyrics' ? LYRICS_EST_SECONDS : AUDIO_EST_SECONDS;
+  const rawProgress = elapsed / estTotal;
+  const displayProgress = Math.min(95, rawProgress < 1
+    ? rawProgress * 85
+    : 85 + (1 - Math.exp(-(rawProgress - 1) * 2)) * 10
+  );
+
+  const label = phase === 'lyrics' ? 'Writing lyrics...' : 'Composing music...';
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  const timeStr = minutes > 0
+    ? `${minutes}:${seconds.toString().padStart(2, '0')}`
+    : `${seconds}s`;
+
+  return (
+    <div className="mt-2">
+      <div className="flex items-center justify-between mb-1">
+        <span className="flex items-center gap-1.5 text-xs text-[#C9A84C]">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          {label}
+        </span>
+        <span className="text-[10px] text-[#F2E8D5]/40 tabular-nums"
+          style={{ fontFamily: 'var(--font-oswald)' }}
+        >
+          {timeStr}
+        </span>
+      </div>
+      <div className="h-1.5 bg-[#1A0F1E] rounded-full overflow-hidden border border-[#C9A84C]/10">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8C872] transition-all duration-1000 ease-out"
+          style={{ width: `${displayProgress}%`, opacity: 0.7 }}
+        />
+      </div>
+    </div>
+  );
+}
 
 interface SongCardProps {
   track: Track;
@@ -31,7 +137,9 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
   const isFailed = track.status === 'failed';
   const isLyricsReady = track.status === 'lyrics_complete';
   const isGeneratingAudio = track.status === 'generating_audio';
-  const isLoading = track.status === 'generating_lyrics' || track.status === 'lyrics_done' || track.status === 'pending';
+  const isGeneratingLyrics = track.status === 'generating_lyrics';
+  const isLyricsDone = track.status === 'lyrics_done';
+  const isPending = track.status === 'pending';
   const roleLabel = track.song_role ? SONG_ROLE_LABELS[track.song_role] : null;
 
   const isPlaybill = variant === 'playbill';
@@ -68,7 +176,7 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
               </p>
             )}
 
-            {/* Locked state: tracks 2-6 before purchase */}
+            {/* Locked state */}
             {isLocked && (
               <div className="mt-2">
                 <button
@@ -94,21 +202,20 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
               </button>
             )}
 
-            {/* Generating audio */}
-            {!isLocked && isGeneratingAudio && (
-              <div className="flex items-center gap-2 text-[#8A7434] text-xs mt-2">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Composing music...
-              </div>
+            {/* Generating audio — progress bar */}
+            {!isLocked && (isGeneratingAudio || isLyricsDone) && (
+              <GenerationProgress phase="audio" />
             )}
 
-            {/* Loading (lyrics phase) */}
-            {!isLocked && isLoading && (
-              <div className="flex items-center gap-2 text-[#1A0F1E]/40 text-xs mt-2">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                {track.status === 'generating_lyrics' && 'Writing lyrics...'}
-                {track.status === 'lyrics_done' && 'Composing music...'}
-                {track.status === 'pending' && 'Waiting...'}
+            {/* Generating lyrics — progress bar */}
+            {!isLocked && isGeneratingLyrics && (
+              <GenerationProgress phase="lyrics" />
+            )}
+
+            {/* Pending */}
+            {!isLocked && isPending && (
+              <div className="flex items-center gap-2 text-[#1A0F1E]/30 text-xs mt-2">
+                Waiting...
               </div>
             )}
 
@@ -183,7 +290,7 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
         </div>
       </div>
 
-      {/* Locked state: tracks 2-6 before purchase */}
+      {/* Locked state */}
       {isLocked && (
         <div className="py-2">
           <button
@@ -211,21 +318,20 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
         </div>
       )}
 
-      {/* Generating audio */}
-      {!isLocked && isGeneratingAudio && (
-        <div className="flex items-center gap-2 text-[#C9A84C] text-xs py-3">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Composing music...
-        </div>
+      {/* Generating audio — progress bar */}
+      {!isLocked && (isGeneratingAudio || isLyricsDone) && (
+        <GenerationProgressDark phase="audio" />
       )}
 
-      {!isLocked && isLoading && (
-        <div className="flex items-center gap-2 text-[#F2E8D5]/40 text-xs py-3">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          {track.status === 'generating_lyrics' && 'Writing lyrics...'}
-          {track.status === 'lyrics_done' && 'Composing music...'}
-          {track.status === 'lyrics_complete' && 'Lyrics ready'}
-          {track.status === 'pending' && 'Waiting...'}
+      {/* Generating lyrics — progress bar */}
+      {!isLocked && isGeneratingLyrics && (
+        <GenerationProgressDark phase="lyrics" />
+      )}
+
+      {/* Pending */}
+      {!isLocked && isPending && (
+        <div className="flex items-center gap-2 text-[#F2E8D5]/30 text-xs py-3">
+          Waiting...
         </div>
       )}
 

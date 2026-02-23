@@ -33,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ fontSize: '19.2px' }}>
       <body
         className={`${playfair.variable} ${cormorant.variable} ${oswald.variable} antialiased bg-[#08070A] text-[#F2E8D5] relative min-h-screen`}
         style={{ fontFamily: 'var(--font-cormorant)' }}

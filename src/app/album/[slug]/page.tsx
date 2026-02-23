@@ -315,10 +315,19 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                     className={`w-full h-full object-cover ${revealed ? 'reveal-blur' : 'opacity-0'}`}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-b from-[#2A1A30] to-[#1A0F1E] flex items-center justify-center">
-                    <span className="text-8xl gold-text-static" style={{ fontFamily: 'var(--font-playfair)' }}>
-                      {album.title.charAt(0)}
-                    </span>
+                  <div className="w-full h-full flex items-center justify-center"
+                    style={{ background: 'radial-gradient(ellipse at 50% 30%, #3D1A2E 0%, #1A0F1E 60%, #08070A 100%)' }}
+                  >
+                    <div className="text-center">
+                      <div className="text-6xl mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
+                        🎭
+                      </div>
+                      <p className="text-[#C9A84C]/40 text-xs tracking-[0.3em] uppercase"
+                        style={{ fontFamily: 'var(--font-oswald)' }}
+                      >
+                        Cover art generating...
+                      </p>
+                    </div>
                   </div>
                 )}
 
