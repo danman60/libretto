@@ -282,11 +282,12 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   if (isMusical && playbill) {
     return (
       <main className="min-h-screen text-[#F2E8D5]">
-        {/* Red velvet curtain backdrop */}
+        {/* Red velvet proscenium curtain */}
         <div className={`curtain-backdrop ${programmeOpen ? 'curtain-open' : ''}`}>
           <div className="curtain-panel curtain-panel-left" />
           <div className="curtain-panel curtain-panel-right" />
           <div className="curtain-valance" />
+          <div className="curtain-proscenium" />
         </div>
 
         {/* Cover state */}
