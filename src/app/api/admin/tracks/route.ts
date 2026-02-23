@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
     const dateTo = url.searchParams.get('dateTo');
     const offset = (page - 1) * limit;
 
-    // Fetch tracks with album info
+    // Fetch tracks (no join — tracks and albums are siblings under projects)
     let query = db
       .from('tracks')
-      .select('*, albums(title, share_slug, project_id)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -41,12 +41,31 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[api/admin/tracks] Query error:', error);
-      return NextResponse.json({ error: 'Query failed' }, { status: 500 });
+      return NextResponse.json({ error: 'Query failed', detail: error.message }, { status: 500 });
     }
 
-    // Fetch generation logs for these tracks' projects
-    const projectIds = [...new Set((tracks || []).map((t: { albums: { project_id: string } | null }) => t.albums?.project_id).filter(Boolean))];
+    // Fetch album info for these tracks' projects
+    const projectIds = [...new Set((tracks || []).map((t: { project_id: string }) => t.project_id))];
 
+    let albumsByProject: Record<string, { title: string; share_slug: string | null }> = {};
+    if (projectIds.length > 0) {
+      const { data: albums } = await db
+        .from('albums')
+        .select('project_id, title, share_slug')
+        .in('project_id', projectIds);
+
+      for (const album of (albums || [])) {
+        albumsByProject[album.project_id] = { title: album.title, share_slug: album.share_slug };
+      }
+    }
+
+    // Attach album info to each track
+    const tracksWithAlbums = (tracks || []).map((t: { project_id: string }) => ({
+      ...t,
+      albums: albumsByProject[t.project_id] || null,
+    }));
+
+    // Fetch generation logs
     let logs: Record<string, unknown[]> = {};
     if (projectIds.length > 0) {
       const { data: allLogs } = await db
@@ -55,7 +74,6 @@ export async function GET(request: NextRequest) {
         .in('project_id', projectIds)
         .order('created_at', { ascending: true });
 
-      // Group logs by project_id + track_number
       for (const log of (allLogs || [])) {
         const key = `${log.project_id}_${log.track_number ?? 'meta'}`;
         if (!logs[key]) logs[key] = [];
@@ -64,7 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      tracks: tracks || [],
+      tracks: tracksWithAlbums,
       logs,
       total: count || 0,
       page,
