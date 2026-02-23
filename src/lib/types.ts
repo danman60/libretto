@@ -53,6 +53,7 @@ export type TrackStatus =
   | 'pending'
   | 'generating_lyrics'
   | 'lyrics_done'
+  | 'lyrics_complete'
   | 'generating_audio'
   | 'complete'
   | 'failed';
