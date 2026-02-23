@@ -9,12 +9,13 @@ export default function LandingPage() {
         <div className="absolute inset-0 overture-bg opacity-50" />
 
         <div className="relative max-w-5xl mx-auto px-6 pt-20 sm:pt-32 pb-24 text-center">
-          <h1 className="marquee-title font-black mb-4"
-            style={{ fontFamily: 'var(--font-playfair)', fontSize: 'clamp(2.5rem, 10vw, 8rem)' }}
-          >
-            BROADWAYIFY
-          </h1>
-
+          <div className="flex justify-center overflow-visible">
+            <h1 className="marquee-title font-black mb-4 mr-[-0.15em]"
+              style={{ fontFamily: 'var(--font-playfair)', fontSize: 'clamp(2.5rem, 8vw, 6rem)' }}
+            >
+              BROADWAYIFY
+            </h1>
+          </div>
           <div className="art-deco-divider my-6" />
 
           <p className="text-2xl sm:text-3xl tracking-widest uppercase gold-text-static mb-6"
