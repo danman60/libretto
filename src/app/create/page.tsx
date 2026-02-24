@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { MusicalTypeSelector } from '@/components/MusicalTypeSelector';
+import { QuillScribeBg } from '@/components/QuillScribeBg';
 import { Loader2 } from 'lucide-react';
 import type { MusicalType } from '@/lib/types';
 
@@ -161,10 +162,17 @@ export default function CreatePage() {
       sessionStorage.setItem('libretto_project_id', newProjectId);
 
       // Step 2: Fire generation (don't await — let polling handle it)
+      // When orchestrator returns (lyrics done), immediately fire audio
       fetch('/api/generate-track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: newProjectId }),
+      }).then(() => {
+        fetch('/api/generate-song', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: newProjectId, trackNumber: 1 }),
+        }).catch(() => {});
       }).catch(err => {
         console.error('Generation request failed:', err);
       });
@@ -188,14 +196,16 @@ export default function CreatePage() {
       : `${seconds}s`;
 
     return (
-      <main className="min-h-screen text-[#F2E8D5] flex flex-col">
-        <div className="text-center pt-8 mb-4">
+      <main className="min-h-screen text-[#F2E8D5] flex flex-col relative overflow-hidden">
+        <QuillScribeBg />
+
+        <div className="text-center pt-8 mb-4 relative z-10">
           <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
             BROADWAYIFY
           </Link>
         </div>
 
-        <div className="flex-1 flex items-center justify-center px-6">
+        <div className="flex-1 flex items-center justify-center px-6 relative z-10">
           <div className="max-w-md w-full text-center gentle-fade-in">
             {error ? (
               <>
