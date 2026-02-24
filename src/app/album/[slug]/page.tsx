@@ -29,6 +29,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const [isCreator, setIsCreator] = useState(false);
   const [programmeOpen, setProgrammeOpen] = useState(false);
   const [coverArtReady, setCoverArtReady] = useState(false);
+  const [audioTriggered, setAudioTriggered] = useState(false);
 
   useEffect(() => {
     fetch(`/api/album/${slug}`)
@@ -81,11 +82,26 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     };
   }, [data?.dominantEmotion]);
 
+  // Auto-trigger track 1 audio when lyrics are ready
+  useEffect(() => {
+    if (!data || audioTriggered) return;
+    const track1 = data.tracks.find((t: Track) => t.track_number === 1);
+    if (track1?.status === 'lyrics_complete') {
+      setAudioTriggered(true);
+      console.log('[album] Auto-triggering track 1 audio generation');
+      fetch('/api/generate-song', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: data.album.project_id, trackNumber: 1 }),
+      }).catch(err => console.error('[album] Failed to trigger track 1:', err));
+    }
+  }, [data, audioTriggered]);
+
   // Poll for in-progress tracks
   useEffect(() => {
     if (!data) return;
     const track1 = data.tracks.find((t: Track) => t.track_number === 1);
-    const track1Done = !track1 || track1.status === 'complete' || track1.status === 'failed' || track1.status === 'lyrics_complete';
+    const track1Done = !track1 || track1.status === 'complete' || track1.status === 'failed';
     const othersInProgress = data.tracks.some((t: Track) =>
       t.track_number !== 1 && t.status !== 'complete' && t.status !== 'failed' && t.status !== 'lyrics_complete' && t.status !== 'pending'
     );
