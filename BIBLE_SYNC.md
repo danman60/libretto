@@ -63,3 +63,7 @@ When syncing bible → code, check each:
 | Date | Bible Version | Sync Target | Notes |
 |---|---|---|---|
 | 2026-02-24 | v4 (15 sections) | Quick sync: lyrics prompt + lyrics_guidance | First L2/L3 integration |
+
+## Tracking
+
+`prompts.ts` exports `MTBIBLE_SYNC_VERSION` — bump this constant each time you sync bible → code.

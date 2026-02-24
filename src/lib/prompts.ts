@@ -1,6 +1,9 @@
 import type { MusicalType, SongRole, ShowConcept } from './types';
 import type { MusicalTypeConfig, SongRoleConfig } from './musical-types';
 
+/** Last MTBible version these prompts were synced to */
+export const MTBIBLE_SYNC_VERSION = 'v4';
+
 // ===== Show Enrichment =====
 
 export function buildEnrichmentPrompt(
