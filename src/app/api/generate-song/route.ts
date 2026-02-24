@@ -64,6 +64,21 @@ export async function POST(request: NextRequest) {
     // Generate the song (lyrics if needed + audio)
     await generateSingleSong(projectId, trackNumber, concept, musicalType);
 
+    // Backfill album cover art as soon as any track has one
+    const { data: completedTrack } = await db
+      .from('tracks')
+      .select('cover_image_url')
+      .eq('project_id', projectId)
+      .eq('track_number', trackNumber)
+      .single();
+
+    if (completedTrack?.cover_image_url) {
+      await db.from('albums')
+        .update({ cover_image_url: completedTrack.cover_image_url })
+        .eq('project_id', projectId)
+        .is('cover_image_url', null);
+    }
+
     // Check if all tracks are done → finalize project
     await maybeFinalizeProject(projectId);
 

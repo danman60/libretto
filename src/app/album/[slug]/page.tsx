@@ -306,7 +306,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const isMusical = !!data.musicalType && !!album.playbill_content;
   const playbill = album.playbill_content as PlaybillContent | null;
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
-  const showProgramme = !!album.cover_image_url && coverArtReady;
+  const showProgramme = (!!album.cover_image_url && coverArtReady) || hasCompleteTracks;
   const act1Tracks = tracks.filter(t => t.track_number <= 3);
   const act2Tracks = tracks.filter(t => t.track_number >= 4);
 
@@ -392,11 +392,17 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                     </div>
 
                     <div className="programme-cover-art">
-                      <img
-                        src={album.cover_image_url!}
-                        alt={album.title}
-                        className={`w-full h-full object-cover ${revealed ? 'reveal-blur' : 'opacity-0'}`}
-                      />
+                      {album.cover_image_url ? (
+                        <img
+                          src={album.cover_image_url}
+                          alt={album.title}
+                          className={`w-full h-full object-cover ${revealed ? 'reveal-blur' : 'opacity-0'}`}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"
+                          style={{ background: 'radial-gradient(ellipse at 50% 30%, #3D1A2E 0%, #1A0F1E 60%, #08070A 100%)' }}
+                        />
+                      )}
 
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-20 pb-6 px-6 text-center">
                         <h1 className="text-3xl sm:text-4xl text-white mb-2 drop-shadow-lg"
