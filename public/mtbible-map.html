@@ -1130,6 +1130,61 @@ Tension
     </div>
   </div>
 
+  <h3 style="font-size:0.95rem; margin-top:20px; color:var(--gold);">Prompt Injection Rules &mdash; Hybrid Curation</h3>
+  <div style="margin-top:8px; margin-bottom:20px;">
+    <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+      Hardcode the must-haves per role. DeepSeek curates 1-2 more based on the specific story/moment.
+    </p>
+
+    <!-- Hardcoded rules table -->
+    <div style="margin-bottom:12px;">
+      <div style="display:flex; gap:4px; padding:8px 10px; background:rgba(229,57,53,0.08); border-radius:8px 8px 0 0; border:1px solid rgba(229,57,53,0.15);">
+        <span style="min-width:110px; font-size:0.75rem; color:var(--red); font-weight:bold;">ALWAYS (all songs)</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);"><strong style="color:var(--cream);">#7 Correct Scansion</strong> &mdash; mechanical quality, never optional. Stress patterns must match melody.</span>
+      </div>
+
+      <div style="display:flex; gap:4px; padding:8px 10px; background:rgba(201,168,76,0.05); border-left:1px solid rgba(201,168,76,0.1); border-right:1px solid rgba(201,168,76,0.1);">
+        <span style="min-width:110px; font-size:0.75rem; color:var(--gold); font-weight:bold;">Opening #</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);"><strong>#4</strong> Specificity + <strong>#2</strong> Understandable &mdash; paint the world clearly, audience must orient fast</span>
+      </div>
+      <div style="display:flex; gap:4px; padding:8px 10px; background:rgba(201,168,76,0.03); border-left:1px solid rgba(201,168,76,0.1); border-right:1px solid rgba(201,168,76,0.1);">
+        <span style="min-width:110px; font-size:0.75rem; color:var(--gold); font-weight:bold;">I Want Song</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);"><strong>#4</strong> Specificity + <strong>#5</strong> Dramatic Progression &mdash; concrete desire, ascending intensity</span>
+      </div>
+      <div style="display:flex; gap:4px; padding:8px 10px; background:rgba(201,168,76,0.05); border-left:1px solid rgba(201,168,76,0.1); border-right:1px solid rgba(201,168,76,0.1);">
+        <span style="min-width:110px; font-size:0.75rem; color:var(--gold); font-weight:bold;">Confrontation</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);"><strong>#5</strong> Dramatic Progression + <strong>#4</strong> Specificity &mdash; stakes escalate, specific grievances not vague anger</span>
+      </div>
+      <div style="display:flex; gap:4px; padding:8px 10px; background:rgba(201,168,76,0.03); border-left:1px solid rgba(201,168,76,0.1); border-right:1px solid rgba(201,168,76,0.1);">
+        <span style="min-width:110px; font-size:0.75rem; color:var(--gold); font-weight:bold;">Act II Opening</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);"><strong>#1</strong> Singable + <strong>#8</strong> Fresh Images &mdash; melody-first charm song, no clich&eacute;s in the breather</span>
+      </div>
+      <div style="display:flex; gap:4px; padding:8px 10px; background:rgba(201,168,76,0.05); border-left:1px solid rgba(201,168,76,0.1); border-right:1px solid rgba(201,168,76,0.1);">
+        <span style="min-width:110px; font-size:0.75rem; color:var(--gold); font-weight:bold;">11 O'Clock #</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);"><strong>#5</strong> Dramatic Progression + <strong>#4</strong> Specificity &mdash; peak moment demands maximum craft</span>
+      </div>
+      <div style="display:flex; gap:4px; padding:8px 10px; background:rgba(201,168,76,0.03); border-left:1px solid rgba(201,168,76,0.1); border-right:1px solid rgba(201,168,76,0.1); border-radius:0 0 8px 8px; border-bottom:1px solid rgba(201,168,76,0.1);">
+        <span style="min-width:110px; font-size:0.75rem; color:var(--gold); font-weight:bold;">Finale</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);"><strong>#3</strong> One Thing Only + <strong>#8</strong> Fresh Images &mdash; resolution needs focus, reprise needs freshness</span>
+      </div>
+    </div>
+
+    <!-- DeepSeek curates the rest -->
+    <div class="note-box" style="background:rgba(76,175,80,0.08); border-color:rgba(76,175,80,0.25);">
+      <h4 style="color:var(--green);">DeepSeek Curates +1-2 More</h4>
+      <p>The enrichment prompt tells DeepSeek:</p>
+      <div style="font-size:0.8rem; padding:8px 12px; margin-top:6px; background:rgba(0,0,0,0.3); border-radius:6px; font-style:italic; color:var(--cream-muted);">
+        "For each song, select 1-2 additional lyrical principles from this list that are most relevant to THIS specific dramatic moment and character. Explain in one sentence why you chose each."
+      </div>
+      <p style="margin-top:8px; font-size:0.8rem; color:var(--cream-muted);">
+        <strong>Available pool for curation:</strong> #1 Singable, #2 Understandable, #3 One Thing, #6 No Self-Pity, #8 Fresh Images, #9 No False Rhyme, #10 Not Rigid, plus Comedy Game rules when applicable.
+      </p>
+      <p style="margin-top:4px; font-size:0.8rem; color:var(--cream-muted);">
+        <strong>Result per song:</strong> #7 (always) + 2 hardcoded + 1-2 curated = <strong>4-5 total rules</strong>. Focused. Actionable. Not overwhelming.
+      </p>
+    </div>
+  </div>
+
   <h3 style="font-size:0.95rem; margin-top:20px; color:var(--gold);">Sonic Cohesion &mdash; One Show, One Sound</h3>
   <div class="note-box" style="background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.25);">
     <h4 style="color:var(--gold);">The Problem</h4>
