@@ -306,7 +306,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const isMusical = !!data.musicalType && !!album.playbill_content;
   const playbill = album.playbill_content as PlaybillContent | null;
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
-  const showProgramme = (!!album.cover_image_url && coverArtReady) || !!album.playbill_content;
+  const showProgramme = !!album.cover_image_url && coverArtReady;
   const act1Tracks = tracks.filter(t => t.track_number <= 3);
   const act2Tracks = tracks.filter(t => t.track_number >= 4);
 
