@@ -99,14 +99,17 @@ ${songConfig.lyrics_guidance}
 
 The chorus appears THREE times and must be IDENTICAL every time. Copy-paste it exactly.
 
-## Songwriting Rules
-1. **HOOK:** First line of the chorus = the hook. Singable, memorable, could be the song title.
-2. **CHARACTER VOICE:** Write in the voice of the character(s) singing. Stay in character.
-3. **SPECIFICITY:** Use details from the show concept. Setting, character names, plot points.
-4. **REPETITION:** The chorus is the emotional anchor — same words every time.
-5. **GENRE:** Write in the ${musicalTypeConfig.label} tradition. ${musicalTypeConfig.style_overview}.
-6. **CONCISE:** Under 280 words total. Let the music breathe.
-7. **THEATRICAL:** These lyrics must work on a stage. Think about the dramatic moment.
+## Songwriting Rules (MTBible)
+1. **SINGABLE:** Sustained vowels on key words. Avoid hard consonants at the ends of important lines. If it's hard to sing on that note, it's the wrong word.
+2. **HOOK:** First line of the chorus = the hook. Singable, memorable, could be the song title. One single, big idea.
+3. **CHARACTER VOICE:** Write in the voice of the character(s) singing. Stay in character. A street kid doesn't use elegant vocabulary. An educated character can rhyme more densely.
+4. **SPECIFICITY:** "Riding on a smile and a shoeshine" not "he was a salesman." Use concrete details from this show's world — setting, character names, sensory images.
+5. **DRAMATIC PROGRESSION:** Ideas in ascending order of punch. The song must END in a different emotional place than it started. Each verse raises the stakes.
+6. **TRANSFORMATION:** The character or the audience's understanding must CHANGE during this song. Surface emotion and deeper truth can differ — subtext is powerful.
+7. **CORRECT SCANSION:** Stress patterns of lyrics MUST match natural speech rhythm. Never misaccent a word. Read it aloud — if it sounds awkward spoken, it will sound worse sung.
+8. **GENRE:** Write in the ${musicalTypeConfig.label} tradition. ${musicalTypeConfig.style_overview}.
+9. **ECONOMY:** Under 280 words total. 6-10 syllables per line for ballads, 10-14 for uptempo. Let the music breathe. Less is more.
+10. **EMPHASIS:** Use ALL CAPS for words that should be belted or powerfully delivered at climactic moments. Use sparingly — only 2-3 times in the whole song.
 
 Respond with ONLY the lyrics text (with structure tags). No explanations.`;
 }
