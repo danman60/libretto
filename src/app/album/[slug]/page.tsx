@@ -7,6 +7,7 @@ import Link from 'next/link';
 import JSZip from 'jszip';
 import { SongCard } from '@/components/SongCard';
 import { Guestbook } from '@/components/Guestbook';
+import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { AlbumPlayer } from '@/components/AlbumPlayer';
 import { StageBackdrop } from '@/components/StageBackdrop';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
@@ -651,6 +652,13 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               </section>
             )}
 
+            {/* Feedback */}
+            <section className="max-w-[680px] mx-auto px-6 py-12">
+              <div className="border-t border-[#C9A84C]/10 pt-12">
+                <FeedbackWidget slug={slug} />
+              </div>
+            </section>
+
             {/* Guestbook */}
             <section className="max-w-[680px] mx-auto px-6 py-12">
               <div className="border-t border-[#C9A84C]/10 pt-12">
@@ -816,6 +824,13 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
           </p>
         </section>
       )}
+
+      {/* Feedback */}
+      <section className="max-w-[680px] mx-auto px-6 py-12">
+        <div className="border-t border-[#C9A84C]/10 pt-12">
+          <FeedbackWidget slug={slug} />
+        </div>
+      </section>
 
       {/* Guestbook */}
       <section className="max-w-[680px] mx-auto px-6 py-12">
