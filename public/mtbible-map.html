@@ -1074,8 +1074,120 @@ Tension
   </details>
 </div>
 
-<!-- ============ SECTION 9: Suno Translation Layer ============ -->
-<h2>9. Suno Translation Layer <span class="badge badge-new">NEW</span></h2>
+<!-- ============ SECTION 9: Prompt Economy & Sonic Cohesion ============ -->
+<h2>9. Prompt Economy &amp; Sonic Cohesion <span class="badge badge-critical">CRITICAL</span></h2>
+<div class="section highlight">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:16px;">
+    The MTBible is a <strong>knowledge base for us</strong>, not a dump into every prompt. More instructions = worse output from both DeepSeek and Suno. Quality over quantity.
+  </p>
+
+  <h3 style="font-size:0.95rem; color:var(--red);">The Overload Problem</h3>
+  <div class="comparison" style="margin-bottom:16px;">
+    <div class="col-current">
+      <h3>Overloaded Prompt</h3>
+      <ul>
+        <li>All 10 Commandments</li>
+        <li>+ Genre rules</li>
+        <li>+ Song form instructions</li>
+        <li>+ Archetype rules</li>
+        <li>+ Energy/tempo</li>
+        <li>+ Reference examples</li>
+        <li>+ Specificity doctrine</li>
+        <li>= LLM hedges, gets generic, fixates on one rule and ignores others</li>
+      </ul>
+    </div>
+    <div class="col-proposed">
+      <h3>Curated Prompt</h3>
+      <ul>
+        <li><strong>3-5 rules max</strong> per song</li>
+        <li>Picked by enrichment step</li>
+        <li>Most relevant to THIS song role</li>
+        <li>= LLM focuses, delivers on what matters</li>
+      </ul>
+      <p style="font-size:0.8rem; color:var(--green); margin-top:8px; font-weight:bold;">The enrichment step is the CURATOR.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;">Budget Per Layer</h3>
+  <div style="margin-top:8px;">
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:130px;">Enrichment (DeepSeek)</span>
+      <span class="archetype-desc">
+        <strong>This is where MTBible knowledge lives.</strong> The dramaturg. Decides WHICH principles matter for THIS show and THIS song. Outputs focused <code>song_briefs[]</code> with 3-5 targeted instructions per song &mdash; not a wall of rules.
+      </span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:130px;">Lyrics (DeepSeek)</span>
+      <span class="archetype-desc">
+        Receives <strong>only the brief for THAT song</strong>. Short, focused. 2-3 key commandments most relevant to the song role. E.g. I Want gets #4 (Specificity) + #5 (Dramatic Progression). Comedy song gets "save best for last" + "punch up."
+      </span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:130px;">Suno Style</span>
+      <span class="archetype-desc">
+        <strong>5-6 tags max.</strong> Genre + instrument + mood + tempo + vocal. Done. First 20-30 words carry most weight. More tags = more confused, muddier output.
+      </span>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem; margin-top:20px; color:var(--gold);">Sonic Cohesion &mdash; One Show, One Sound</h3>
+  <div class="note-box" style="background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.25);">
+    <h4 style="color:var(--gold);">The Problem</h4>
+    <p style="margin-bottom:8px;">Currently each song's style prompt is built <strong>independently</strong> &mdash; no awareness of the other 5 songs. Track 1 could sound like 1940s big band while Track 4 sounds like modern pop. The show has no sonic identity.</p>
+
+    <h4 style="color:var(--gold);">The Solution: Show DNA</h4>
+    <p style="margin-bottom:8px;">The enrichment step defines a <strong>show_style_dna</strong> &mdash; a consistent core style string that anchors ALL 6 songs. Individual songs vary in energy, tempo, and mood, but share the same:</p>
+    <ul>
+      <li><strong>Genre anchor</strong> &mdash; e.g. <code>Broadway, orchestral</code> appears in every song's style</li>
+      <li><strong>Core instruments</strong> &mdash; e.g. <code>grand piano, strings</code> are always present (others added/removed per song)</li>
+      <li><strong>Vocal identity</strong> &mdash; e.g. <code>belting female vocals</code> or <code>male tenor</code> stays consistent</li>
+      <li><strong>Era/production</strong> &mdash; e.g. <code>modern musical theater, polished</code> across all tracks</li>
+    </ul>
+    <p style="margin-top:8px; font-size:0.8rem; color:var(--cream-muted);">Each song then <strong>layers variations ON TOP</strong> of the DNA: the Confrontation adds <code>intense, minor key, dramatic</code>. The Charm Song adds <code>warm, gentle, playful</code>. But the foundation stays the same.</p>
+  </div>
+
+  <div style="margin-top:12px; padding:12px; background:rgba(0,0,0,0.3); border-radius:8px;">
+    <p style="font-size:0.8rem; color:var(--gold-light); margin-bottom:8px;"><strong>Example: Classic Broadway Show DNA</strong></p>
+    <p style="font-size:0.8rem; font-family:monospace; color:var(--cream); margin-bottom:10px;">
+      <strong>DNA (shared):</strong> Broadway, orchestral, grand piano, lush strings, belting female vocals, theatrical, modern
+    </p>
+    <div style="font-size:0.8rem; color:var(--cream-muted);">
+      <div style="display:flex; gap:6px; margin-bottom:4px;">
+        <span style="color:var(--gold); min-width:90px;">Song 1:</span>
+        <span>DNA + <code>ensemble, upbeat, bright, 125 BPM</code></span>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:4px;">
+        <span style="color:var(--gold); min-width:90px;">Song 2:</span>
+        <span>DNA + <code>soaring melody, building, driving, 140 BPM</code></span>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:4px;">
+        <span style="color:var(--gold); min-width:90px;">Song 3:</span>
+        <span>DNA + <code>intense, dramatic, minor key, punchy, 105 BPM</code></span>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:4px;">
+        <span style="color:var(--gold); min-width:90px;">Song 4:</span>
+        <span>DNA + <code>warm, gentle, playful, mid-tempo, 110 BPM</code></span>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:4px;">
+        <span style="color:var(--gold); min-width:90px;">Song 5:</span>
+        <span>DNA + <code>powerful, emotional climax, building to crescendo</code></span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <span style="color:var(--gold); min-width:90px;">Song 6:</span>
+        <span>DNA + <code>warm, bittersweet, reprise, cathartic, 115 BPM</code></span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;">
+    <p style="font-size:0.8rem; color:var(--cream-muted);">
+      <strong style="color:var(--gold-light);">Implementation:</strong> Enrichment step outputs <code>show_style_dna: string</code> (the shared core). <code>buildSongStylePrompt</code> concatenates: <code>show_style_dna + song_role_modifiers</code>. Total stays under 5-6 descriptors because the DNA IS the base, not an addition.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION 10: Suno Translation Layer ============ -->
+<h2>10. Suno Translation Layer <span class="badge badge-new">NEW</span></h2>
 <div class="section highlight">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     Suno has <strong>two input surfaces</strong>. Our translation layer must output BOTH.
@@ -1284,8 +1396,8 @@ Tension
   </div>
 </div>
 
-<!-- ============ SECTION 10: Implementation Checklist ============ -->
-<h2>10. Implementation Checklist</h2>
+<!-- ============ SECTION 11: Implementation Checklist ============ -->
+<h2>11. Implementation Checklist</h2>
 <div class="section">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     Files to modify &amp; what changes in each:
@@ -1309,11 +1421,11 @@ Tension
   <details>
     <summary>lib/prompts.ts <span class="badge badge-upgrade">MAJOR</span></summary>
     <ul>
-      <li><code>buildEnrichmentPrompt</code> &mdash; inject pacing/tension arc, specificity doctrine, genre craft principles</li>
-      <li><code>buildSongLyricsPrompt</code> &mdash; inject 10 Commandments (emphasize #1 and #7), genre-specific form (not hardcoded V/C/B/C), song archetype rules, tempo/energy guidance</li>
-      <li><code>buildSongStylePrompt</code> &mdash; rewrite as Suno translation layer: genre tags + mood + instruments + tempo + vocal + production</li>
+      <li><code>buildEnrichmentPrompt</code> &mdash; inject pacing/tension arc, specificity doctrine, genre craft principles. Output: <code>show_style_dna</code> + curated <code>song_briefs[]</code> (3-5 rules each, not all 10)</li>
+      <li><code>buildSongLyricsPrompt</code> &mdash; receives ONLY that song's brief. 2-3 most relevant commandments. Genre-specific form. No prompt overload.</li>
+      <li><code>buildSongStylePrompt</code> &mdash; rewrite: <code>show_style_dna + song_role_modifiers</code> = 5-6 total Suno tags. Sonic cohesion across all 6 songs.</li>
       <li>New: <code>buildSunoStructureTemplate</code> &mdash; convert song form to Suno metatag sequence</li>
-      <li>Add ShowConcept output fields: <code>tension_pacing</code>, per-song <code>song_briefs[]</code></li>
+      <li>Add ShowConcept output fields: <code>show_style_dna</code>, <code>tension_pacing</code>, per-song <code>song_briefs[]</code></li>
     </ul>
   </details>
 
