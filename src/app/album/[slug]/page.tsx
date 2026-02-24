@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use, useCallback } from 'react';
+import { useEffect, useState, use, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
@@ -8,6 +8,7 @@ import JSZip from 'jszip';
 import { SongCard } from '@/components/SongCard';
 import { Guestbook } from '@/components/Guestbook';
 import { AlbumPlayer } from '@/components/AlbumPlayer';
+import { StageBackdrop } from '@/components/StageBackdrop';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
 import { generateBooklet } from '@/lib/generate-booklet';
 import { Share2, Check, Loader2, Download, PlusCircle, QrCode, Code, BookOpen, ChevronLeft } from 'lucide-react';
@@ -26,6 +27,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const [highlightedTrack, setHighlightedTrack] = useState(-1);
   const [isCreator, setIsCreator] = useState(false);
   const [programmeOpen, setProgrammeOpen] = useState(false);
+  const [coverArtReady, setCoverArtReady] = useState(false);
 
   useEffect(() => {
     fetch(`/api/album/${slug}`)
@@ -35,7 +37,22 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       })
       .then(albumData => {
         setData(albumData);
-        setTimeout(() => setRevealed(true), 200);
+        // Preload cover art before revealing the programme
+        if (albumData.album?.cover_image_url) {
+          const img = new Image();
+          img.onload = () => {
+            setCoverArtReady(true);
+            setTimeout(() => setRevealed(true), 200);
+          };
+          img.onerror = () => {
+            setCoverArtReady(true);
+            setTimeout(() => setRevealed(true), 200);
+          };
+          img.src = albumData.album.cover_image_url;
+        } else {
+          // No cover art yet — show without it
+          setTimeout(() => setRevealed(true), 200);
+        }
       })
       .catch(() => setError('Album not found'));
   }, [slug]);
@@ -71,7 +88,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     const othersInProgress = data.tracks.some((t: Track) =>
       t.track_number !== 1 && t.status !== 'complete' && t.status !== 'failed' && t.status !== 'lyrics_complete' && t.status !== 'pending'
     );
-    if (track1Done && !othersInProgress) return;
+    const missingCoverArt = !data.album.cover_image_url;
+    if (track1Done && !othersInProgress && !missingCoverArt) return;
 
     const interval = setInterval(async () => {
       try {
@@ -79,11 +97,18 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         if (!res.ok) return;
         const fresh = await res.json();
         setData(fresh);
+        // Preload cover art when it arrives via polling
+        if (fresh.album?.cover_image_url && !coverArtReady) {
+          const img = new Image();
+          img.onload = () => { setCoverArtReady(true); setRevealed(true); };
+          img.onerror = () => { setCoverArtReady(true); setRevealed(true); };
+          img.src = fresh.album.cover_image_url;
+        }
       } catch { /* ignore */ }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [data, slug]);
+  }, [data, slug, coverArtReady]);
 
   const handleGenerateTrack = useCallback(async (trackNumber: number) => {
     if (!data) return;
@@ -125,6 +150,17 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       console.error('Generate track error:', err);
     }
   }, [data, slug]);
+
+  // Auto-generate track 1 if it's pending (no user click needed)
+  const autoGenFired = useRef(false);
+  useEffect(() => {
+    if (!data || autoGenFired.current) return;
+    const track1 = data.tracks.find((t: Track) => t.track_number === 1);
+    if (track1 && track1.status === 'pending') {
+      autoGenFired.current = true;
+      handleGenerateTrack(1);
+    }
+  }, [data, handleGenerateTrack]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -269,6 +305,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const isMusical = !!data.musicalType && !!album.playbill_content;
   const playbill = album.playbill_content as PlaybillContent | null;
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
+  const showProgramme = !!album.cover_image_url && coverArtReady;
   const act1Tracks = tracks.filter(t => t.track_number <= 3);
   const act2Tracks = tracks.filter(t => t.track_number >= 4);
 
@@ -293,201 +330,206 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         {/* Cover state */}
         {!programmeOpen && (
           <>
-            <div className="relative z-10 text-center pt-8">
+            <div className="relative z-10 text-center pt-12">
               <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
                 BROADWAYIFY
               </Link>
             </div>
 
             <section className="relative z-10 flex flex-col items-center justify-center px-6 py-12 min-h-[calc(100vh-120px)]">
-              <div
-                className="programme-cover cursor-pointer gentle-fade-in"
-                onClick={() => setProgrammeOpen(true)}
-              >
-                <div className="programme-cover-frame">
-                  <div className="bg-[#1A0F1E] px-6 py-3 text-center border-b-2 border-[#C9A84C]/40">
-                    <span className="text-[#C9A84C] text-xs tracking-[0.4em] uppercase"
-                      style={{ fontFamily: 'var(--font-oswald)' }}
-                    >
-                      BROADWAYIFY PRESENTS
-                    </span>
-                  </div>
-
-                  <div className="programme-cover-art">
-                    {album.cover_image_url ? (
-                      <img
-                        src={album.cover_image_url}
-                        alt={album.title}
-                        className={`w-full h-full object-cover ${revealed ? 'reveal-blur' : 'opacity-0'}`}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"
+              {!showProgramme ? (
+                <div className="text-center gentle-fade-in">
+                  <div className="programme-cover-frame" style={{ opacity: 0.6 }}>
+                    <div className="bg-[#1A0F1E] px-6 py-3 text-center border-b-2 border-[#C9A84C]/40">
+                      <span className="text-[#C9A84C] text-xs tracking-[0.4em] uppercase"
+                        style={{ fontFamily: 'var(--font-oswald)' }}
+                      >
+                        BROADWAYIFY PRESENTS
+                      </span>
+                    </div>
+                    <div className="programme-cover-art">
+                      <div className="w-full h-full flex items-center justify-center animate-pulse"
                         style={{ background: 'radial-gradient(ellipse at 50% 30%, #3D1A2E 0%, #1A0F1E 60%, #08070A 100%)' }}
                       >
-                        <div className="text-center">
-                          <div className="text-6xl mb-2">🎭</div>
+                        <div className="text-center px-8">
+                          <h2 className="text-2xl sm:text-3xl text-[#F2E8D5]/60 mb-4"
+                            style={{ fontFamily: 'var(--font-playfair)' }}
+                          >
+                            {album.title}
+                          </h2>
+                          <Loader2 className="h-6 w-6 animate-spin text-[#C9A84C]/60 mx-auto mb-3" />
                           <p className="text-[#C9A84C]/40 text-xs tracking-[0.3em] uppercase"
                             style={{ fontFamily: 'var(--font-oswald)' }}
                           >
-                            Cover art generating...
+                            Painting the poster...
                           </p>
                         </div>
                       </div>
-                    )}
-
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-20 pb-6 px-6 text-center">
-                      <h1 className="text-3xl sm:text-4xl text-white mb-2 drop-shadow-lg"
-                        style={{ fontFamily: 'var(--font-playfair)' }}
+                    </div>
+                    <div className="bg-[#1A0F1E] px-6 py-3 text-center border-t-2 border-[#C9A84C]/40">
+                      <span className="text-[#C9A84C]/50 text-[10px] tracking-[0.3em] uppercase"
+                        style={{ fontFamily: 'var(--font-oswald)' }}
                       >
-                        {album.title}
-                      </h1>
-                      {album.tagline && (
-                        <p className="text-sm text-white/70 max-w-xs mx-auto"
-                          style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
-                        >
-                          {album.tagline}
-                        </p>
-                      )}
+                        A Musical in Two Acts
+                      </span>
                     </div>
                   </div>
+                </div>
+              ) : (
+              <>
+                <div
+                  className="programme-cover cursor-pointer gentle-fade-in"
+                  onClick={() => setProgrammeOpen(true)}
+                >
+                  <div className="programme-cover-frame">
+                    <div className="bg-[#1A0F1E] px-6 py-3 text-center border-b-2 border-[#C9A84C]/40">
+                      <span className="text-[#C9A84C] text-xs tracking-[0.4em] uppercase"
+                        style={{ fontFamily: 'var(--font-oswald)' }}
+                      >
+                        BROADWAYIFY PRESENTS
+                      </span>
+                    </div>
 
-                  <div className="bg-[#1A0F1E] px-6 py-3 text-center border-t-2 border-[#C9A84C]/40">
-                    <span className="text-[#C9A84C]/50 text-[10px] tracking-[0.3em] uppercase"
-                      style={{ fontFamily: 'var(--font-oswald)' }}
-                    >
-                      A Musical in Two Acts
-                    </span>
+                    <div className="programme-cover-art">
+                      <img
+                        src={album.cover_image_url!}
+                        alt={album.title}
+                        className={`w-full h-full object-cover ${revealed ? 'reveal-blur' : 'opacity-0'}`}
+                      />
+
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-20 pb-6 px-6 text-center">
+                        <h1 className="text-3xl sm:text-4xl text-white mb-2 drop-shadow-lg"
+                          style={{ fontFamily: 'var(--font-playfair)' }}
+                        >
+                          {album.title}
+                        </h1>
+                        {album.tagline && (
+                          <p className="text-sm text-white/70 max-w-xs mx-auto"
+                            style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
+                          >
+                            {album.tagline}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-[#1A0F1E] px-6 py-3 text-center border-t-2 border-[#C9A84C]/40">
+                      <span className="text-[#C9A84C]/50 text-[10px] tracking-[0.3em] uppercase"
+                        style={{ fontFamily: 'var(--font-oswald)' }}
+                      >
+                        A Musical in Two Acts
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <p className="text-sm text-[#F2E8D5]/30 mt-6 animate-pulse"
-                style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
-              >
-                Tap to open the programme
-              </p>
+                <p className="text-sm text-[#F2E8D5]/30 mt-6 animate-pulse"
+                  style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
+                >
+                  Tap to open the programme
+                </p>
+              </>
+              )}
             </section>
           </>
         )}
 
         {/* Interior state — with page flip entrance */}
         {programmeOpen && (
-          <div className="programme-flip-in relative z-10">
-            {/* Nav */}
-            <div className="flex items-center justify-between px-6 pt-6">
+          <>
+          <StageBackdrop />
+          <div className="programme-flip-in relative z-10 min-h-screen flex flex-col">
+            {/* Compact horizontal header — nav + title + actions in one row */}
+            <header className="flex items-center gap-3 px-4 sm:px-6 py-3 border-b border-[#C9A84C]/10 flex-shrink-0">
               <button
                 onClick={() => setProgrammeOpen(false)}
-                className="flex items-center gap-1 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors"
+                className="flex items-center gap-1 text-sm text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors flex-shrink-0"
                 style={{ fontFamily: 'var(--font-oswald)' }}
               >
                 <ChevronLeft className="h-4 w-4" />
-                Cover
+                <span className="hidden sm:inline">Cover</span>
               </button>
-              <Link href="/" className="marquee-title inline-block py-2 text-xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
-                BROADWAYIFY
-              </Link>
-              <div className="w-16" />
-            </div>
 
-            {/* Title bar + actions */}
-            <section className="max-w-7xl mx-auto px-6 pt-6 pb-4">
-              <div className="text-center mb-4">
-                <h1 className="text-3xl sm:text-4xl mb-1"
+              <div className="flex-1 min-w-0 text-center">
+                <h1 className="text-lg sm:text-xl truncate inline"
                   style={{ fontFamily: 'var(--font-playfair)' }}
                 >
                   {album.title}
                 </h1>
                 {album.tagline && (
-                  <p className="text-base text-[#F2E8D5]/50"
+                  <span className="hidden md:inline text-sm text-[#F2E8D5]/40 ml-3"
                     style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
                   >
                     {album.tagline}
-                  </p>
-                )}
-
-                {isCreator && album.title_alternatives && album.title_alternatives.length > 1 && (
-                  <div className="flex flex-wrap gap-2 justify-center mt-3">
-                    {album.title_alternatives.map((alt, i) => (
-                      alt.title !== album.title && (
-                        <button
-                          key={i}
-                          onClick={() => handleTitleSwitch(i)}
-                          className="text-xs px-4 py-2 min-h-[44px] rounded-full border border-[#C9A84C]/15 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/40 transition-colors flex items-center"
-                          style={{ fontFamily: 'var(--font-oswald)' }}
-                        >
-                          {alt.title}
-                        </button>
-                      )
-                    ))}
-                  </div>
+                  </span>
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2 justify-center">
-                <button onClick={handleShare} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors">
-                  {copied ? <><Check className="h-4 w-4" /> Copied</> : <><Share2 className="h-4 w-4" /> Share</>}
-                </button>
-                <div className="relative">
-                  <button onClick={() => setShowQR(!showQR)} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors">
-                    <QrCode className="h-4 w-4" /> QR
-                  </button>
-                  {showQR && (
-                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 glass-card p-3 shadow-xl">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&bgcolor=08070A&color=F2E8D5`}
-                        alt="QR Code"
-                        className="w-[150px] h-[150px] rounded"
-                      />
-                    </div>
-                  )}
-                </div>
-                <button onClick={handleCopyEmbed} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors">
-                  {embedCopied ? <><Check className="h-4 w-4" /> Copied</> : <><Code className="h-4 w-4" /> Embed</>}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button onClick={handleShare} className="flex items-center gap-1 text-xs min-h-[36px] px-2 py-1 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors">
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Share2 className="h-3.5 w-3.5" />}
                 </button>
                 {hasCompleteTracks && (
                   <>
-                    <button onClick={handleDownload} disabled={downloading} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors disabled:opacity-50">
-                      {downloading ? <><Loader2 className="h-4 w-4 animate-spin" /> Zipping...</> : <><Download className="h-4 w-4" /> ZIP</>}
+                    <button onClick={handleDownload} disabled={downloading} className="flex items-center gap-1 text-xs min-h-[36px] px-2 py-1 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors disabled:opacity-50">
+                      {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
                     </button>
-                    <button onClick={handleBooklet} disabled={generatingBooklet} className="flex items-center gap-1.5 text-sm min-h-[44px] px-3 py-2 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors disabled:opacity-50">
-                      {generatingBooklet ? <><Loader2 className="h-4 w-4 animate-spin" /> PDF...</> : <><BookOpen className="h-4 w-4" /> Playbill</>}
+                    <button onClick={handleBooklet} disabled={generatingBooklet} className="flex items-center gap-1 text-xs min-h-[36px] px-2 py-1 rounded-lg bg-[#1A0F1E]/50 border border-[#C9A84C]/10 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 transition-colors disabled:opacity-50">
+                      {generatingBooklet ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BookOpen className="h-3.5 w-3.5" />}
                     </button>
                   </>
                 )}
               </div>
-            </section>
+            </header>
 
-            {/* THE PROGRAMME SPREAD */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-              <div className="playbill-spread playbill-spread-enter">
-                <div className="grid grid-cols-1 md:grid-cols-2">
+            {isCreator && album.title_alternatives && album.title_alternatives.length > 1 && (
+              <div className="flex flex-wrap gap-1.5 justify-center px-4 py-2 border-b border-[#C9A84C]/5">
+                {album.title_alternatives.map((alt, i) => (
+                  alt.title !== album.title && (
+                    <button
+                      key={i}
+                      onClick={() => handleTitleSwitch(i)}
+                      className="text-[10px] px-3 py-1 rounded-full border border-[#C9A84C]/15 text-[#F2E8D5]/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/40 transition-colors"
+                      style={{ fontFamily: 'var(--font-oswald)' }}
+                    >
+                      {alt.title}
+                    </button>
+                  )
+                ))}
+              </div>
+            )}
+
+            {/* THE PROGRAMME SPREAD — fills remaining viewport */}
+            <section className="flex-1 flex flex-col px-3 sm:px-6 py-3 sm:py-4">
+              <div className="playbill-spread playbill-spread-enter flex-1 flex flex-col">
+                <div className="grid grid-cols-1 md:grid-cols-2 flex-1">
                   {/* LEFT PAGE — Playbill content */}
-                  <div className="playbill-page border-b md:border-b-0 md:border-r border-[#C9A84C]/15">
-                    <div className="text-center mb-6">
-                      <h2 className="text-2xl sm:text-3xl text-[#1A0F1E] mb-1"
+                  <div className="playbill-page border-b md:border-b-0 md:border-r border-[#C9A84C]/15 flex flex-col overflow-y-auto">
+                    <div className="text-center mb-4 sm:mb-5">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl text-[#1A0F1E] mb-1"
                         style={{ fontFamily: 'var(--font-playfair)' }}
                       >
                         {album.title}
                       </h2>
                       {album.tagline && (
-                        <p className="text-sm text-[#1A0F1E]/50 mb-2"
+                        <p className="text-sm sm:text-base text-[#1A0F1E]/50 mb-1"
                           style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
                         >
                           {album.tagline}
                         </p>
                       )}
-                      <p className="text-xs tracking-[0.2em] uppercase text-[#8A7434]"
+                      <p className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#8A7434]"
                         style={{ fontFamily: 'var(--font-oswald)' }}
                       >
                         A Musical in Two Acts
                       </p>
                     </div>
 
-                    <div className="mb-6">
+                    <div className="mb-4 sm:mb-5">
                       <div className="playbill-section-header" style={{ fontFamily: 'var(--font-oswald)' }}>
                         Synopsis
                       </div>
-                      <div className="text-sm text-[#1A0F1E]/75 leading-relaxed"
+                      <div className="text-sm sm:text-base text-[#1A0F1E]/75 leading-relaxed"
                         style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic', lineHeight: '1.7' }}
                       >
                         {playbill.synopsis.split('\n').filter(Boolean).map((paragraph, i) => (
@@ -497,20 +539,20 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                     </div>
 
                     {playbill.characters.length > 0 && (
-                      <div className="mb-4">
+                      <div className="mb-3">
                         <div className="playbill-section-header" style={{ fontFamily: 'var(--font-oswald)' }}>
                           Cast of Characters
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5 sm:space-y-2">
                           {playbill.characters.map((char, i) => (
                             <div key={i} className="flex gap-2">
-                              <span className="text-sm font-bold text-[#1A0F1E] flex-shrink-0"
+                              <span className="text-sm sm:text-base font-bold text-[#1A0F1E] flex-shrink-0"
                                 style={{ fontFamily: 'var(--font-playfair)' }}
                               >
                                 {char.name}
                               </span>
                               <span className="text-[#C9A84C]/40 flex-shrink-0">&#8212;</span>
-                              <span className="text-xs text-[#1A0F1E]/50 pt-0.5"
+                              <span className="text-xs sm:text-sm text-[#1A0F1E]/50 pt-0.5"
                                 style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
                               >
                                 {char.description}
@@ -521,8 +563,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                       </div>
                     )}
 
-                    <div className="mt-auto pt-4 border-t border-[#C9A84C]/15">
-                      <p className="text-xs text-[#1A0F1E]/50"
+                    <div className="mt-auto pt-3 border-t border-[#C9A84C]/15">
+                      <p className="text-xs sm:text-sm text-[#1A0F1E]/50"
                         style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
                       >
                         {playbill.setting}
@@ -531,13 +573,13 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                   </div>
 
                   {/* RIGHT PAGE — Song list */}
-                  <div className="playbill-page playbill-spine">
+                  <div className="playbill-page playbill-spine flex flex-col overflow-y-auto">
                     <div className="playbill-section-header" style={{ fontFamily: 'var(--font-oswald)' }}>
                       Musical Numbers
                     </div>
 
                     <div className="mb-2">
-                      <h4 className="text-[10px] tracking-[0.25em] uppercase text-[#8A7434] mb-1"
+                      <h4 className="text-[10px] sm:text-xs tracking-[0.25em] uppercase text-[#8A7434] mb-1"
                         style={{ fontFamily: 'var(--font-oswald)' }}
                       >
                         Act I
@@ -567,7 +609,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                     </div>
 
                     <div>
-                      <h4 className="text-[10px] tracking-[0.25em] uppercase text-[#8A7434] mb-1"
+                      <h4 className="text-[10px] sm:text-xs tracking-[0.25em] uppercase text-[#8A7434] mb-1"
                         style={{ fontFamily: 'var(--font-oswald)' }}
                       >
                         Act II
@@ -631,12 +673,13 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               </div>
             </section>
 
-            <footer className="border-t border-[#C9A84C]/10 py-8 text-center">
+            <footer className="border-t border-[#C9A84C]/10 py-8 text-center flex-shrink-0">
               <p className="text-sm text-[#F2E8D5]/30">
                 Made with <a href="/" className="text-[#F2E8D5]/40 hover:text-[#C9A84C] transition-colors">Broadwayify</a>
               </p>
             </footer>
           </div>
+          </>
         )}
       </main>
     );

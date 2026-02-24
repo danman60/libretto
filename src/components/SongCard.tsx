@@ -176,16 +176,16 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
               </p>
             )}
 
-            {/* Locked state */}
-            {isLocked && (
+            {/* Locked state — demo: triggers generation */}
+            {isLocked && onGenerateTrack && (
               <div className="mt-2">
                 <button
-                  onClick={() => alert('Coming soon!')}
+                  onClick={() => onGenerateTrack(track.track_number)}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#8A7434] hover:bg-[#C9A84C]/20 transition-colors"
                   style={{ fontFamily: 'var(--font-oswald)' }}
                 >
                   <Lock className="h-3 w-3" />
-                  Unlock Song — $0.99
+                  Unlock Song
                 </button>
               </div>
             )}
@@ -290,16 +290,16 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
         </div>
       </div>
 
-      {/* Locked state */}
-      {isLocked && (
+      {/* Locked state — demo: triggers generation */}
+      {isLocked && onGenerateTrack && (
         <div className="py-2">
           <button
-            onClick={() => alert('Coming soon!')}
+            onClick={() => onGenerateTrack(track.track_number)}
             className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/20 transition-colors"
             style={{ fontFamily: 'var(--font-oswald)' }}
           >
             <Lock className="h-3 w-3" />
-            Unlock Song — $0.99
+            Unlock Song
           </button>
         </div>
       )}
