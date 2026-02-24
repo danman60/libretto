@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Libretto MTBible Enrichment Map</title>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C872;
+    --gold-dim: #8A7434;
+    --burgundy: #6B1D2A;
+    --burgundy-light: #8E2E3E;
+    --bg: #08070A;
+    --bg-card: #12101A;
+    --bg-card-alt: #1A0F1E;
+    --cream: #F2E8D5;
+    --cream-muted: #B8AD9A;
+    --green: #4CAF50;
+    --red: #E53935;
+    --blue: #42A5F5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.6;
+    padding: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    text-align: center;
+    color: var(--gold);
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--cream-muted);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  h2 {
+    color: var(--gold);
+    font-size: 1.3rem;
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--gold-dim);
+    letter-spacing: 1px;
+  }
+
+  h3 {
+    color: var(--gold-light);
+    font-size: 1.1rem;
+    margin: 16px 0 8px;
+  }
+
+  .section {
+    background: var(--bg-card);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .section.highlight {
+    border-color: var(--gold-dim);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-alt) 100%);
+  }
+
+  /* Commandments */
+  .commandments {
+    display: grid;
+    gap: 8px;
+  }
+
+  .commandment {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 10px;
+    background: rgba(201, 168, 76, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--gold-dim);
+  }
+
+  .commandment .num {
+    color: var(--gold);
+    font-weight: bold;
+    min-width: 24px;
+    font-size: 0.9rem;
+  }
+
+  .commandment .text {
+    font-size: 0.85rem;
+    color: var(--cream);
+  }
+
+  .commandment .text strong {
+    color: var(--gold-light);
+  }
+
+  /* Current vs Proposed */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .comparison { grid-template-columns: 1fr; }
+  }
+
+  .col-current {
+    background: rgba(229, 57, 53, 0.08);
+    border: 1px solid rgba(229, 57, 53, 0.3);
+    border-radius: 10px;
+    padding: 12px;
+  }
+
+  .col-proposed {
+    background: rgba(76, 175, 80, 0.08);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 10px;
+    padding: 12px;
+  }
+
+  .col-current h3 { color: var(--red); }
+  .col-proposed h3 { color: var(--green); }
+
+  ul {
+    padding-left: 18px;
+    font-size: 0.85rem;
+  }
+
+  ul li {
+    margin-bottom: 4px;
+    color: var(--cream-muted);
+  }
+
+  ul li strong {
+    color: var(--cream);
+  }
+
+  /* Genre Cards */
+  .genre-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .genre-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .genre-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(201, 168, 76, 0.08);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .genre-header:active {
+    background: rgba(201, 168, 76, 0.15);
+  }
+
+  .genre-icon {
+    font-size: 1.5rem;
+  }
+
+  .genre-name {
+    font-size: 1rem;
+    color: var(--gold);
+    font-weight: bold;
+    flex: 1;
+  }
+
+  .genre-toggle {
+    color: var(--gold-dim);
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+  }
+
+  .genre-card.open .genre-toggle {
+    transform: rotate(90deg);
+  }
+
+  .genre-body {
+    display: none;
+    padding: 14px;
+  }
+
+  .genre-card.open .genre-body {
+    display: block;
+  }
+
+  /* Song form tags */
+  .form-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-right: 4px;
+    font-family: monospace;
+  }
+
+  .form-aaba { background: rgba(66, 165, 245, 0.2); color: var(--blue); border: 1px solid rgba(66, 165, 245, 0.4); }
+  .form-abab { background: rgba(76, 175, 80, 0.2); color: var(--green); border: 1px solid rgba(76, 175, 80, 0.4); }
+  .form-free { background: rgba(255, 167, 38, 0.2); color: #FFA726; border: 1px solid rgba(255, 167, 38, 0.4); }
+  .form-vcvc { background: rgba(229, 57, 53, 0.2); color: #EF9A9A; border: 1px solid rgba(229, 57, 53, 0.3); }
+
+  /* Song role rows */
+  .song-role {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+  }
+
+  .song-role:last-child { border-bottom: none; }
+
+  .song-role-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .song-role-num {
+    background: var(--gold-dim);
+    color: var(--bg);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .song-role-name {
+    color: var(--gold-light);
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+
+  .song-role-detail {
+    font-size: 0.8rem;
+    color: var(--cream-muted);
+    padding-left: 30px;
+  }
+
+  .song-role-detail .new {
+    color: var(--green);
+    font-weight: bold;
+  }
+
+  /* Pipeline flow */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(201, 168, 76, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--gold-dim);
+  }
+
+  .pipeline-step .step-num {
+    background: var(--gold);
+    color: var(--bg);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .pipeline-step .step-text {
+    font-size: 0.85rem;
+  }
+
+  .pipeline-step .step-text strong {
+    color: var(--gold-light);
+  }
+
+  .pipeline-arrow {
+    text-align: center;
+    color: var(--gold-dim);
+    font-size: 0.9rem;
+  }
+
+  /* Notes area */
+  .note-box {
+    background: rgba(142, 46, 62, 0.15);
+    border: 1px solid rgba(142, 46, 62, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  .note-box h4 {
+    color: var(--burgundy-light);
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .note-box p, .note-box ul {
+    font-size: 0.8rem;
+    color: var(--cream-muted);
+  }
+
+  /* Archetype matrix */
+  .archetype-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.08);
+  }
+
+  .archetype-row:last-child { border-bottom: none; }
+
+  .archetype-label {
+    min-width: 100px;
+    color: var(--gold);
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding-top: 2px;
+  }
+
+  .archetype-desc {
+    font-size: 0.8rem;
+    color: var(--cream-muted);
+    flex: 1;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    color: var(--cream-muted);
+    font-size: 0.75rem;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(201, 168, 76, 0.1);
+    font-style: italic;
+  }
+
+  /* Expandable sections */
+  details {
+    margin-bottom: 8px;
+  }
+
+  details summary {
+    cursor: pointer;
+    color: var(--gold-light);
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 6px 0;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  details summary:active {
+    color: var(--gold);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  .badge-new { background: rgba(76, 175, 80, 0.2); color: var(--green); }
+  .badge-upgrade { background: rgba(66, 165, 245, 0.2); color: var(--blue); }
+  .badge-keep { background: rgba(255, 255, 255, 0.1); color: var(--cream-muted); }
+</style>
+</head>
+<body>
+
+<h1>MTBible Enrichment Map</h1>
+<p class="subtitle">How BMI Lehman Engel principles upgrade Libretto's AI musical generation</p>
+
+<!-- ============ SECTION 1: Core Principles ============ -->
+<h2>1. Pat's 10 Commandments of MT Lyrics</h2>
+<div class="section highlight">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    These become <strong style="color:var(--green);">injected into every lyrics prompt</strong> &mdash; the LLM's songwriting rulebook.
+  </p>
+  <div class="commandments">
+    <div class="commandment">
+      <span class="num">1</span>
+      <span class="text"><strong>Be singable.</strong> Sustained vowels on key notes. "Try to sing it so fast it cannot be understood" &mdash; Lerner</span>
+    </div>
+    <div class="commandment">
+      <span class="num">2</span>
+      <span class="text"><strong>Be understandable.</strong> Not opera &mdash; audience must grasp lyrics in real time. If they stop to think, you've lost them.</span>
+    </div>
+    <div class="commandment">
+      <span class="num">3</span>
+      <span class="text"><strong>One thing only.</strong> Encapsulated in the hook. Say "I love you" in a new/fresh way. Embrace subtext.</span>
+    </div>
+    <div class="commandment">
+      <span class="num">4</span>
+      <span class="text"><strong>Be specific.</strong> "Riding on a smile and a shoeshine" not "he was a salesman." Specifics make songs memorable.</span>
+    </div>
+    <div class="commandment">
+      <span class="num">5</span>
+      <span class="text"><strong>Write dramatically.</strong> Ideas in ascending order of punch. Write backwards for progression. End in a different place.</span>
+    </div>
+    <div class="commandment">
+      <span class="num">6</span>
+      <span class="text"><strong>No self-pity</strong> (except in comedy). Keep it positive. In comedy, if complaining, make it FUNNY.</span>
+    </div>
+    <div class="commandment">
+      <span class="num">7</span>
+      <span class="text"><strong>Correct scansion.</strong> Don't misaccent words. Stress patterns must match the melody.</span>
+    </div>
+    <div class="commandment">
+      <span class="num">8</span>
+      <span class="text"><strong>Fresh images.</strong> No clich&eacute;s. Find new metaphors, new angles of vision.</span>
+    </div>
+    <div class="commandment">
+      <span class="num">9</span>
+      <span class="text"><strong>No false rhyme.</strong> Don't transpose words for rhyme. "Familiarity breeds content" &mdash; Sondheim</span>
+    </div>
+    <div class="commandment">
+      <span class="num">10</span>
+      <span class="text"><strong>Not rigid or wordy.</strong> Characters make up lyrics spontaneously. Don't look "square."</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 2: Song Forms ============ -->
+<h2>2. Song Form &mdash; Current vs. Proposed</h2>
+<div class="section">
+  <div class="comparison">
+    <div class="col-current">
+      <h3>Current (All Genres)</h3>
+      <p style="font-size:0.85rem; margin-bottom:8px;">Every song forced into:</p>
+      <p style="font-family:monospace; font-size:0.85rem; color:#EF9A9A;">
+        [Verse 1]<br>[Chorus]<br>[Verse 2]<br>[Chorus]<br>[Bridge]<br>[Chorus]
+      </p>
+      <p style="font-size:0.8rem; color:var(--cream-muted); margin-top:8px;">
+        Pop structure. Not theatrical. Identical chorus 3x mandated.
+      </p>
+    </div>
+    <div class="col-proposed">
+      <h3>Proposed (Per-Genre)</h3>
+      <p style="font-size:0.85rem; margin-bottom:8px;">Form follows genre tradition:</p>
+      <div style="margin-top:6px;">
+        <span class="form-tag form-aaba">AABA</span> Classic Broadway, Disney<br>
+        <span class="form-tag form-abab">ABAB</span> Romantic, Jukebox<br>
+        <span class="form-tag form-free">FREE</span> Hip-Hop (verse/hook/verse/hook)<br>
+        <span class="form-tag form-vcvc">V/C/V/C/B/C</span> Rock Opera (keep pop-rock form)
+      </div>
+      <p style="font-size:0.8rem; color:var(--cream-muted); margin-top:8px;">
+        8-bar phrases. Chorus = reframed each time, not identical.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 3: Enrichment Pipeline ============ -->
+<h2>3. Enrichment Pipeline Upgrade</h2>
+<div class="section highlight">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    The enrichment step (DeepSeek expands 1 sentence &rarr; ShowConcept) gets dramatically richer.
+  </p>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <span class="step-num">1</span>
+      <span class="step-text"><strong>User input</strong> &mdash; genre + one sentence idea (unchanged)</span>
+    </div>
+    <div class="pipeline-arrow">&darr;</div>
+    <div class="pipeline-step">
+      <span class="step-num">2</span>
+      <span class="step-text"><strong>Enrichment prompt</strong> <span class="badge badge-upgrade">UPGRADE</span> &mdash; now includes genre-specific MT craft principles, dramatic arc rules, specificity doctrine</span>
+    </div>
+    <div class="pipeline-arrow">&darr;</div>
+    <div class="pipeline-step">
+      <span class="step-num">3</span>
+      <span class="step-text"><strong>ShowConcept output</strong> <span class="badge badge-upgrade">UPGRADE</span> &mdash; adds <em>tension_pacing</em>, <em>song_briefs[]</em> with per-song form/archetype/guidance</span>
+    </div>
+    <div class="pipeline-arrow">&darr;</div>
+    <div class="pipeline-step">
+      <span class="step-num">4</span>
+      <span class="step-text"><strong>Lyrics prompt</strong> <span class="badge badge-upgrade">UPGRADE</span> &mdash; gets 10 Commandments + genre form + song archetype rules + specific song brief from enrichment</span>
+    </div>
+    <div class="pipeline-arrow">&darr;</div>
+    <div class="pipeline-step">
+      <span class="step-num">5</span>
+      <span class="step-text"><strong>Style prompt</strong> <span class="badge badge-upgrade">UPGRADE</span> &mdash; genre-appropriate accompaniment cues (sparse&rarr;thick, groove, instrumentation progression)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 4: Genre-Specific Principles ============ -->
+<h2>4. Per-Genre Principle Application</h2>
+<div class="genre-grid">
+
+  <!-- Classic Broadway -->
+  <div class="genre-card open" onclick="this.classList.toggle('open')">
+    <div class="genre-header">
+      <span class="genre-icon">🎭</span>
+      <span class="genre-name">Classic Broadway</span>
+      <span class="genre-toggle">&#9654;</span>
+    </div>
+    <div class="genre-body">
+      <div style="margin-bottom:10px;">
+        <span class="form-tag form-aaba">AABA</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);">Primary form &mdash; 32-bar chorus, 8-bar sections</span>
+      </div>
+      <ul>
+        <li><strong>Melody &gt; Lyric complexity.</strong> Lush, singable lines. Sustained vowels on gold notes.</li>
+        <li><strong>Subtext is king.</strong> "People Will Say We're In Love" &mdash; list don'ts to reveal do's.</li>
+        <li><strong>B section = contrast.</strong> More chromatic, more movement, propels into final A.</li>
+        <li><strong>Chorus reframed</strong> each time &mdash; same melody, shifted context gives progression.</li>
+        <li><strong>Charm song</strong> after all characters introduced (Act I) or opening of Act II.</li>
+        <li><strong>Specificity</strong>: "Cherries an' hops, melons down in the Imperial" not "I traveled everywhere."</li>
+      </ul>
+      <div class="note-box">
+        <h4>Reference Models</h4>
+        <p>Waitin' for My Dearie, To Life, Never Never Land, If I Loved You, People Will Say We're In Love</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rock Opera -->
+  <div class="genre-card" onclick="this.classList.toggle('open')">
+    <div class="genre-header">
+      <span class="genre-icon">🎸</span>
+      <span class="genre-name">Rock Opera</span>
+      <span class="genre-toggle">&#9654;</span>
+    </div>
+    <div class="genre-body">
+      <div style="margin-bottom:10px;">
+        <span class="form-tag form-vcvc">V/C/V/C/B/C</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);">Pop-rock form fits naturally. Keep it.</span>
+      </div>
+      <ul>
+        <li><strong>Raw energy &gt; polish.</strong> Can break form when emotion demands it.</li>
+        <li><strong>Dramatic progression still applies</strong> &mdash; ascending intensity, each verse raises stakes.</li>
+        <li><strong>"A Boy Like That" model</strong> &mdash; hit emotional peaks immediately, no slow setup.</li>
+        <li><strong>Confrontation = dueling voices</strong>, rapid-fire exchanges, build to a scream.</li>
+        <li><strong>Act II dip</strong> &mdash; stripped-back, acoustic. Armor off. Then rebuild to anthem.</li>
+        <li><strong>Specificity through rebellion</strong> &mdash; specific grievances, not vague angst.</li>
+      </ul>
+      <div class="note-box">
+        <h4>Reference Models</h4>
+        <p>A Boy Like That (WSS), Cool (WSS), No Place Like London (Sweeney Todd)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jukebox -->
+  <div class="genre-card" onclick="this.classList.toggle('open')">
+    <div class="genre-header">
+      <span class="genre-icon">🎵</span>
+      <span class="genre-name">Jukebox Musical</span>
+      <span class="genre-toggle">&#9654;</span>
+    </div>
+    <div class="genre-body">
+      <div style="margin-bottom:10px;">
+        <span class="form-tag form-abab">ABAB</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);">Pop-friendly alternating form</span>
+      </div>
+      <ul>
+        <li><strong>Hook is everything.</strong> One single, big idea per song. Radio-memorable chorus.</li>
+        <li><strong>Melody &gt;&gt; lyric complexity.</strong> Simple, universal words. Let the tune carry.</li>
+        <li><strong>Charm song = the bread & butter.</strong> Optimistic, steady beat, audience relaxes.</li>
+        <li><strong>"Healthy Normal American Boy" model</strong> &mdash; same sequence repeated with escalating stakes.</li>
+        <li><strong>Comedy through truth</strong> &mdash; Contest Game (back-and-forth), Lamentation (over harmless things).</li>
+        <li><strong>Declutter</strong> &mdash; fewer words, more room for melody. Singability first.</li>
+      </ul>
+      <div class="note-box">
+        <h4>Reference Models</h4>
+        <p>It's De-Lovely, Put On a Happy Face, Hey Look Me Over, Mame</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disney -->
+  <div class="genre-card" onclick="this.classList.toggle('open')">
+    <div class="genre-header">
+      <span class="genre-icon">✨</span>
+      <span class="genre-name">Disney-Style</span>
+      <span class="genre-toggle">&#9654;</span>
+    </div>
+    <div class="genre-body">
+      <div style="margin-bottom:10px;">
+        <span class="form-tag form-aaba">AABA</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);">Classic form with soaring B section</span>
+      </div>
+      <ul>
+        <li><strong>I Want Song is THE moment.</strong> AABA mandatory. B section = chromatic lift, inverted intervals, propels to final A.</li>
+        <li><strong>Villain Song = Comedy Song rules.</strong> Comedy from truth. Charismatic evil. Save best joke for last.</li>
+        <li><strong>"Never Never Land" model</strong> &mdash; B section echoes/contrasts, final A lengthened for conclusion.</li>
+        <li><strong>Fairy-tale specificity</strong> &mdash; magical details, sensory wonder, not generic "magical world."</li>
+        <li><strong>Act II Opening = Charm Song.</strong> Found-family warmth. Melody &gt; lyric. Audience breathes.</li>
+        <li><strong>Eleven O'Clock reprise</strong> &mdash; same I Want melody, reframed: now they HAVE the thing.</li>
+      </ul>
+      <div class="note-box">
+        <h4>Reference Models</h4>
+        <p>Never Never Land, Not While I'm Around, Waitin' for My Dearie (for I Want form)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hip-Hop -->
+  <div class="genre-card" onclick="this.classList.toggle('open')">
+    <div class="genre-header">
+      <span class="genre-icon">🎤</span>
+      <span class="genre-name">Hip-Hop Musical</span>
+      <span class="genre-toggle">&#9654;</span>
+    </div>
+    <div class="genre-body">
+      <div style="margin-bottom:10px;">
+        <span class="form-tag form-free">FREE</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);">Verse/Hook/Verse/Hook + spoken word bridges</span>
+      </div>
+      <ul>
+        <li><strong>Lyrics &gt;&gt;&gt; melody.</strong> Dense wordplay, internal rhymes, every bar counts.</li>
+        <li><strong>Still dramatic progression</strong> &mdash; bars in ascending order of punch. Write backwards.</li>
+        <li><strong>Confrontation = rap battle.</strong> Contest Game archetype. Back-and-forth escalation.</li>
+        <li><strong>"Cool" (WSS) model</strong> &mdash; parallel lines in A, contrast in B, SURPRISE in B'.</li>
+        <li><strong>Specificity through culture</strong> &mdash; real places, real slang, real details. Not generic "streets."</li>
+        <li><strong>Comedy = Exaggerated Pronouncement</strong> (Officer Krupke model) or Philosophy Game.</li>
+        <li><strong>R&B sung hooks</strong> for choruses &mdash; universal want over specific verses.</li>
+      </ul>
+      <div class="note-box">
+        <h4>Reference Models</h4>
+        <p>Cool (WSS parallel structure), Gee Officer Krupke (comedy), A Boy Like That (confrontation peaks)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Romantic -->
+  <div class="genre-card" onclick="this.classList.toggle('open')">
+    <div class="genre-header">
+      <span class="genre-icon">💫</span>
+      <span class="genre-name">Romantic Musical</span>
+      <span class="genre-toggle">&#9654;</span>
+    </div>
+    <div class="genre-body">
+      <div style="margin-bottom:10px;">
+        <span class="form-tag form-abab">ABAB</span>
+        <span style="font-size:0.8rem; color:var(--cream-muted);">Gradually rising stanzas that need each other</span>
+      </div>
+      <ul>
+        <li><strong>Subtext is EVERYTHING.</strong> "People Will Say We're In Love" &mdash; say love without saying love.</li>
+        <li><strong>"If I Loved You" model</strong> &mdash; long winding prose bleeds naturally into sweeping chorus.</li>
+        <li><strong>"Weekend in the Country" model</strong> &mdash; persuading song, stanzas musically need each other, gradually rising.</li>
+        <li><strong>Sensory specificity</strong> &mdash; cold side of the bed, rain on windows, specific smells. Not abstract emotion.</li>
+        <li><strong>Accompaniment: sparse &rarr; thick.</strong> Piano solo &rarr; strings enter &rarr; full. Forward motion in texture.</li>
+        <li><strong>Duet = musical scene.</strong> Tension, persuasion, discovery built into structure (Shall We Dance model).</li>
+      </ul>
+      <div class="note-box">
+        <h4>Reference Models</h4>
+        <p>People Will Say We're In Love, If I Loved You, A Weekend in the Country, Shall We Dance</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 5: Song Archetype Matrix ============ -->
+<h2>5. Song Archetype &rarr; Song Role Mapping</h2>
+<div class="section">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    MTBible archetypes mapped to our 6 song roles. <span class="badge badge-new">NEW</span> = principles not currently in the system.
+  </p>
+
+  <div class="archetype-row">
+    <span class="archetype-label">Opening Number</span>
+    <span class="archetype-desc">
+      <strong>"I Am" Song</strong> for ensemble. Establishes starting point, not endpoint. <span class="badge badge-new">NEW</span> Not the whole story &mdash; just one particular thing about this world.
+    </span>
+  </div>
+
+  <div class="archetype-row">
+    <span class="archetype-label">I Want Song</span>
+    <span class="archetype-desc">
+      <strong>Character Establishment.</strong> AABA mandatory (Classic/Disney). <span class="badge badge-new">NEW</span> No power ballads (too early). Non-diegetic. Starting point of character arc only.
+    </span>
+  </div>
+
+  <div class="archetype-row">
+    <span class="archetype-label">Confrontation</span>
+    <span class="archetype-desc">
+      <strong>Scene Construction.</strong> Dialogue bleeds into song. <span class="badge badge-new">NEW</span> Hit emotional peaks immediately (A Boy Like That). Stakes increase each repetition (Healthy Normal American Boy).
+    </span>
+  </div>
+
+  <div class="archetype-row">
+    <span class="archetype-label">Act II Opening</span>
+    <span class="archetype-desc">
+      <strong>Charm Song.</strong> <span class="badge badge-new">NEW</span> Moment of relief. Doesn't move plot. Steady beat, optimistic. Melody &gt; lyric. 4 approaches: group excitement, celebration, relaxed fun, world observation.
+    </span>
+  </div>
+
+  <div class="archetype-row">
+    <span class="archetype-label">11 O'Clock #</span>
+    <span class="archetype-desc">
+      <strong>Emotional Climax.</strong> <span class="badge badge-new">NEW</span> End of chorus needs spark/surprise. Extension of final A, high note, lyrical shift, or new chord. Coda usually 4 measures. Stinger on beat 7, 9, or 1.
+    </span>
+  </div>
+
+  <div class="archetype-row">
+    <span class="archetype-label">Finale</span>
+    <span class="archetype-desc">
+      <strong>Resolution + Reprise.</strong> <span class="badge badge-new">NEW</span> Reframe the repeating chorus &mdash; same melody, shifted meaning gives audience progression and breathing room.
+    </span>
+  </div>
+</div>
+
+<!-- ============ SECTION 6: Dramatic Pacing ============ -->
+<h2>6. Dramatic Pacing (Tension Arc)</h2>
+<div class="section">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    <span class="badge badge-new">NEW</span> Currently missing from enrichment entirely. The MTBible's pacing model:
+  </p>
+
+  <div style="font-family:monospace; font-size:0.8rem; padding:12px; background:rgba(0,0,0,0.3); border-radius:8px; overflow-x:auto;">
+    <pre style="color:var(--cream-muted); margin:0;">
+Tension
+  ^
+  |        ___/\___          _____/\
+  |       /        \        /       \  &lt;-- CLIMAX
+  |      /     ACT I \     / ACT II  \
+  |   __/    builds    \__/   builds   \___
+  |  /                  ^                  \
+  | / Opening       Intermission        Finale
+  |/   (dip)          (dip)            (resolve)
+  +----------------------------------------&gt; Time
+  Song1   Song2  Song3  Song4  Song5  Song6</pre>
+  </div>
+
+  <ul style="margin-top:12px;">
+    <li><strong>Song 1 (Opening):</strong> Moderate energy. Set the world. NOT the highest point.</li>
+    <li><strong>Song 2 (I Want):</strong> Builds personal investment. Rising.</li>
+    <li><strong>Song 3 (Confrontation):</strong> Act I climax. Peak tension. Point of no return.</li>
+    <li><strong>Song 4 (Act II Opening):</strong> DIP. Relief. Charm song. Audience breathes.</li>
+    <li><strong>Song 5 (11 O'Clock):</strong> THE climax. Maximum emotional intensity.</li>
+    <li><strong>Song 6 (Finale):</strong> Resolution. Earned catharsis. Descend to peace.</li>
+  </ul>
+</div>
+
+<!-- ============ SECTION 7: Comedy Sub-Categories ============ -->
+<h2>7. Comedy Song Games <span class="badge badge-new">NEW</span></h2>
+<div class="section">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    When a song calls for comedy (any genre), the enrichment should assign a specific game:
+  </p>
+
+  <div class="archetype-row">
+    <span class="archetype-label">Outlandish Story</span>
+    <span class="archetype-desc">Character tells an absurd-yet-real tale. <em>Sing</em>, <em>Dance Ten Looks Three</em></span>
+  </div>
+  <div class="archetype-row">
+    <span class="archetype-label">Philosophy</span>
+    <span class="archetype-desc">Absolute certainty, create expectation then surprise. <em>Everybody Ought to Have a Maid</em></span>
+  </div>
+  <div class="archetype-row">
+    <span class="archetype-label">Contest</span>
+    <span class="archetype-desc">Back-and-forth escalation. <em>Anything You Can Do</em>, <em>A Little Priest</em></span>
+  </div>
+  <div class="archetype-row">
+    <span class="archetype-label">Lamentation</span>
+    <span class="archetype-desc">Over-the-top grief about something harmless. <em>Kids</em>, <em>Adelaide's Lament</em></span>
+  </div>
+  <div class="archetype-row">
+    <span class="archetype-label">Exaggerated</span>
+    <span class="archetype-desc">Big pronouncement played for laughs. <em>Officer Krupke</em>, <em>Everyone's a Little Bit Racist</em></span>
+  </div>
+
+  <div class="note-box">
+    <h4>Key Comedy Rules</h4>
+    <ul>
+      <li>Comedy from TRUTH and pain/discomfort</li>
+      <li>Music gets out of the way of lyric (tempo = speech rate)</li>
+      <li>Gets funnier as it goes &mdash; save best for last</li>
+      <li>Punch UP (at power), never down (at victims)</li>
+      <li>Declutter: fewer words = more room for funny</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ SECTION 8: Implementation Checklist ============ -->
+<h2>8. Implementation Checklist</h2>
+<div class="section">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    Files to modify &amp; what changes in each:
+  </p>
+
+  <details>
+    <summary>lib/musical-types.ts <span class="badge badge-upgrade">MAJOR</span></summary>
+    <ul>
+      <li>Add <code>song_form</code> per genre (AABA, ABAB, V/C/B/C, FREE)</li>
+      <li>Add <code>mt_principles</code> per genre &mdash; which MTBible rules apply and HOW</li>
+      <li>Add <code>song_archetype</code> per song role &mdash; Charm, Comedy Game type, etc.</li>
+      <li>Expand <code>lyrics_guidance</code> with MTBible-informed craft rules</li>
+      <li>Add <code>accompaniment_guidance</code> &mdash; sparse-to-thick progression, groove, instrumentation</li>
+      <li>Add <code>reference_examples</code> per song role &mdash; "model this on..."</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>lib/prompts.ts <span class="badge badge-upgrade">MAJOR</span></summary>
+    <ul>
+      <li><code>buildEnrichmentPrompt</code> &mdash; inject pacing/tension arc, specificity doctrine, genre craft principles</li>
+      <li><code>buildSongLyricsPrompt</code> &mdash; inject 10 Commandments, genre-specific form (not hardcoded V/C/B/C), song archetype rules</li>
+      <li><code>buildSongStylePrompt</code> &mdash; add accompaniment progression guidance</li>
+      <li>Add ShowConcept output fields: <code>tension_pacing</code>, per-song <code>song_briefs[]</code></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>lib/types.ts <span class="badge badge-upgrade">MINOR</span></summary>
+    <ul>
+      <li>Extend <code>ShowConcept</code> with <code>tension_pacing</code> and <code>song_briefs</code></li>
+      <li>Add <code>SongForm</code> type (AABA | ABAB | ABAC | VCVCBC | FREE)</li>
+      <li>Add <code>ComedyGame</code> type if applicable</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>lib/generate-show.ts <span class="badge badge-keep">MINOR</span></summary>
+    <ul>
+      <li>Pass new enrichment fields through to track creation</li>
+      <li>Store song_briefs in track metadata</li>
+    </ul>
+  </details>
+
+  <details open>
+    <summary>MTBible.md <span class="badge badge-keep">REFERENCE</span></summary>
+    <ul>
+      <li>Already saved. Source of truth for all principles.</li>
+      <li>Not imported in code &mdash; principles are distilled into configs and prompts.</li>
+    </ul>
+  </details>
+</div>
+
+<div class="footer">
+  BROADWAYIFY &mdash; Libretto MTBible Enrichment Map<br>
+  Built for internal planning. Not for public distribution.
+</div>
+
+<script>
+// All genre cards start collapsed except first
+// Click handling is done via onclick in HTML
+</script>
+</body>
+</html>
