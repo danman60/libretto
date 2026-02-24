@@ -19,6 +19,8 @@
     --green: #4CAF50;
     --red: #E53935;
     --blue: #42A5F5;
+    --orange: #FFA726;
+    --purple: #AB47BC;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -92,6 +94,11 @@
     background: rgba(201, 168, 76, 0.05);
     border-radius: 8px;
     border-left: 3px solid var(--gold-dim);
+  }
+
+  .commandment.critical {
+    border-left: 3px solid var(--gold);
+    background: rgba(201, 168, 76, 0.12);
   }
 
   .commandment .num {
@@ -337,6 +344,15 @@
     color: var(--cream-muted);
   }
 
+  .note-box.idea {
+    background: rgba(171, 71, 188, 0.12);
+    border-color: rgba(171, 71, 188, 0.3);
+  }
+
+  .note-box.idea h4 {
+    color: var(--purple);
+  }
+
   /* Archetype matrix */
   .archetype-row {
     display: flex;
@@ -405,6 +421,92 @@
   .badge-new { background: rgba(76, 175, 80, 0.2); color: var(--green); }
   .badge-upgrade { background: rgba(66, 165, 245, 0.2); color: var(--blue); }
   .badge-keep { background: rgba(255, 255, 255, 0.1); color: var(--cream-muted); }
+  .badge-critical { background: rgba(229, 57, 53, 0.2); color: var(--red); }
+  .badge-idea { background: rgba(171, 71, 188, 0.2); color: var(--purple); }
+
+  /* Suno tag styles */
+  .suno-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-family: monospace;
+    background: rgba(201, 168, 76, 0.1);
+    color: var(--gold-light);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    margin: 1px 2px;
+  }
+
+  .suno-structure {
+    background: rgba(66, 165, 245, 0.1);
+    color: var(--blue);
+    border-color: rgba(66, 165, 245, 0.3);
+  }
+
+  .suno-bad {
+    background: rgba(229, 57, 53, 0.1);
+    color: #EF9A9A;
+    border-color: rgba(229, 57, 53, 0.3);
+    text-decoration: line-through;
+  }
+
+  /* Energy meter */
+  .energy-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+  }
+
+  .energy-bar .label {
+    min-width: 110px;
+    font-size: 0.8rem;
+    color: var(--cream-muted);
+  }
+
+  .energy-bar .bar-bg {
+    flex: 1;
+    height: 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+
+  .energy-bar .bar-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.3s;
+  }
+
+  .energy-bar .val {
+    min-width: 36px;
+    font-size: 0.75rem;
+    color: var(--cream-muted);
+    text-align: right;
+    font-family: monospace;
+  }
+
+  /* Tempo tag */
+  .tempo-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    font-family: monospace;
+    background: rgba(255, 167, 38, 0.15);
+    color: var(--orange);
+    border: 1px solid rgba(255, 167, 38, 0.3);
+    margin-left: 6px;
+  }
+
+  code {
+    background: rgba(201, 168, 76, 0.1);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    color: var(--gold-light);
+  }
 </style>
 </head>
 <body>
@@ -419,9 +521,9 @@
     These become <strong style="color:var(--green);">injected into every lyrics prompt</strong> &mdash; the LLM's songwriting rulebook.
   </p>
   <div class="commandments">
-    <div class="commandment">
+    <div class="commandment critical">
       <span class="num">1</span>
-      <span class="text"><strong>Be singable.</strong> Sustained vowels on key notes. "Try to sing it so fast it cannot be understood" &mdash; Lerner</span>
+      <span class="text"><strong>Be singable.</strong> Sustained vowels on key notes. Don't sing it so fast it cannot be understood. Singable means sustained &mdash; a joy for the singer to perform.</span>
     </div>
     <div class="commandment">
       <span class="num">2</span>
@@ -443,9 +545,9 @@
       <span class="num">6</span>
       <span class="text"><strong>No self-pity</strong> (except in comedy). Keep it positive. In comedy, if complaining, make it FUNNY.</span>
     </div>
-    <div class="commandment">
+    <div class="commandment critical">
       <span class="num">7</span>
-      <span class="text"><strong>Correct scansion.</strong> Don't misaccent words. Stress patterns must match the melody.</span>
+      <span class="text"><strong>Correct scansion.</strong> <span class="badge badge-critical">CRITICAL</span> Don't misaccent words. Stress patterns of lyrics MUST match the natural melody rhythm. Wrong scansion breaks the illusion &mdash; nothing pulls an audience out faster than a misaccented word.</span>
     </div>
     <div class="commandment">
       <span class="num">8</span>
@@ -510,8 +612,13 @@
     </div>
     <div class="pipeline-arrow">&darr;</div>
     <div class="pipeline-step">
+      <span class="step-num">2b</span>
+      <span class="step-text"><strong>Artist Research</strong> <span class="badge badge-idea">JUKEBOX ONLY</span> &mdash; if user names an artist, quick web lookup of their musical style, arrangement patterns, signature sounds &rarr; feed into style prompts</span>
+    </div>
+    <div class="pipeline-arrow">&darr;</div>
+    <div class="pipeline-step">
       <span class="step-num">3</span>
-      <span class="step-text"><strong>ShowConcept output</strong> <span class="badge badge-upgrade">UPGRADE</span> &mdash; adds <em>tension_pacing</em>, <em>song_briefs[]</em> with per-song form/archetype/guidance</span>
+      <span class="step-text"><strong>ShowConcept output</strong> <span class="badge badge-upgrade">UPGRADE</span> &mdash; adds <em>tension_pacing</em>, <em>song_briefs[]</em> with per-song form/archetype/energy/tempo/guidance</span>
     </div>
     <div class="pipeline-arrow">&darr;</div>
     <div class="pipeline-step">
@@ -521,7 +628,7 @@
     <div class="pipeline-arrow">&darr;</div>
     <div class="pipeline-step">
       <span class="step-num">5</span>
-      <span class="step-text"><strong>Style prompt</strong> <span class="badge badge-upgrade">UPGRADE</span> &mdash; genre-appropriate accompaniment cues (sparse&rarr;thick, groove, instrumentation progression)</span>
+      <span class="step-text"><strong>Suno Translation Layer</strong> <span class="badge badge-new">NEW</span> &mdash; converts craft concepts into two outputs: Suno style string + annotated lyrics with structure metatags (see Section 9)</span>
     </div>
   </div>
 </div>
@@ -599,14 +706,23 @@
       <ul>
         <li><strong>Hook is everything.</strong> One single, big idea per song. Radio-memorable chorus.</li>
         <li><strong>Melody &gt;&gt; lyric complexity.</strong> Simple, universal words. Let the tune carry.</li>
-        <li><strong>Charm song = the bread & butter.</strong> Optimistic, steady beat, audience relaxes.</li>
-        <li><strong>"Healthy Normal American Boy" model</strong> &mdash; same sequence repeated with escalating stakes.</li>
+        <li><strong>Artist-driven style.</strong> User likely names a real artist &mdash; style prompts should mirror that artist's signature sound, arrangement, and era.</li>
+        <li><strong>Charm song = the bread &amp; butter.</strong> Optimistic, steady beat, audience relaxes.</li>
         <li><strong>Comedy through truth</strong> &mdash; Contest Game (back-and-forth), Lamentation (over harmless things).</li>
         <li><strong>Declutter</strong> &mdash; fewer words, more room for melody. Singability first.</li>
       </ul>
+      <div class="note-box idea">
+        <h4>Feature Idea: Artist Research</h4>
+        <p>When user names an existing artist (e.g. "ABBA", "Queen", "Stevie Wonder"), the app does a quick lookup of their musical style, typical arrangement, instrumentation, tempo range, and signature production techniques. This feeds directly into Suno style strings and lyrics guidance &mdash; so the output actually sounds like that artist's tradition, not generic pop.</p>
+        <ul style="margin-top:6px;">
+          <li>Could use DeepSeek with a "describe this artist's musical style in Suno tags" prompt</li>
+          <li>Cache results for common artists</li>
+          <li>Fall back to genre defaults if artist unknown</li>
+        </ul>
+      </div>
       <div class="note-box">
         <h4>Reference Models</h4>
-        <p>It's De-Lovely, Put On a Happy Face, Hey Look Me Over, Mame</p>
+        <p>Mamma Mia (ABBA), Jersey Boys (Four Seasons), Beautiful (Carole King), Moulin Rouge (mashup style), &amp; Juliet (Max Martin pop), Tina (Tina Turner)</p>
       </div>
     </div>
   </div>
@@ -654,14 +770,13 @@
         <li><strong>Lyrics &gt;&gt;&gt; melody.</strong> Dense wordplay, internal rhymes, every bar counts.</li>
         <li><strong>Still dramatic progression</strong> &mdash; bars in ascending order of punch. Write backwards.</li>
         <li><strong>Confrontation = rap battle.</strong> Contest Game archetype. Back-and-forth escalation.</li>
-        <li><strong>"Cool" (WSS) model</strong> &mdash; parallel lines in A, contrast in B, SURPRISE in B'.</li>
         <li><strong>Specificity through culture</strong> &mdash; real places, real slang, real details. Not generic "streets."</li>
-        <li><strong>Comedy = Exaggerated Pronouncement</strong> (Officer Krupke model) or Philosophy Game.</li>
-        <li><strong>R&B sung hooks</strong> for choruses &mdash; universal want over specific verses.</li>
+        <li><strong>Comedy = Exaggerated Pronouncement</strong> or Philosophy Game.</li>
+        <li><strong>R&amp;B sung hooks</strong> for choruses &mdash; universal want over specific verses.</li>
       </ul>
       <div class="note-box">
         <h4>Reference Models</h4>
-        <p>Cool (WSS parallel structure), Gee Officer Krupke (comedy), A Boy Like That (confrontation peaks)</p>
+        <p>Hamilton (My Shot, The Room Where It Happens, Wait For It), In The Heights (Breathe, 96,000, Blackout), The Wiz (Ease On Down The Road), Passing Strange</p>
       </div>
     </div>
   </div>
@@ -694,53 +809,108 @@
   </div>
 </div>
 
-<!-- ============ SECTION 5: Song Archetype Matrix ============ -->
-<h2>5. Song Archetype &rarr; Song Role Mapping</h2>
-<div class="section">
-  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
-    MTBible archetypes mapped to our 6 song roles. <span class="badge badge-new">NEW</span> = principles not currently in the system.
+<!-- ============ SECTION 5: Song Role Energy & Tempo ============ -->
+<h2>5. Song Role &rarr; Energy, Tempo &amp; Character</h2>
+<div class="section highlight">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:16px;">
+    <span class="badge badge-new">NEW</span> Each song role has a distinct energy signature and tempo range. These feed directly into Suno style prompts.
   </p>
 
-  <div class="archetype-row">
-    <span class="archetype-label">Opening Number</span>
-    <span class="archetype-desc">
-      <strong>"I Am" Song</strong> for ensemble. Establishes starting point, not endpoint. <span class="badge badge-new">NEW</span> Not the whole story &mdash; just one particular thing about this world.
-    </span>
+  <!-- Opening Number -->
+  <div style="margin-bottom:16px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <strong style="color:var(--gold-light);">1. Opening Number</strong>
+      <span class="tempo-tag">120-135 BPM</span>
+    </div>
+    <div class="energy-bar">
+      <span class="label">Energy</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:55%; background:linear-gradient(90deg, var(--gold-dim), var(--gold));"></div></div>
+      <span class="val">0.55</span>
+    </div>
+    <p style="font-size:0.8rem; color:var(--cream-muted);">
+      <strong>"I Am" Song</strong> for ensemble. Sets the world. Moderate energy &mdash; NOT the highest point. One particular thing about this world, not everything.
+    </p>
   </div>
 
-  <div class="archetype-row">
-    <span class="archetype-label">I Want Song</span>
-    <span class="archetype-desc">
-      <strong>Character Establishment.</strong> AABA mandatory (Classic/Disney). <span class="badge badge-new">NEW</span> No power ballads (too early). Non-diegetic. Starting point of character arc only.
-    </span>
+  <!-- I Want Song -->
+  <div style="margin-bottom:16px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <strong style="color:var(--gold-light);">2. I Want Song</strong>
+      <span class="tempo-tag">140+ BPM</span>
+      <span class="badge badge-critical">HIGH ENERGY</span>
+    </div>
+    <div class="energy-bar">
+      <span class="label">Energy</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:80%; background:linear-gradient(90deg, var(--gold), var(--orange));"></div></div>
+      <span class="val">0.80</span>
+    </div>
+    <p style="font-size:0.8rem; color:var(--cream-muted);">
+      <strong>Full of energy. Straight eighths. Driving tempo.</strong> AABA mandatory (Classic/Disney). Non-diegetic. Starting point of character arc &mdash; they may end the show in a totally different place. NOT a power ballad (too early for that).
+    </p>
   </div>
 
-  <div class="archetype-row">
-    <span class="archetype-label">Confrontation</span>
-    <span class="archetype-desc">
-      <strong>Scene Construction.</strong> Dialogue bleeds into song. <span class="badge badge-new">NEW</span> Hit emotional peaks immediately (A Boy Like That). Stakes increase each repetition (Healthy Normal American Boy).
-    </span>
+  <!-- Confrontation -->
+  <div style="margin-bottom:16px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <strong style="color:var(--gold-light);">3. Confrontation</strong>
+      <span class="tempo-tag">95-115 BPM</span>
+    </div>
+    <div class="energy-bar">
+      <span class="label">Energy</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:90%; background:linear-gradient(90deg, var(--orange), var(--red));"></div></div>
+      <span class="val">0.90</span>
+    </div>
+    <p style="font-size:0.8rem; color:var(--cream-muted);">
+      <strong>Slower, punchier, more dynamic.</strong> Act I climax. Point of no return. Hit emotional peaks immediately (A Boy Like That model). Stakes increase each repetition. The slower tempo creates space for dramatic punch and dynamic contrast &mdash; heavy hits land harder at lower BPM.
+    </p>
   </div>
 
-  <div class="archetype-row">
-    <span class="archetype-label">Act II Opening</span>
-    <span class="archetype-desc">
-      <strong>Charm Song.</strong> <span class="badge badge-new">NEW</span> Moment of relief. Doesn't move plot. Steady beat, optimistic. Melody &gt; lyric. 4 approaches: group excitement, celebration, relaxed fun, world observation.
-    </span>
+  <!-- Act II Opening -->
+  <div style="margin-bottom:16px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <strong style="color:var(--gold-light);">4. Act II Opening</strong>
+      <span class="tempo-tag">100-120 BPM</span>
+    </div>
+    <div class="energy-bar">
+      <span class="label">Energy</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:30%; background:linear-gradient(90deg, var(--blue), var(--gold-dim));"></div></div>
+      <span class="val">0.30</span>
+    </div>
+    <p style="font-size:0.8rem; color:var(--cream-muted);">
+      <strong>Charm Song.</strong> Moment of relief. Doesn't move plot. Steady beat, optimistic. Melody &gt; lyric. DIP in tension. 4 approaches: group excitement, celebration, relaxed fun, world observation. Audience breathes.
+    </p>
   </div>
 
-  <div class="archetype-row">
-    <span class="archetype-label">11 O'Clock #</span>
-    <span class="archetype-desc">
-      <strong>Emotional Climax.</strong> <span class="badge badge-new">NEW</span> End of chorus needs spark/surprise. Extension of final A, high note, lyrical shift, or new chord. Coda usually 4 measures. Stinger on beat 7, 9, or 1.
-    </span>
+  <!-- Eleven O'Clock -->
+  <div style="margin-bottom:16px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <strong style="color:var(--gold-light);">5. Eleven O'Clock Number</strong>
+      <span class="tempo-tag">VARIES</span>
+    </div>
+    <div class="energy-bar">
+      <span class="label">Energy</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:100%; background:linear-gradient(90deg, var(--orange), #F44336);"></div></div>
+      <span class="val">1.00</span>
+    </div>
+    <p style="font-size:0.8rem; color:var(--cream-muted);">
+      <strong>THE climax. Maximum emotional intensity.</strong> Can be a big ballad / power ballad OR high tempo &mdash; whatever serves the story's peak. End of chorus needs spark/surprise. Extension, high note, lyrical shift, or new chord. Coda usually 4 measures.
+    </p>
   </div>
 
-  <div class="archetype-row">
-    <span class="archetype-label">Finale</span>
-    <span class="archetype-desc">
-      <strong>Resolution + Reprise.</strong> <span class="badge badge-new">NEW</span> Reframe the repeating chorus &mdash; same melody, shifted meaning gives audience progression and breathing room.
-    </span>
+  <!-- Finale -->
+  <div style="margin-bottom:0;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <strong style="color:var(--gold-light);">6. Finale</strong>
+      <span class="tempo-tag">105-125 BPM</span>
+    </div>
+    <div class="energy-bar">
+      <span class="label">Energy</span>
+      <div class="bar-bg"><div class="bar-fill" style="width:60%; background:linear-gradient(90deg, var(--gold-dim), var(--gold));"></div></div>
+      <span class="val">0.60</span>
+    </div>
+    <p style="font-size:0.8rem; color:var(--cream-muted);">
+      <strong>A little laid back.</strong> Resolution + Reprise. Reframe the repeating chorus &mdash; same melody, shifted meaning. Earned catharsis, not another peak. The audience has already had the climax &mdash; this is the warm landing.
+    </p>
   </div>
 </div>
 
@@ -755,24 +925,27 @@
     <pre style="color:var(--cream-muted); margin:0;">
 Tension
   ^
-  |        ___/\___          _____/\
-  |       /        \        /       \  &lt;-- CLIMAX
-  |      /     ACT I \     / ACT II  \
-  |   __/    builds    \__/   builds   \___
-  |  /                  ^                  \
-  | / Opening       Intermission        Finale
-  |/   (dip)          (dip)            (resolve)
-  +----------------------------------------&gt; Time
-  Song1   Song2  Song3  Song4  Song5  Song6</pre>
+  |                              /\
+  |                             /  \  &lt;-- PEAK CLIMAX
+  |        /\                  /    \     (11 O'Clock)
+  |       /  \  ACT I         /      \
+  |      /    \  climax      / ACT II \
+  |   __/      \         ___/   builds \____
+  |  /          \       /  ^                \
+  | / Opening    \     / Charm              Finale
+  |/ (moderate)   \___/  Song              (laid back)
+  +------------------------------------------&gt; Time
+  Song1   Song2  Song3  Song4   Song5   Song6
+ 0.55    0.80   0.90   0.30    1.00    0.60</pre>
   </div>
 
   <ul style="margin-top:12px;">
-    <li><strong>Song 1 (Opening):</strong> Moderate energy. Set the world. NOT the highest point.</li>
-    <li><strong>Song 2 (I Want):</strong> Builds personal investment. Rising.</li>
-    <li><strong>Song 3 (Confrontation):</strong> Act I climax. Peak tension. Point of no return.</li>
-    <li><strong>Song 4 (Act II Opening):</strong> DIP. Relief. Charm song. Audience breathes.</li>
-    <li><strong>Song 5 (11 O'Clock):</strong> THE climax. Maximum emotional intensity.</li>
-    <li><strong>Song 6 (Finale):</strong> Resolution. Earned catharsis. Descend to peace.</li>
+    <li><strong>Song 1 (Opening):</strong> Moderate energy (0.55). Set the world. NOT the highest point.</li>
+    <li><strong>Song 2 (I Want):</strong> High energy (0.80). Driving, 140+ BPM, straight eighths. Rising fast.</li>
+    <li><strong>Song 3 (Confrontation):</strong> Act I climax (0.90). Slower, punchier, dynamic. Point of no return.</li>
+    <li><strong>Song 4 (Act II Opening):</strong> DIP (0.30). Charm song. Relief. Audience breathes.</li>
+    <li><strong>Song 5 (11 O'Clock):</strong> <strong>PEAK CLIMAX (1.00).</strong> The highest point in the entire show. Maximum emotional intensity.</li>
+    <li><strong>Song 6 (Finale):</strong> Laid back (0.60). Resolution. Earned catharsis. Warm landing, not another peak.</li>
   </ul>
 </div>
 
@@ -816,8 +989,303 @@ Tension
   </div>
 </div>
 
-<!-- ============ SECTION 8: Implementation Checklist ============ -->
-<h2>8. Implementation Checklist</h2>
+<!-- ============ SECTION 8: Song & Lyric Examples ============ -->
+<h2>8. Song &amp; Lyric Examples <span class="badge badge-new">NEW</span></h2>
+<div class="section">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    Concrete examples of great MT lyrics organized by principle &mdash; these serve as few-shot examples for the LLM.
+    <span class="badge badge-idea">EXPAND THIS SECTION</span> &mdash; more examples = richer enrichment.
+  </p>
+
+  <details>
+    <summary>Subtext &mdash; saying it without saying it</summary>
+    <div style="padding:8px 0;">
+      <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-bottom:4px;">People Will Say We're In Love (Rodgers &amp; Hammerstein)</p>
+      <p style="font-size:0.8rem; color:var(--cream-muted); font-style:italic; margin-bottom:6px;">Laurey lists "don'ts" to Curly to prove their love is untrue &mdash; actually revealing it:</p>
+      <div style="font-size:0.85rem; padding:8px 12px; background:rgba(0,0,0,0.3); border-radius:6px; border-left:2px solid var(--gold-dim); font-style:italic;">
+        Don't throw bouquets at me<br>
+        Don't please my folks too much<br>
+        Don't laugh at my jokes too much<br>
+        People will say we're in love...
+      </div>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:6px;"><strong>Principle:</strong> The character argues AGAINST the truth, which makes the truth undeniable.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Specificity &mdash; concrete details vs. generic</summary>
+    <div style="padding:8px 0;">
+      <p style="font-size:0.85rem; color:var(--red); font-weight:bold; margin-bottom:4px;">BAD &mdash; Generic (Sweethearts, 1913)</p>
+      <div style="font-size:0.85rem; padding:8px 12px; background:rgba(229,57,53,0.08); border-radius:6px; border-left:2px solid var(--red); font-style:italic;">
+        If you ask where love is found<br>
+        The sort of love that's fond and true...
+      </div>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px; margin-bottom:12px;">Blocky, vague, archaic. Nobody talks like this. No direction, no fresh images.</p>
+
+      <p style="font-size:0.85rem; color:var(--green); font-weight:bold; margin-bottom:4px;">GOOD &mdash; Specific (Not While I'm Around, Sondheim)</p>
+      <div style="font-size:0.85rem; padding:8px 12px; background:rgba(76,175,80,0.08); border-radius:6px; border-left:2px solid var(--green); font-style:italic;">
+        Demons are prowling everywhere nowadays<br>
+        I'll send 'em howling, I don't care<br>
+        I got ways...
+      </div>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px; margin-bottom:12px;">Says "I love you / I'll protect you" with fresh, vivid, character-specific images.</p>
+
+      <p style="font-size:0.85rem; color:var(--green); font-weight:bold; margin-bottom:4px;">GOOD &mdash; Specific (Death of a Salesman, Arthur Miller)</p>
+      <div style="font-size:0.85rem; padding:8px 12px; background:rgba(76,175,80,0.08); border-radius:6px; border-left:2px solid var(--green); font-style:italic;">
+        He's the man way out there in the blue, riding on a smile and a shoeshine. And when they start not smiling back &mdash; that's an earthquake...
+      </div>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;">Not "he was a salesman who traveled." SPECIFIC sensory images that make you FEEL it.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>AABA Form &mdash; Statement, Restatement, Contrast, Conclusion</summary>
+    <div style="padding:8px 0;">
+      <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-bottom:4px;">Waitin' for My Dearie (Lerner &amp; Loewe)</p>
+      <div style="font-size:0.85rem; padding:8px 12px; background:rgba(0,0,0,0.3); border-radius:6px; border-left:2px solid var(--blue);">
+        <strong style="color:var(--blue);">(A)</strong> <em>Waitin' for my dearie / An' happy am I / To hold my heart till he comes strollin' by</em><br><br>
+        <strong style="color:var(--blue);">(A)</strong> <em>When he comes, my dearie / One look an' I'll know / That he's the dearie I've been wantin' so</em><br><br>
+        <strong style="color:var(--orange);">(B)</strong> <em>Though I'll live forty lives / Till the day he arrives / I'll not ever, ever grieve...</em><br>
+        <span style="font-size:0.75rem; color:var(--orange);">More movement, more chromatic, inverted intervals &mdash; PROPELS into final A</span><br><br>
+        <strong style="color:var(--blue);">(A)</strong> <em>There's a laddie weary / An' wanderin' free...</em><br>
+        <span style="font-size:0.75rem; color:var(--green);">Slight surprise, shortening, lyrical conclusion</span>
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Dramatic Progression &mdash; escalating stakes same structure</summary>
+    <div style="padding:8px 0;">
+      <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-bottom:4px;">A Healthy Normal American Boy (Bye Bye Birdie)</p>
+      <p style="font-size:0.8rem; color:var(--cream-muted); margin-bottom:6px;">Same musical sequence repeated 4 times while stakes and intensity increase each time. "Refrain is the hook, anchor, homebase."</p>
+      <p style="font-size:0.75rem; color:var(--cream-muted);"><strong>Principle:</strong> Repetition + escalation. Each pass through the same structure hits harder because the context has shifted.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Scene Construction &mdash; dialogue bleeding into song</summary>
+    <div style="padding:8px 0;">
+      <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-bottom:4px;">If I Loved You (Carousel)</p>
+      <p style="font-size:0.8rem; color:var(--cream-muted);">Extensive park bench scene: long, winding prose/dialogue ("We don't count at all...") transitions naturally into a sweeping AABA chorus. The song doesn't start cold &mdash; it GROWS out of the conversation.</p>
+
+      <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-top:10px; margin-bottom:4px;">A Boy Like That (West Side Story)</p>
+      <p style="font-size:0.8rem; color:var(--cream-muted);">Dramatic setup bleeds directly into song, hitting emotional peaks IMMEDIATELY. No warm-up &mdash; full intensity from bar one.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ============ SECTION 9: Suno Translation Layer ============ -->
+<h2>9. Suno Translation Layer <span class="badge badge-new">NEW</span></h2>
+<div class="section highlight">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    Suno has <strong>two input surfaces</strong>. Our translation layer must output BOTH.
+  </p>
+
+  <div class="comparison" style="margin-bottom:16px;">
+    <div style="background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.2); border-radius:10px; padding:12px;">
+      <h3 style="color:var(--gold-light); font-size:0.95rem;">Style Field (1000 chars)</h3>
+      <p style="font-size:0.8rem; color:var(--cream-muted); margin-bottom:6px;">Genre, mood, instruments, vocal type, tempo, production quality.</p>
+      <p style="font-size:0.8rem;">Formula: <code>[Genre] + [Instruments] + [Mood] + [Tempo] + [Vocal] + [Production]</code></p>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;">4-7 descriptors sweet spot. First 20-30 words carry most weight. Lead with genre.</p>
+    </div>
+    <div style="background:rgba(66,165,245,0.08); border:1px solid rgba(66,165,245,0.2); border-radius:10px; padding:12px;">
+      <h3 style="color:var(--blue); font-size:0.95rem;">Lyrics Field (metatags)</h3>
+      <p style="font-size:0.8rem; color:var(--cream-muted); margin-bottom:6px;">Structure tags interspersed with lyrics on their own lines.</p>
+      <p style="font-size:0.8rem;">Tags: <span class="suno-tag suno-structure">[Verse 1]</span> <span class="suno-tag suno-structure">[Chorus]</span> <span class="suno-tag suno-structure">[Bridge]</span> <span class="suno-tag suno-structure">[Big Finish]</span></p>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;">Keep tags 1-3 words. Lyrics must MATCH tag intent (chorus reads like chorus).</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;">Confirmed Working Tags</h3>
+
+  <details open>
+    <summary>Genre Tags (Broadway-relevant)</summary>
+    <div style="padding:6px 0;">
+      <span class="suno-tag">Broadway</span>
+      <span class="suno-tag">Musical theater</span>
+      <span class="suno-tag">Opera</span>
+      <span class="suno-tag">Operatic Pop</span>
+      <span class="suno-tag">Dark Cabaret</span>
+      <span class="suno-tag">Big Band</span>
+      <span class="suno-tag">Swing</span>
+      <span class="suno-tag">Vocal Jazz</span>
+      <span class="suno-tag">Classical Crossover</span>
+      <span class="suno-tag">Orchestral</span>
+      <span class="suno-tag">Cinematic</span>
+      <span class="suno-tag">Ballad</span>
+      <span class="suno-tag">Hip-hop</span>
+      <span class="suno-tag">Rap</span>
+      <span class="suno-tag">R&amp;B</span>
+      <span class="suno-tag">Pop</span>
+      <span class="suno-tag">Rock</span>
+      <span class="suno-tag">Punk rock</span>
+      <span class="suno-tag">Alt-rock</span>
+      <span class="suno-tag">Indie folk</span>
+      <span class="suno-tag">Singer-Songwriter</span>
+    </div>
+  </details>
+
+  <details>
+    <summary>Vocal Tags</summary>
+    <div style="padding:6px 0;">
+      <span class="suno-tag">[Belting]</span>
+      <span class="suno-tag">[Operatic]</span>
+      <span class="suno-tag">[Falsetto]</span>
+      <span class="suno-tag">[Crooning]</span>
+      <span class="suno-tag">[Whisper]</span>
+      <span class="suno-tag">[Spoken Word]</span>
+      <span class="suno-tag">[Rap]</span>
+      <span class="suno-tag">[Harmonies]</span>
+      <span class="suno-tag">[Female Vocal]</span>
+      <span class="suno-tag">[Male Vocal]</span>
+      <span class="suno-tag">[Duet]</span>
+      <span class="suno-tag">[Choir]</span>
+      <span class="suno-tag">[Powerful]</span>
+      <span class="suno-tag">[Vulnerable]</span>
+      <span class="suno-tag">[Defiant]</span>
+    </div>
+  </details>
+
+  <details>
+    <summary>Instrument Tags</summary>
+    <div style="padding:6px 0;">
+      <span class="suno-tag">[Grand Piano]</span>
+      <span class="suno-tag">[Piano]</span>
+      <span class="suno-tag">[Orchestral Strings]</span>
+      <span class="suno-tag">[String Quartet]</span>
+      <span class="suno-tag">[Violin Solo]</span>
+      <span class="suno-tag">[Cello]</span>
+      <span class="suno-tag">[Harp]</span>
+      <span class="suno-tag">[Brass Section]</span>
+      <span class="suno-tag">[Trumpet]</span>
+      <span class="suno-tag">[French Horn]</span>
+      <span class="suno-tag">[Saxophone]</span>
+      <span class="suno-tag">[Full Orchestra]</span>
+      <span class="suno-tag">[Electric Guitar]</span>
+      <span class="suno-tag">[Acoustic Guitar]</span>
+      <span class="suno-tag">[808s]</span>
+    </div>
+  </details>
+
+  <details>
+    <summary>Structure Tags (in lyrics field)</summary>
+    <div style="padding:6px 0;">
+      <span class="suno-tag suno-structure">[Verse 1]</span>
+      <span class="suno-tag suno-structure">[Verse 2]</span>
+      <span class="suno-tag suno-structure">[Pre-Chorus]</span>
+      <span class="suno-tag suno-structure">[Chorus]</span>
+      <span class="suno-tag suno-structure">[Bridge]</span>
+      <span class="suno-tag suno-structure">[Hook]</span>
+      <span class="suno-tag suno-structure">[Instrumental]</span>
+      <span class="suno-tag suno-structure">[Piano Solo]</span>
+      <span class="suno-tag suno-structure">[Build-up]</span>
+      <span class="suno-tag suno-structure">[Crescendo]</span>
+      <span class="suno-tag suno-structure">[Outro: Big finish]</span>
+      <span class="suno-tag suno-structure">[Outro: Fade out]</span>
+      <span class="suno-tag suno-structure">[Short Instrumental Intro]</span>
+      <br><br>
+      <span class="suno-tag suno-bad">[Intro]</span>
+      <span style="font-size:0.75rem; color:var(--red);"> Unreliable &mdash; use descriptive variant instead</span>
+    </div>
+  </details>
+
+  <details>
+    <summary>Dynamic / Production Tags</summary>
+    <div style="padding:6px 0;">
+      <span class="suno-tag">[Crescendo]</span>
+      <span class="suno-tag">[Starts out quietly]</span>
+      <span class="suno-tag">[Big Finish]</span>
+      <span class="suno-tag">[Sparse]</span>
+      <span class="suno-tag">[Lush]</span>
+      <span class="suno-tag">[Atmospheric]</span>
+      <span class="suno-tag">[Strings Rise]</span>
+      <span style="font-size:0.75rem; display:block; margin-top:6px; color:var(--cream-muted);">Also in style field: <code>building</code>, <code>cinematic build</code>, <code>orchestral swell</code>, <code>intimate</code>, <code>raw</code>, <code>polished</code></span>
+    </div>
+  </details>
+
+  <h3 style="font-size:0.95rem; margin-top:16px;">Critical Rules</h3>
+  <div style="margin-top:8px;">
+    <ul>
+      <li><strong style="color:var(--red);">NO negative prompts.</strong> <span class="suno-tag suno-bad">no drums</span> makes Suno ADD drums. Specify what you WANT: <span class="suno-tag">solo piano</span>, <span class="suno-tag">acapella</span></li>
+      <li><strong>AABA form must be manually structured.</strong> Suno doesn't understand "AABA" &mdash; map it to: <span class="suno-tag suno-structure">[Verse 1]</span> <span class="suno-tag suno-structure">[Verse 2]</span> <span class="suno-tag suno-structure">[Bridge]</span> <span class="suno-tag suno-structure">[Verse 3]</span></li>
+      <li><strong>BPM can be specified:</strong> <span class="suno-tag">[Tempo: 140 BPM]</span> &mdash; useful for driving I Want songs</li>
+      <li><strong>Era tags work:</strong> <span class="suno-tag">1940s Big Band</span> <span class="suno-tag">modern musical theater</span></li>
+      <li><strong>Lyrics must match intent.</strong> A <span class="suno-tag suno-structure">[Chorus]</span> tag only works if lyrics actually read like a chorus (short, hooky, repeatable)</li>
+      <li><strong>Limit instrument tags</strong> to 2-3 per section for best results</li>
+    </ul>
+  </div>
+
+  <h3 style="font-size:0.95rem; margin-top:16px;">Form &rarr; Structure Tag Translation</h3>
+  <div style="margin-top:8px;">
+    <div class="archetype-row">
+      <span class="archetype-label"><span class="form-tag form-aaba">AABA</span></span>
+      <span class="archetype-desc">
+        <span class="suno-tag suno-structure">[Verse 1]</span> A &rarr;
+        <span class="suno-tag suno-structure">[Verse 2]</span> A &rarr;
+        <span class="suno-tag suno-structure">[Bridge]</span> B &rarr;
+        <span class="suno-tag suno-structure">[Verse 3]</span> A (conclusion)
+      </span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label"><span class="form-tag form-abab">ABAB</span></span>
+      <span class="archetype-desc">
+        <span class="suno-tag suno-structure">[Verse 1]</span> A &rarr;
+        <span class="suno-tag suno-structure">[Chorus]</span> B &rarr;
+        <span class="suno-tag suno-structure">[Verse 2]</span> A &rarr;
+        <span class="suno-tag suno-structure">[Chorus]</span> B
+      </span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label"><span class="form-tag form-vcvc">V/C/V/C/B/C</span></span>
+      <span class="archetype-desc">
+        <span class="suno-tag suno-structure">[Verse 1]</span> &rarr;
+        <span class="suno-tag suno-structure">[Chorus]</span> &rarr;
+        <span class="suno-tag suno-structure">[Verse 2]</span> &rarr;
+        <span class="suno-tag suno-structure">[Chorus]</span> &rarr;
+        <span class="suno-tag suno-structure">[Bridge]</span> &rarr;
+        <span class="suno-tag suno-structure">[Chorus]</span>
+      </span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label"><span class="form-tag form-free">FREE</span></span>
+      <span class="archetype-desc">
+        <span class="suno-tag suno-structure">[Verse 1]</span> &rarr;
+        <span class="suno-tag suno-structure">[Hook]</span> &rarr;
+        <span class="suno-tag suno-structure">[Verse 2]</span> &rarr;
+        <span class="suno-tag suno-structure">[Hook]</span> &rarr;
+        <span class="suno-tag suno-structure">[Bridge]</span> (spoken word) &rarr;
+        <span class="suno-tag suno-structure">[Hook]</span>
+      </span>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem; margin-top:16px;">Example: Broadway I Want Song</h3>
+  <div style="margin-top:8px; padding:12px; background:rgba(0,0,0,0.3); border-radius:8px;">
+    <p style="font-size:0.8rem; color:var(--gold-light); margin-bottom:6px;"><strong>Style field:</strong></p>
+    <p style="font-size:0.8rem; font-family:monospace; color:var(--cream); margin-bottom:12px;">
+      Broadway, dramatic, orchestral, soaring melody, belting female vocals, grand piano, lush strings, building, 140 BPM, theatrical
+    </p>
+    <p style="font-size:0.8rem; color:var(--blue); margin-bottom:6px;"><strong>Lyrics field:</strong></p>
+    <pre style="font-size:0.8rem; color:var(--cream-muted); margin:0; white-space:pre-wrap;">[Short Instrumental Intro]
+
+[Verse 1]
+(A section - statement, intimate, piano-led)
+
+[Verse 2]
+(A section - restatement, strings entering, builds)
+
+[Bridge]
+(B section - contrast, chromatic, new energy, PROPELS forward)
+
+[Verse 3]
+(A section - conclusion, full orchestra, belted, slight surprise)
+
+[Outro: Big finish]</pre>
+  </div>
+</div>
+
+<!-- ============ SECTION 10: Implementation Checklist ============ -->
+<h2>10. Implementation Checklist</h2>
 <div class="section">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     Files to modify &amp; what changes in each:
@@ -829,8 +1297,11 @@ Tension
       <li>Add <code>song_form</code> per genre (AABA, ABAB, V/C/B/C, FREE)</li>
       <li>Add <code>mt_principles</code> per genre &mdash; which MTBible rules apply and HOW</li>
       <li>Add <code>song_archetype</code> per song role &mdash; Charm, Comedy Game type, etc.</li>
+      <li>Add <code>energy_level</code> + <code>tempo_range</code> per song role</li>
       <li>Expand <code>lyrics_guidance</code> with MTBible-informed craft rules</li>
       <li>Add <code>accompaniment_guidance</code> &mdash; sparse-to-thick progression, groove, instrumentation</li>
+      <li>Add <code>suno_style_base</code> per genre &mdash; pre-built Suno genre tags</li>
+      <li>Add <code>suno_structure_template</code> per form &mdash; metatag sequence</li>
       <li>Add <code>reference_examples</code> per song role &mdash; "model this on..."</li>
     </ul>
   </details>
@@ -839,9 +1310,19 @@ Tension
     <summary>lib/prompts.ts <span class="badge badge-upgrade">MAJOR</span></summary>
     <ul>
       <li><code>buildEnrichmentPrompt</code> &mdash; inject pacing/tension arc, specificity doctrine, genre craft principles</li>
-      <li><code>buildSongLyricsPrompt</code> &mdash; inject 10 Commandments, genre-specific form (not hardcoded V/C/B/C), song archetype rules</li>
-      <li><code>buildSongStylePrompt</code> &mdash; add accompaniment progression guidance</li>
+      <li><code>buildSongLyricsPrompt</code> &mdash; inject 10 Commandments (emphasize #1 and #7), genre-specific form (not hardcoded V/C/B/C), song archetype rules, tempo/energy guidance</li>
+      <li><code>buildSongStylePrompt</code> &mdash; rewrite as Suno translation layer: genre tags + mood + instruments + tempo + vocal + production</li>
+      <li>New: <code>buildSunoStructureTemplate</code> &mdash; convert song form to Suno metatag sequence</li>
       <li>Add ShowConcept output fields: <code>tension_pacing</code>, per-song <code>song_briefs[]</code></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>lib/suno-kie.ts <span class="badge badge-upgrade">MEDIUM</span></summary>
+    <ul>
+      <li>Accept annotated lyrics (with structure metatags) from translation layer</li>
+      <li>Pass BPM hint in style string when available</li>
+      <li>Ensure style string stays under 1000 chars, prioritize first 30 words</li>
     </ul>
   </details>
 
@@ -851,6 +1332,7 @@ Tension
       <li>Extend <code>ShowConcept</code> with <code>tension_pacing</code> and <code>song_briefs</code></li>
       <li>Add <code>SongForm</code> type (AABA | ABAB | ABAC | VCVCBC | FREE)</li>
       <li>Add <code>ComedyGame</code> type if applicable</li>
+      <li>Add <code>EnergyLevel</code> and <code>TempoRange</code> types</li>
     </ul>
   </details>
 
@@ -859,6 +1341,7 @@ Tension
     <ul>
       <li>Pass new enrichment fields through to track creation</li>
       <li>Store song_briefs in track metadata</li>
+      <li>For Jukebox: add optional artist research step before enrichment</li>
     </ul>
   </details>
 
@@ -873,7 +1356,8 @@ Tension
 
 <div class="footer">
   BROADWAYIFY &mdash; Libretto MTBible Enrichment Map<br>
-  Built for internal planning. Not for public distribution.
+  Built for internal planning. Not for public distribution.<br>
+  Last updated: Feb 2026
 </div>
 
 <script>
