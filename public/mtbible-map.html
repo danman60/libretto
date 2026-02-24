@@ -507,18 +507,82 @@
     font-size: 0.8rem;
     color: var(--gold-light);
   }
+
+  /* Classification badges */
+  .class-a, .class-b, .class-c, .class-d {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 1px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 4px;
+    letter-spacing: 0.5px;
+  }
+  .class-a { background: rgba(76,175,80,0.2); color: var(--green); border: 1px solid rgba(76,175,80,0.4); }
+  .class-b { background: rgba(66,165,245,0.2); color: var(--blue); border: 1px solid rgba(66,165,245,0.4); }
+  .class-c { background: rgba(255,167,38,0.2); color: var(--orange); border: 1px solid rgba(255,167,38,0.4); }
+  .class-d { background: rgba(171,71,188,0.2); color: var(--purple); border: 1px solid rgba(171,71,188,0.4); }
+
+  .expert-quote {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--cream-muted);
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-left: 2px solid var(--gold-dim);
+    background: rgba(0,0,0,0.2);
+    border-radius: 0 6px 6px 0;
+  }
+  .expert-quote .attribution {
+    display: block;
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--gold-dim);
+    margin-top: 4px;
+  }
+
+  .layer-tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: bold;
+    vertical-align: middle;
+  }
+  .layer-deepseek { background: rgba(76,175,80,0.15); color: var(--green); border: 1px solid rgba(76,175,80,0.3); }
+  .layer-suno { background: rgba(66,165,245,0.15); color: var(--blue); border: 1px solid rgba(66,165,245,0.3); }
+  .layer-both { background: rgba(255,167,38,0.15); color: var(--orange); border: 1px solid rgba(255,167,38,0.3); }
 </style>
 </head>
 <body>
 
 <h1>MTBible Enrichment Map</h1>
-<p class="subtitle">How BMI Lehman Engel principles upgrade Libretto's AI musical generation</p>
+<p class="subtitle">How BMI Lehman Engel principles + cross-expert consensus upgrade Libretto's AI musical generation</p>
+
+<div class="section" style="padding:10px 14px; margin-bottom:20px;">
+  <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:0.75rem;">
+    <strong style="color:var(--gold);">Classification:</strong>
+    <span class="class-a">A &mdash; UNIVERSAL</span>
+    <span class="class-b">B &mdash; STRONG PATTERN</span>
+    <span class="class-c">C &mdash; GENRE-SPECIFIC</span>
+    <span class="class-d">D &mdash; CONTESTED</span>
+    <span style="color:var(--cream-muted); margin-left:8px;">|</span>
+    <strong style="color:var(--gold); margin-left:4px;">Target:</strong>
+    <span class="layer-tag layer-deepseek">DEEPSEEK</span>
+    <span class="layer-tag layer-suno">SUNO</span>
+    <span class="layer-tag layer-both">BOTH</span>
+  </div>
+  <p style="font-size:0.7rem; color:var(--cream-muted); margin-top:6px;">
+    Sources: BMI Lehman Engel Workshop (L1), Sondheim/Hammerstein/Ashman/Schwartz/Menken/JR Brown cross-expert consensus (L2), structural analysis &amp; genre matrix (L3)
+  </p>
+</div>
 
 <!-- ============ SECTION 1: Core Principles ============ -->
-<h2>1. Pat's 10 Commandments of MT Lyrics</h2>
+<h2>1. Pat's 10 Commandments of MT Lyrics <span class="class-a">A</span> <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
 <div class="section highlight">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
-    These become <strong style="color:var(--green);">injected into every lyrics prompt</strong> &mdash; the LLM's songwriting rulebook.
+    These become <strong style="color:var(--green);">injected into every lyrics prompt</strong> &mdash; the LLM's songwriting rulebook. Cross-validated by Sondheim, Hammerstein, Schwartz, and Ashman as universal principles.
   </p>
   <div class="commandments">
     <div class="commandment critical">
@@ -549,6 +613,29 @@
       <span class="num">7</span>
       <span class="text"><strong>Correct scansion.</strong> <span class="badge badge-critical">CRITICAL</span> Don't misaccent words. Stress patterns of lyrics MUST match the natural melody rhythm. Wrong scansion breaks the illusion &mdash; nothing pulls an audience out faster than a misaccented word.</span>
     </div>
+
+    <!-- Prosody Deep Dive (L2) -->
+    <div style="margin:8px 0 8px 34px; padding:10px 12px; background:rgba(201,168,76,0.06); border-radius:8px; border:1px solid rgba(201,168,76,0.12);">
+      <p style="font-size:0.8rem; color:var(--gold-light); font-weight:bold; margin-bottom:6px;">Prosody Deep Dive (Hammerstein + Sondheim)</p>
+      <ul style="font-size:0.8rem;">
+        <li><strong>Open vowels on high notes.</strong> Never hard consonants at the top of a singer's range. "Talk" killed a song because of the hard "k" at the end.</li>
+        <li><strong>Singability &gt; literary elegance.</strong> "No word, however fine and lofty, is a good word in a song if it is difficult to sing on that note."</li>
+        <li><strong>Phonetics matter.</strong> There is an "inexorable mathematics in music" &mdash; measures, beats, syllables must align.</li>
+        <li><strong>Lyrics must sound like speech.</strong> "It's got to sound like speech" &mdash; inflection, elongation of syllables, natural phrasing.</li>
+      </ul>
+      <div class="expert-quote">
+        "If a song is not singable, it is no song at all."
+        <span class="attribution">&mdash; Oscar Hammerstein II, "Notes on Lyrics" (1949)</span>
+      </div>
+      <div class="expert-quote">
+        "One of the hardest things about writing lyrics is to make the lyrics sit on the music in such a way that you're not aware there was a writer there, and it sounds natural."
+        <span class="attribution">&mdash; Stephen Sondheim, Academy of Achievement interview</span>
+      </div>
+      <p style="font-size:0.75rem; color:var(--blue); margin-top:8px;">
+        <strong><span class="layer-tag layer-suno">SUNO</span> Translation:</strong> Use ALL CAPS for words that should be belted/emphasized. Suno interprets CAPS as powerful delivery. E.g. <code>"I WILL NOT BE SILENCED!"</code> = climactic belt. <code>"never again"</code> = softer delivery.
+      </p>
+    </div>
+
     <div class="commandment">
       <span class="num">8</span>
       <span class="text"><strong>Fresh images.</strong> No clich&eacute;s. Find new metaphors, new angles of vision.</span>
@@ -564,8 +651,78 @@
   </div>
 </div>
 
-<!-- ============ SECTION 2: Song Forms ============ -->
-<h2>2. Song Form &mdash; Current vs. Proposed</h2>
+<!-- ============ SECTION 2: Dramatic Function ============ -->
+<h2>2. Why Characters Sing &mdash; Dramatic Function <span class="class-a">A</span> <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
+<div class="section highlight">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    The single most agreed-upon rule across all experts: <strong style="color:var(--gold);">characters sing when emotion exceeds the capacity of speech.</strong> A "wrong song" &mdash; one with no dramatic reason to exist at that point &mdash; is a far greater sin than a "bad song."
+  </p>
+
+  <div class="expert-quote">
+    "I had been brought up by Oscar Hammerstein to think of songs as being little scenes or one-act plays which were necessary to telling the story."
+    <span class="attribution">&mdash; Stephen Sondheim, Finishing the Hat (2010)</span>
+  </div>
+  <div class="expert-quote">
+    "The song is the servant of the play. It is wrong to write first what you think is an attractive song and then try to wedge it into a story."
+    <span class="attribution">&mdash; Oscar Hammerstein II, "Notes on Lyrics" (1949)</span>
+  </div>
+
+  <h3 style="font-size:0.95rem;">Songs Crystallize Around Three Experiences</h3>
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:8px 0;">
+    <div style="background:rgba(76,175,80,0.08); border:1px solid rgba(76,175,80,0.2); border-radius:8px; padding:10px; text-align:center;">
+      <strong style="color:var(--green); font-size:0.9rem;">Transition</strong>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;">A moment of change. The world shifts.</p>
+    </div>
+    <div style="background:rgba(66,165,245,0.08); border:1px solid rgba(66,165,245,0.2); border-radius:8px; padding:10px; text-align:center;">
+      <strong style="color:var(--blue); font-size:0.9rem;">Realization</strong>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;">Reaching new understanding. Seeing clearly.</p>
+    </div>
+    <div style="background:rgba(255,167,38,0.08); border:1px solid rgba(255,167,38,0.2); border-radius:8px; padding:10px; text-align:center;">
+      <strong style="color:var(--orange); font-size:0.9rem;">Decision</strong>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;">Character commits. Point of no return.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;">Mapped to Our 6 Song Roles</h3>
+  <div style="margin-top:8px;">
+    <div class="archetype-row">
+      <span class="archetype-label">Opening #</span>
+      <span class="archetype-desc"><strong style="color:var(--green);">Transition</strong> &mdash; audience enters a new world. Song teaches them how to watch this show.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label">I Want Song</span>
+      <span class="archetype-desc"><strong style="color:var(--blue);">Realization</strong> &mdash; protagonist discovers/articulates their deepest desire. "Superhuman passion" that drives the rest of the show.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label">Confrontation</span>
+      <span class="archetype-desc"><strong style="color:var(--orange);">Decision</strong> &mdash; forces collide, character must commit. Point of no return.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label">Act II Opening</span>
+      <span class="archetype-desc"><strong style="color:var(--green);">Transition</strong> &mdash; aftermath. World has changed. Reset before the final climb.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label">11 O'Clock #</span>
+      <span class="archetype-desc"><strong style="color:var(--blue);">Realization</strong> &mdash; protagonist sees truth. Darkest moment or greatest clarity. Everything changes.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label">Finale</span>
+      <span class="archetype-desc"><strong style="color:var(--orange);">Decision</strong> &mdash; earned resolution. Character has been transformed. Reprise reframes what we've heard before.</span>
+    </div>
+  </div>
+
+  <div class="expert-quote">
+    "Every time one can write a self-deluded song, you are way ahead of the game." &mdash; Self-delusion creates dramatic irony: the character says one thing, the audience understands another.
+    <span class="attribution">&mdash; Stephen Sondheim</span>
+  </div>
+
+  <p style="font-size:0.8rem; color:var(--green); margin-top:8px;">
+    <strong>Prompt injection:</strong> Each song brief should include its dramatic function type (Transition/Realization/Decision) so DeepSeek knows the PURPOSE, not just the topic.
+  </p>
+</div>
+
+<!-- ============ SECTION 3: Song Forms ============ -->
+<h2>3. Song Form &mdash; Current vs. Proposed</h2>
 <div class="section">
   <div class="comparison">
     <div class="col-current">
@@ -594,8 +751,8 @@
   </div>
 </div>
 
-<!-- ============ SECTION 3: Enrichment Pipeline ============ -->
-<h2>3. Enrichment Pipeline Upgrade</h2>
+<!-- ============ SECTION 4: Enrichment Pipeline ============ -->
+<h2>4. Enrichment Pipeline Upgrade <span class="layer-tag layer-both">BOTH</span></h2>
 <div class="section highlight">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     The enrichment step (DeepSeek expands 1 sentence &rarr; ShowConcept) gets dramatically richer.
@@ -633,8 +790,8 @@
   </div>
 </div>
 
-<!-- ============ SECTION 4: Genre-Specific Principles ============ -->
-<h2>4. Per-Genre Principle Application</h2>
+<!-- ============ SECTION 5: Genre-Specific Principles ============ -->
+<h2>5. Per-Genre Principle Application <span class="class-c">C</span> <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
 <div class="genre-grid">
 
   <!-- Classic Broadway -->
@@ -809,8 +966,8 @@
   </div>
 </div>
 
-<!-- ============ SECTION 5: Song Role Energy & Tempo ============ -->
-<h2>5. Song Role &rarr; Energy, Tempo &amp; Character</h2>
+<!-- ============ SECTION 6: Song Role Energy & Tempo ============ -->
+<h2>6. Song Role &rarr; Energy, Tempo &amp; Character <span class="class-a">A</span> <span class="layer-tag layer-both">BOTH</span></h2>
 <div class="section highlight">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:16px;">
     <span class="badge badge-new">NEW</span> Each song role has a distinct energy signature and tempo range. These feed directly into Suno style prompts.
@@ -914,8 +1071,57 @@
   </div>
 </div>
 
-<!-- ============ SECTION 6: Dramatic Pacing ============ -->
-<h2>6. Dramatic Pacing (Tension Arc)</h2>
+<!-- ============ SECTION 7: Opening Numbers & I Want Deep Dive ============ -->
+<h2>7. Opening Numbers &amp; "I Want" Songs <span class="class-a">A</span> <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
+<div class="section">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    These two song types have the deepest expert consensus of any in musical theatre. Getting them right anchors the entire show.
+  </p>
+
+  <h3 style="font-size:0.95rem;">Opening Numbers &mdash; Two Schools</h3>
+  <div class="comparison" style="margin-bottom:12px;">
+    <div style="background:rgba(66,165,245,0.08); border:1px solid rgba(66,165,245,0.2); border-radius:10px; padding:12px;">
+      <h3 style="color:var(--blue); font-size:0.9rem;">Jerome Robbins School</h3>
+      <p style="font-size:0.8rem; color:var(--cream-muted);">Set up the world and theme BEFORE the story begins. Establish rules, tone, place. The audience learns how to watch.</p>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;"><em>Examples: "Comedy Tonight" (Forum), "Tradition" (Fiddler), "Belle" (Beauty &amp; the Beast)</em></p>
+    </div>
+    <div style="background:rgba(76,175,80,0.08); border:1px solid rgba(76,175,80,0.2); border-radius:10px; padding:12px;">
+      <h3 style="color:var(--green); font-size:0.9rem;">R&amp;H School</h3>
+      <p style="font-size:0.8rem; color:var(--cream-muted);">Start the story immediately. Drop into action. No preamble.</p>
+      <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:4px;"><em>Examples: "Oh, What a Beautiful Mornin'" (Oklahoma!), "Alexander Hamilton" (Hamilton)</em></p>
+    </div>
+  </div>
+  <div class="expert-quote">
+    "The whole point of an opening number is to not only lay out the ground rules for the audience, but to tell them where they are."
+    <span class="attribution">&mdash; Stephen Sondheim, Sondheim on Music (2003)</span>
+  </div>
+  <p style="font-size:0.8rem; color:var(--cream-muted);">
+    <strong>Cautionary tale:</strong> <em>Forum</em> originally opened with "Love Is in the Air" &mdash; audiences expected a romance and didn't laugh. Robbins suggested "Comedy Tonight," which immediately fixed reception. <strong style="color:var(--gold);">The opening number's primary job is setting the correct contract about what kind of show this is.</strong>
+  </p>
+
+  <h3 style="font-size:0.95rem; margin-top:16px;">"I Want" Songs &mdash; Within 15 Minutes</h3>
+  <div class="expert-quote">
+    "Pretty much any successful musical you can name has an 'I Want' song for its main character within the first fifteen or so minutes of the show. I can think of exceptions, but frankly I feel that the lack of such a moment is a weakness in most of those cases."
+    <span class="attribution">&mdash; Stephen Schwartz, MusicalWriters.com (2018)</span>
+  </div>
+  <div class="expert-quote">
+    "The stage may be full of people singing and dancing, but the I Want song tells the audience, 'Watch this one. This is the important one. This is the one with the superhuman passion.'"
+    <span class="attribution">&mdash; Jack Viertel, The Secret Life of the American Musical</span>
+  </div>
+  <ul>
+    <li><strong>Bob Fosse's 3 song types:</strong> "I Am" (explain character/situation), "I Want" (supply desire/motivation), and "New" (don't fit either). That's it.</li>
+    <li><strong>The want is the show's engine.</strong> Ariel's "Part of Your World" = "the central issue of the entire film. By having her sing it, it makes that point indelibly." (Howard Ashman)</li>
+    <li><strong>I Want songs are the most recordable.</strong> They make sense outside the show because the desire is universal. They give the singer something to ACT.</li>
+  </ul>
+
+  <div class="note-box" style="margin-top:8px;">
+    <h4>Development Example: Wicked</h4>
+    <p style="font-size:0.8rem;">Schwartz wrote two versions of "Making Good" as Elphaba's I Want &mdash; neither had impact. His son suggested delaying until AFTER an inciting incident (accidental magic). He replaced it with "The Wizard and I" &mdash; which better engaged audiences and set up Act I. <strong>Lesson: the I Want needs emotional fuel from a triggering event.</strong></p>
+  </div>
+</div>
+
+<!-- ============ SECTION 8: Dramatic Pacing ============ -->
+<h2>8. Dramatic Pacing (Tension Arc) <span class="class-a">A</span> <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
 <div class="section">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     <span class="badge badge-new">NEW</span> Currently missing from enrichment entirely. The MTBible's pacing model:
@@ -947,13 +1153,112 @@ Tension
     <li><strong>Song 5 (11 O'Clock):</strong> <strong>PEAK CLIMAX (1.00).</strong> The highest point in the entire show. Maximum emotional intensity.</li>
     <li><strong>Song 6 (Finale):</strong> Laid back (0.60). Resolution. Earned catharsis. Warm landing, not another peak.</li>
   </ul>
+
+  <h3 style="font-size:0.95rem; margin-top:16px;">Song Placement Theory (L2)</h3>
+  <ul>
+    <li><strong>Berlin's "Posts":</strong> Irving Berlin evaluated projects by looking for the "posts" &mdash; points in the story that DEMAND a song. Songs belong at emotional highpoints where dialogue alone is insufficient.</li>
+    <li><strong>Song density should match dramatic rhythm.</strong> In Sondheim's <em>Forum</em>, songs bunch in the first half (exposition), then become scarcer as action accelerates &mdash; no songs at all in the last 20 minutes before the Finale.</li>
+    <li><strong>Schwartz's beat boards:</strong> A wall of notecards, each bearing a story beat. Song moments marked in different colors. Visual flow reveals whether songs are well-organized or clumped.</li>
+    <li><strong>"Sing it or say it; never both."</strong> (John Kenrick) &mdash; A song must lift the scene to greater heights. If it merely repeats what dialogue already established, cut it.</li>
+  </ul>
 </div>
 
-<!-- ============ SECTION 7: Comedy Sub-Categories ============ -->
-<h2>7. Comedy Song Games <span class="badge badge-new">NEW</span></h2>
+<!-- ============ SECTION 9: Subtext & Transformation ============ -->
+<h2>9. Subtext &amp; Transformation <span class="class-a">A</span> <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
+<div class="section highlight">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    <strong style="color:var(--gold);">A theatre song must change something.</strong> The situation, the character's understanding, or the audience's understanding should be different at the end of the song than at the start. The best songs operate on multiple levels &mdash; the character expresses one thing; the audience understands something deeper.
+  </p>
+
+  <h3 style="font-size:0.95rem;">The Transformation Rule</h3>
+  <div class="expert-quote">
+    "A song is really a single idea&hellip; the audience should understand something they didn't beforehand but something that moment needed to be crystallized for those three minutes."
+    <span class="attribution">&mdash; Jason Robert Brown, masterclass</span>
+  </div>
+  <div class="expert-quote">
+    "Pop songwriters can get sandbagged by musical theater specifically because of this issue &mdash; the pop writer aims deliberately for the repetition, the 'hook,' and is not used to accommodating a character's emotional transformation."
+    <span class="attribution">&mdash; Jason Robert Brown, jasonrobertbrown.com (2016)</span>
+  </div>
+  <ul style="margin-top:8px;">
+    <li><strong>Theatre songs require emotional transformation</strong> within the song itself. Pop songs can stay in one emotional state. This is THE key difference.</li>
+    <li><strong>Each verse raises the stakes.</strong> The chorus means something different each time it recurs because the context has shifted.</li>
+    <li><strong>End in a different place.</strong> Commandment #5 applied at the macro level &mdash; the character at the end of the song is NOT the same character who started it.</li>
+  </ul>
+
+  <h3 style="font-size:0.95rem;">Subtext Techniques</h3>
+  <ul>
+    <li><strong>Self-delusion songs</strong> &mdash; Character argues for something the audience knows is wrong. Gap between what's said and what's meant creates dramatic irony. ("Being Alive" &mdash; surface = complaints about relationships; subtext = desperate plea for connection.)</li>
+    <li><strong>Bold strokes.</strong> Musical theatre writes in "very, very bold colors and very bold strokes" (Arthur Laurents). Subtext doesn't mean subtle &mdash; it means LAYERED.</li>
+    <li><strong>Musicalize the mundane.</strong> Ashman's genius: Ariel's catalog of "gadgets and gizmos" is literally an inventory but subtextually reveals obsessive longing, isolation, and yearning to belong.</li>
+    <li><strong>Complaint &rarr; Prayer progression.</strong> Start with what's wrong, end with what's desperately wanted. The audience hears the want underneath the complaint from the start.</li>
+  </ul>
+
+  <div class="expert-quote">
+    "The more you say, the more conscious the audience is of the author. Keep it simple; keep it short; save it for when the music straightjackets the poem and prevents it from breathing on its own, whereas it liberates a lyric."
+    <span class="attribution">&mdash; Stephen Sondheim, Finishing the Hat (2010)</span>
+  </div>
+
+  <p style="font-size:0.8rem; color:var(--green); margin-top:8px;">
+    <strong>Prompt injection:</strong> Tell DeepSeek: "The character should express [surface emotion] while the audience understands [deeper truth]. The song should transform from [starting state] to [ending state]."
+  </p>
+</div>
+
+<!-- ============ SECTION 10: Reprises ============ -->
+<h2>10. Reprises &mdash; Reframe, Don't Repeat <span class="class-a">A</span> <span class="layer-tag layer-both">BOTH</span></h2>
 <div class="section">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
-    When a song calls for comedy (any genre), the enrichment should assign a specific game:
+    A reprise must reveal character development or changed circumstances. It is <strong style="color:var(--red);">never mere repetition</strong>. Every expert agrees.
+  </p>
+
+  <div class="expert-quote">
+    "Dropping 'Boys and Girls Like You and Me' from Oklahoma! &mdash; they played it in the overture, sang it in the first act, did it in the entr'acte, and reprised in the second act. They dropped it because it didn't serve the function it could. That's ruthlessness, and I learned that from Oscar."
+    <span class="attribution">&mdash; Stephen Sondheim, Academy of Achievement interview</span>
+  </div>
+
+  <h3 style="font-size:0.95rem;">Canonical Reprise Examples</h3>
+  <div style="margin-top:8px;">
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:140px;">"Let Me Entertain You"</span>
+      <span class="archetype-desc"><em>Gypsy</em> &mdash; Innocent child's song becomes seductive adult number. Same words, completely different meaning.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:140px;">"Tonight"</span>
+      <span class="archetype-desc"><em>West Side Story</em> &mdash; Romantic hope becomes violent dread. Same melody carries opposite emotions.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:140px;">"If I Loved You"</span>
+      <span class="archetype-desc"><em>Carousel</em> &mdash; Hypothetical love becomes recognition of loss. The conditional is now unbearably real.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:140px;">"I'll Cover You"</span>
+      <span class="archetype-desc"><em>Rent</em> &mdash; Joyful love song becomes funeral elegy. Same words reframed by death.</span>
+    </div>
+    <div class="archetype-row">
+      <span class="archetype-label" style="min-width:140px;">"Part of Your World"</span>
+      <span class="archetype-desc"><em>Little Mermaid</em> &mdash; Ashman rewrote reprise from sad lament into determination anthem: "I don't know when, I don't know how, but I know something's starting right now."</span>
+    </div>
+  </div>
+
+  <div class="note-box idea" style="margin-top:12px;">
+    <h4 style="color:var(--gold);">Feature Aspiration: Finale Reprise System</h4>
+    <p>Currently, the Finale lyrics are generated independently &mdash; no awareness of earlier songs. The aspiration:</p>
+    <ul style="margin-top:6px;">
+      <li><strong>Feed earlier lyrics to the Finale prompt.</strong> Give DeepSeek the Opening Number hook + I Want chorus + Confrontation climax line.</li>
+      <li><strong>Instruct:</strong> "Weave callbacks to these earlier moments into the Finale. Same phrases, transformed meaning."</li>
+      <li><strong>Suno translation:</strong> Use <span class="suno-tag suno-structure">[Callback]</span> tag (v5) to reference earlier melodic material if possible.</li>
+      <li><strong>Result:</strong> Finale that FEELS like a real finale &mdash; reprising and reframing the show's emotional journey.</li>
+    </ul>
+    <p style="font-size:0.75rem; color:var(--cream-muted); margin-top:6px;">
+      <strong>Implementation note:</strong> This means generating tracks 1-5 before Finale, and passing key lyrical hooks into the Finale's lyrics prompt. Track generation order may need to change.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION 11: Comedy Sub-Categories ============ -->
+<h2>11. Comedy Song Games <span class="class-b">B</span> <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
+<div class="section">
+  <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
+    When a song calls for comedy (any genre), the enrichment should assign a specific game. Comedy songs obey ALL the same craft rules as dramatic songs, <strong style="color:var(--gold);">plus surprise</strong> &mdash; the laughs come from specificity, timing, and misdirection, not random gags.
   </p>
 
   <div class="archetype-row">
@@ -989,8 +1294,8 @@ Tension
   </div>
 </div>
 
-<!-- ============ SECTION 8: Song & Lyric Examples ============ -->
-<h2>8. Song &amp; Lyric Examples <span class="badge badge-new">NEW</span></h2>
+<!-- ============ SECTION 12: Song & Lyric Examples ============ -->
+<h2>12. Song &amp; Lyric Examples <span class="layer-tag layer-deepseek">DEEPSEEK</span></h2>
 <div class="section">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     Concrete examples of great MT lyrics organized by principle &mdash; these serve as few-shot examples for the LLM.
@@ -1063,6 +1368,19 @@ Tension
   </details>
 
   <details>
+    <summary>Reprise &mdash; same words, different world (L2)</summary>
+    <div style="padding:8px 0;">
+      <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-bottom:4px;">Part of Your World &rarr; Reprise (The Little Mermaid)</p>
+      <p style="font-size:0.8rem; color:var(--cream-muted); margin-bottom:8px;">Ashman initially wrote the reprise as a sad lament: "I'll never be part of that world." Directors argued it should show determination. He rewrote: <em>"I don't know when, I don't know how, but I know something's starting right now."</em> Same melody, transformed from longing to resolve.</p>
+
+      <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-bottom:4px;">Being Alive (Company, Sondheim)</p>
+      <p style="font-size:0.8rem; color:var(--cream-muted); margin-bottom:8px;">Was the THIRD attempt at Robert's climactic number. Surface = list of complaints about relationships. Subtext = desperate plea for connection. Progresses from <strong>complaint to prayer</strong> &mdash; same musical structure carries escalating emotional honesty.</p>
+
+      <p style="font-size:0.75rem; color:var(--cream-muted);"><strong>Principle:</strong> A reprise earns its power by showing how the SAME musical idea now carries DIFFERENT stakes. The audience remembers where they first heard it &mdash; the gap between then and now IS the drama.</p>
+    </div>
+  </details>
+
+  <details>
     <summary>Scene Construction &mdash; dialogue bleeding into song</summary>
     <div style="padding:8px 0;">
       <p style="font-size:0.85rem; color:var(--gold-light); font-weight:bold; margin-bottom:4px;">If I Loved You (Carousel)</p>
@@ -1074,12 +1392,31 @@ Tension
   </details>
 </div>
 
-<!-- ============ SECTION 9: Prompt Economy & Sonic Cohesion ============ -->
-<h2>9. Prompt Economy &amp; Sonic Cohesion <span class="badge badge-critical">CRITICAL</span></h2>
+<!-- ============ SECTION 13: Prompt Economy & Sonic Cohesion ============ -->
+<h2>13. Prompt Economy &amp; Sonic Cohesion <span class="badge badge-critical">CRITICAL</span> <span class="layer-tag layer-both">BOTH</span></h2>
 <div class="section highlight">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:16px;">
-    The MTBible is a <strong>knowledge base for us</strong>, not a dump into every prompt. More instructions = worse output from both DeepSeek and Suno. Quality over quantity.
+    The MTBible is a <strong>knowledge base for us</strong>, not a dump into every prompt. More instructions = worse output from both DeepSeek and Suno.
   </p>
+
+  <div style="padding:10px 14px; background:rgba(201,168,76,0.1); border-radius:8px; margin-bottom:16px; border:1px solid rgba(201,168,76,0.2);">
+    <p style="font-size:0.9rem; color:var(--gold); font-weight:bold; margin-bottom:6px;">Sondheim's Three Laws (the organizing axioms)</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+      <div style="text-align:center; padding:8px;">
+        <strong style="color:var(--gold-light); font-size:0.85rem;">Content Dictates Form</strong>
+        <p style="font-size:0.7rem; color:var(--cream-muted); margin-top:4px;">Dramatic need determines structure, not convention</p>
+      </div>
+      <div style="text-align:center; padding:8px;">
+        <strong style="color:var(--gold-light); font-size:0.85rem;">Less Is More</strong>
+        <p style="font-size:0.7rem; color:var(--cream-muted); margin-top:4px;">Underwrite. Leave room for music and audience</p>
+      </div>
+      <div style="text-align:center; padding:8px;">
+        <strong style="color:var(--gold-light); font-size:0.85rem;">God Is in the Details</strong>
+        <p style="font-size:0.7rem; color:var(--cream-muted); margin-top:4px;">Specificity over generality, always</p>
+      </div>
+    </div>
+    <p style="font-size:0.7rem; color:var(--cream-muted); text-align:center; margin-top:4px;">All in the service of <strong style="color:var(--gold);">Clarity</strong> &mdash; without which nothing else matters.</p>
+  </div>
 
   <h3 style="font-size:0.95rem; color:var(--red);">The Overload Problem</h3>
   <div class="comparison" style="margin-bottom:16px;">
@@ -1241,8 +1578,8 @@ Tension
   </div>
 </div>
 
-<!-- ============ SECTION 10: Suno Translation Layer ============ -->
-<h2>10. Suno Translation Layer <span class="badge badge-new">NEW</span></h2>
+<!-- ============ SECTION 14: Suno Translation Layer ============ -->
+<h2>14. Suno Translation Layer <span class="layer-tag layer-suno">SUNO</span></h2>
 <div class="section highlight">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     Suno has <strong>two input surfaces</strong>. Our translation layer must output BOTH.
@@ -1353,6 +1690,15 @@ Tension
       <br><br>
       <span class="suno-tag suno-bad">[Intro]</span>
       <span style="font-size:0.75rem; color:var(--red);"> Unreliable &mdash; use descriptive variant instead</span>
+      <br><br>
+      <strong style="font-size:0.75rem; color:var(--green);">v5 Advanced Tags:</strong><br>
+      <span class="suno-tag suno-structure">[Callback: Chorus melody]</span>
+      <span class="suno-tag suno-structure">[Modulate up a key]</span>
+      <span class="suno-tag suno-structure">[Modulate down a key]</span>
+      <span class="suno-tag suno-structure">[Emotional climax]</span>
+      <span class="suno-tag suno-structure">[Ascending progression]</span>
+      <br>
+      <span style="font-size:0.7rem; color:var(--cream-muted);">v5 respects these more consistently. <code>[Modulate up a key]</code> before final chorus = classic Broadway climax move.</span>
     </div>
   </details>
 
@@ -1373,12 +1719,16 @@ Tension
   <h3 style="font-size:0.95rem; margin-top:16px;">Critical Rules</h3>
   <div style="margin-top:8px;">
     <ul>
-      <li><strong style="color:var(--red);">NO negative prompts.</strong> <span class="suno-tag suno-bad">no drums</span> makes Suno ADD drums. Specify what you WANT: <span class="suno-tag">solo piano</span>, <span class="suno-tag">acapella</span></li>
+      <li><strong style="color:var(--red);">v4: NO negative prompts.</strong> <span class="suno-tag suno-bad">no drums</span> makes Suno ADD drums. Specify what you WANT: <span class="suno-tag">solo piano</span>, <span class="suno-tag">acapella</span>. <strong>v5: Exclude Styles field works</strong> &mdash; up to 4-6 exclusions.</li>
       <li><strong>AABA form must be manually structured.</strong> Suno doesn't understand "AABA" &mdash; map it to: <span class="suno-tag suno-structure">[Verse 1]</span> <span class="suno-tag suno-structure">[Verse 2]</span> <span class="suno-tag suno-structure">[Bridge]</span> <span class="suno-tag suno-structure">[Verse 3]</span></li>
-      <li><strong>BPM can be specified:</strong> <span class="suno-tag">[Tempo: 140 BPM]</span> &mdash; useful for driving I Want songs</li>
+      <li><strong>BPM:</strong> Numbers are approximate guidance. <strong>Italian terms more reliable:</strong> <span class="suno-tag">Adagio</span> (60-76), <span class="suno-tag">Andante</span> (76-108), <span class="suno-tag">Moderato</span> (108-120), <span class="suno-tag">Allegro</span> (120-156). v5 Studio has manual BPM lock.</li>
       <li><strong>Era tags work:</strong> <span class="suno-tag">1940s Big Band</span> <span class="suno-tag">modern musical theater</span></li>
       <li><strong>Lyrics must match intent.</strong> A <span class="suno-tag suno-structure">[Chorus]</span> tag only works if lyrics actually read like a chorus (short, hooky, repeatable)</li>
-      <li><strong>Limit instrument tags</strong> to 2-3 per section for best results</li>
+      <li><strong>Max 3-4 instruments</strong> per generation. More causes confusion.</li>
+      <li><strong>First tag = highest weight.</strong> Lead with primary genre. 4-8 tags total sweet spot.</li>
+      <li><strong>ALL CAPS = powerful delivery.</strong> <code>I WILL NOT BE SILENCED!</code> triggers belting. <code>never again</code> = softer. Use for climactic moments.</li>
+      <li><strong>Syllable budget:</strong> 6-8 syl/line for ballads, 8-10 mid-tempo, 10-14 rap/uptempo. Long lines break at wrong points.</li>
+      <li><strong>Per-section performance cues:</strong> <span class="suno-tag suno-structure">[Verse 1 | Soft, Piano]</span> <span class="suno-tag suno-structure">[Chorus | Belting, Full Orchestra]</span> &mdash; max 1-3 cues per section.</li>
     </ul>
   </div>
 
@@ -1451,8 +1801,8 @@ Tension
   </div>
 </div>
 
-<!-- ============ SECTION 11: Implementation Checklist ============ -->
-<h2>11. Implementation Checklist</h2>
+<!-- ============ SECTION 15: Implementation Checklist ============ -->
+<h2>15. Implementation Checklist</h2>
 <div class="section">
   <p style="font-size:0.85rem; color:var(--cream-muted); margin-bottom:12px;">
     Files to modify &amp; what changes in each:
@@ -1522,7 +1872,9 @@ Tension
 </div>
 
 <div class="footer">
-  BROADWAYIFY &mdash; Libretto MTBible Enrichment Map<br>
+  BROADWAYIFY &mdash; Libretto MTBible Enrichment Map v4<br>
+  Sources: BMI Lehman Engel Workshop (L1) + Sondheim/Hammerstein/Ashman/Schwartz/Menken/JR Brown consensus (L2) + Structural analysis (L3)<br>
+  Suno tags reference: <code>docs/SUNO_TAGS_REFERENCE.md</code> (674 lines, 17 sections)<br>
   Built for internal planning. Not for public distribution.<br>
   Last updated: Feb 2026
 </div>
