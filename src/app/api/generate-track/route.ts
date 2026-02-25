@@ -3,7 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 import {
   doEnrichment,
   createPlaceholders,
-  generateLyricsOnly,
+  generateLyricsAndSubmitAudio,
   generatePlaybillAndAlbum,
 } from '@/lib/generate-show';
 import { generatePoster } from '@/lib/flux';
@@ -66,9 +66,9 @@ export async function POST(request: NextRequest) {
     // Step 2: Create placeholders first (lyrics generation needs track rows)
     await createPlaceholders(projectId, musicalType);
 
-    // Step 3: Fire poster + playbill + track 1 lyrics ALL in parallel
-    // FLUX poster ~5s, playbill ~10s, lyrics ~15s — all independent
-    console.log('[api/generate-track] Firing parallel: poster + playbill + track 1 lyrics');
+    // Step 3: Fire poster + playbill + track 1 lyrics+audio ALL in parallel
+    // FLUX poster ~5s, playbill ~10s, lyrics ~15s + KIE submit ~1s
+    console.log('[api/generate-track] Firing parallel: poster + playbill + track 1 lyrics+audio');
 
     const [posterResult, playbillResult, ] = await Promise.allSettled([
       // FLUX poster (~5s) — non-fatal if it fails
@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
       }),
       // Playbill + album (~10s)
       generatePlaybillAndAlbum(projectId, concept, musicalType),
-      // Track 1 lyrics (~15s)
-      generateLyricsOnly(projectId, 1, concept, musicalType),
+      // Track 1 lyrics + immediate KIE submit (~15s + ~1s)
+      generateLyricsAndSubmitAudio(projectId, 1, concept, musicalType),
     ]);
 
     // Extract poster URL (may be null if FLUX failed — non-fatal)
@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
         .eq('project_id', projectId);
     }
 
-    // Audio generation is triggered by the frontend (album page) when it
-    // detects lyrics_complete. This gives it a fresh 5-min serverless timeout.
+    // Track 1 audio already submitted to KIE above (webhook handles completion).
+    // Tracks 2-6 audio triggered by frontend (album page) on unlock.
 
     return NextResponse.json({ success: true, share_slug: shareSlug });
   } catch (err) {

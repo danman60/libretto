@@ -86,13 +86,16 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     };
   }, [data?.dominantEmotion]);
 
-  // Auto-trigger track 1 audio when lyrics are ready
+  // Auto-trigger track 1 audio when lyrics are ready (fallback — orchestrator normally submits immediately)
   useEffect(() => {
     if (!data || audioTriggered) return;
     const track1 = data.tracks.find((t: Track) => t.track_number === 1);
-    if (track1?.status === 'lyrics_complete') {
+    if (track1?.status === 'generating_audio' || track1?.status === 'complete') {
+      // Already submitted by orchestrator — no action needed
       setAudioTriggered(true);
-      console.log('[album] Auto-triggering track 1 audio generation');
+    } else if (track1?.status === 'lyrics_complete') {
+      setAudioTriggered(true);
+      console.log('[album] Auto-triggering track 1 audio generation (fallback)');
       fetch('/api/generate-song', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

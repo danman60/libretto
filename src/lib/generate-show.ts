@@ -4,9 +4,9 @@
  * Pipeline (orchestrator in /api/generate-track):
  * 1. Enrich idea via DeepSeek -> ShowConcept -> save backstory
  * 2. Create 6 track placeholders
- * 3. Generate lyrics for ALL 6 in parallel via DeepSeek (~15s total)
- * 4. Set tracks 1-6 to lyrics_complete
- * 5. Fire /api/generate-song for track 1 only (fire-and-forget)
+ * 3. Generate lyrics for track 1 + immediately submit to KIE (webhook mode)
+ * 4. Track 1 goes straight to generating_audio — no frontend round-trip
+ * 5. Tracks 2-6 audio triggered by frontend on unlock
  * 6. Fire generatePlaybillAndAlbum via after() (~10s)
  * 7. Return { success: true }
  *
@@ -15,7 +15,7 @@
 
 import { getServiceSupabase } from './supabase';
 import { callDeepSeek, callDeepSeekJSON } from './deepseek';
-import { generateTrackViaKie } from './suno-kie';
+import { generateTrackViaKie, submitKieWithWebhook } from './suno-kie';
 import { logGeneration } from './log-generation';
 import { getMusicalTypeConfig, getSongRoles } from './musical-types';
 import {
@@ -156,6 +156,84 @@ export async function generateLyricsOnly(
     console.log(`[generate-show] Song ${trackNumber}: Lyrics complete (${lyrics.length} chars)`);
   } catch (err) {
     console.error(`[generate-show] Song ${trackNumber}: Lyrics generation failed:`, err);
+    await logGeneration({
+      projectId, trackNumber, event: 'failed',
+      errorMessage: err instanceof Error ? err.message : String(err),
+    });
+    await db.from('tracks').update({
+      status: 'failed',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+  }
+}
+
+/**
+ * Generate lyrics for track 1 AND immediately submit to KIE (webhook mode).
+ * Saves ~6-10s vs waiting for the album page to detect lyrics_complete.
+ */
+export async function generateLyricsAndSubmitAudio(
+  projectId: string,
+  trackNumber: number,
+  concept: ShowConcept,
+  musicalType: MusicalType
+): Promise<void> {
+  const db = getServiceSupabase();
+  const config = getMusicalTypeConfig(musicalType);
+  const songRoles = getSongRoles(musicalType);
+  const songConfig = songRoles[trackNumber - 1];
+
+  try {
+    // --- Generate lyrics (same as generateLyricsOnly) ---
+    await db.from('tracks').update({
+      status: 'generating_lyrics',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+    console.log(`[generate-show] Song ${trackNumber} (${songConfig.role}): Generating lyrics...`);
+    const lyricsStart = Date.now();
+    await logGeneration({ projectId, trackNumber, event: 'lyrics_started', model: 'deepseek-chat' });
+
+    const lyrics = await callDeepSeek(
+      buildSongLyricsPrompt(songConfig, trackNumber, concept, config),
+      { temperature: 0.85, maxTokens: 1500 }
+    );
+    const stylePrompt = buildSongStylePrompt(songConfig, config);
+
+    await logGeneration({
+      projectId, trackNumber, event: 'lyrics_done',
+      durationMs: Date.now() - lyricsStart, model: 'deepseek-chat',
+    });
+
+    // Save lyrics with lyrics_complete momentarily
+    await db.from('tracks').update({
+      lyrics,
+      style_prompt: stylePrompt,
+      status: 'lyrics_complete',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+    console.log(`[generate-show] Song ${trackNumber}: Lyrics complete (${lyrics.length} chars) — submitting to KIE immediately`);
+
+    // --- Submit to KIE right away (no waiting for album page) ---
+    await logGeneration({ projectId, trackNumber, event: 'audio_started', stylePrompt, model: 'kie-suno' });
+
+    const taskId = await submitKieWithWebhook(
+      lyrics,
+      stylePrompt,
+      songConfig.label,
+      projectId,
+      trackNumber
+    );
+
+    await db.from('tracks').update({
+      suno_task_id: taskId,
+      status: 'generating_audio',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+    console.log(`[generate-show] Song ${trackNumber}: KIE submitted (taskId=${taskId}). Webhook will complete.`);
+  } catch (err) {
+    console.error(`[generate-show] Song ${trackNumber}: Lyrics+submit failed:`, err);
     await logGeneration({
       projectId, trackNumber, event: 'failed',
       errorMessage: err instanceof Error ? err.message : String(err),
