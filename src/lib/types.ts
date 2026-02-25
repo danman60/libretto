@@ -21,9 +21,15 @@ export type SongRole =
 export type ProjectStatus =
   | 'intake'
   | 'enriching'
+  | 'choosing'
   | 'generating_music'
   | 'complete'
   | 'failed';
+
+export interface PosterOption {
+  url: string;
+  label: string;
+}
 
 export interface Project {
   id: string;
@@ -33,6 +39,7 @@ export interface Project {
   musical_type: MusicalType | null;
   idea: string | null;
   backstory: string | null;
+  poster_options: PosterOption[] | null;
   // Legacy fields (kept for backward compat)
   allow_real_names: boolean;
   music_profile: MusicProfile | null;

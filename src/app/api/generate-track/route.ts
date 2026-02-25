@@ -4,9 +4,8 @@ import {
   doEnrichment,
   createPlaceholders,
   generateLyricsAndSubmitAudio,
-  generatePlaybillAndAlbum,
 } from '@/lib/generate-show';
-import { generatePoster } from '@/lib/flux';
+import { generatePosterVariants } from '@/lib/flux';
 import { getMusicalTypeConfig } from '@/lib/musical-types';
 import type { MusicalType, ShowConcept } from '@/lib/types';
 
@@ -14,9 +13,10 @@ export const maxDuration = 300; // 5 minutes
 
 /**
  * POST /api/generate-track
- * Orchestrator: enrichment -> (poster + playbill + placeholders + lyrics in parallel) -> return slug.
- * FLUX poster (~5s) runs alongside playbill (~10s) and lyrics (~15s).
- * Audio generation triggered separately by frontend.
+ * Orchestrator: enrichment -> placeholders -> set choosing -> parallel(track 1 + poster variants) -> return.
+ * Track 1 lyrics+audio fires immediately after enrichment.
+ * Poster variants arrive ~5-10s later for the choice gate.
+ * Playbill + album creation deferred to /api/finalize-show.
  */
 export async function POST(request: NextRequest) {
   console.log('[api/generate-track] POST - Triggering show generation');
@@ -63,47 +63,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Enrichment failed' }, { status: 500 });
     }
 
-    // Step 2: Create placeholders first (lyrics generation needs track rows)
+    // Step 2: Create track placeholders
     await createPlaceholders(projectId, musicalType);
 
-    // Step 3: Fire poster + playbill + track 1 lyrics+audio ALL in parallel
-    // FLUX poster ~5s, playbill ~10s, lyrics ~15s + KIE submit ~1s
-    console.log('[api/generate-track] Firing parallel: poster + playbill + track 1 lyrics+audio');
+    // Step 3: Set status to 'choosing' — frontend detects this and shows title picker
+    await db.from('projects').update({
+      status: 'choosing',
+      updated_at: new Date().toISOString(),
+    }).eq('id', projectId);
 
-    const [posterResult, playbillResult, ] = await Promise.allSettled([
-      // FLUX poster (~5s) — non-fatal if it fails
-      generatePoster(concept, config).catch(err => {
-        console.error('[api/generate-track] Poster generation failed (non-fatal):', err);
-        return null;
-      }),
-      // Playbill + album (~10s)
-      generatePlaybillAndAlbum(projectId, concept, musicalType),
-      // Track 1 lyrics + immediate KIE submit (~15s + ~1s)
+    console.log('[api/generate-track] Status set to choosing. Firing parallel: track 1 + poster variants');
+
+    // Step 4: Fire track 1 lyrics+audio AND 3 poster variants in parallel
+    const [, posterResult] = await Promise.allSettled([
+      // Track 1 lyrics + immediate KIE submit
       generateLyricsAndSubmitAudio(projectId, 1, concept, musicalType),
+      // 3 FLUX poster variants (~5-10s each, parallel)
+      generatePosterVariants(concept, config).catch(err => {
+        console.error('[api/generate-track] Poster variants failed (non-fatal):', err);
+        return [];
+      }),
     ]);
 
-    // Extract poster URL (may be null if FLUX failed — non-fatal)
-    const posterUrl = posterResult.status === 'fulfilled' ? posterResult.value : null;
-
-    // Extract share slug from playbill result
-    if (playbillResult.status === 'rejected') {
-      console.error('[api/generate-track] Playbill/album failed:', playbillResult.reason);
-      return NextResponse.json({ error: 'Album creation failed' }, { status: 500 });
-    }
-    const shareSlug = playbillResult.value;
-
-    // Backfill poster URL onto album if FLUX succeeded
-    if (posterUrl) {
-      console.log('[api/generate-track] Backfilling FLUX poster onto album');
-      await db.from('albums')
-        .update({ cover_image_url: posterUrl })
-        .eq('project_id', projectId);
+    // Step 5: Save poster URLs to projects.poster_options
+    const posterOptions = posterResult.status === 'fulfilled' ? posterResult.value : [];
+    if (posterOptions.length > 0) {
+      await db.from('projects').update({
+        poster_options: posterOptions,
+        updated_at: new Date().toISOString(),
+      }).eq('id', projectId);
+      console.log(`[api/generate-track] Saved ${posterOptions.length} poster options`);
     }
 
-    // Track 1 audio already submitted to KIE above (webhook handles completion).
-    // Tracks 2-6 audio triggered by frontend (album page) on unlock.
-
-    return NextResponse.json({ success: true, share_slug: shareSlug });
+    return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[api/generate-track] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

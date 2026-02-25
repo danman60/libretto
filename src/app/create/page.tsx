@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MusicalTypeSelector } from '@/components/MusicalTypeSelector';
 import { Loader2 } from 'lucide-react';
 import { ScribingAnimation } from '@/components/ScribingAnimation';
 import { startOverture, stopOverture } from '@/lib/overture-synth';
-import type { MusicalType } from '@/lib/types';
+import type { MusicalType, ShowConcept, PosterOption } from '@/lib/types';
 
 const STAGE_MESSAGES: Record<string, string[]> = {
   intake: ['Raising the curtain...'],
@@ -17,8 +18,12 @@ const STAGE_MESSAGES: Record<string, string[]> = {
     'Writing the backstory...',
     'Building the dramatic arc...',
   ],
+  choosing: [
+    'Your show is taking shape...',
+    'The orchestra is warming up...',
+  ],
   generating_music: [
-    'Painting the poster...',
+    'Printing the playbill...',
     'The orchestra is tuning...',
     'Rehearsing Act I...',
     'Setting the stage lights...',
@@ -37,6 +42,7 @@ const STAGE_MESSAGES: Record<string, string[]> = {
 const STAGE_LABELS: Record<string, string> = {
   intake: 'Preparing',
   enriching: 'Developing your concept',
+  choosing: 'Make it yours',
   generating_music: 'Creating the playbill',
   generating_lyrics: 'Writing lyrics',
   generating_audio: 'Composing music',
@@ -48,6 +54,7 @@ function getStageProgress(status: string, hasAlbum: boolean, trackCount: number)
   switch (status) {
     case 'intake': return 5;
     case 'enriching': return 20;
+    case 'choosing': return 35;
     case 'generating_music': return 45 + Math.min(trackCount * 5, 30);
     default: return 10;
   }
@@ -66,6 +73,15 @@ export default function CreatePage() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const msgIndexRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
+
+  // Choice gate state
+  const [showConcept, setShowConcept] = useState<ShowConcept | null>(null);
+  const [posterOptions, setPosterOptions] = useState<PosterOption[] | null>(null);
+  const [chosenTitle, setChosenTitle] = useState<number>(0);
+  const [chosenPoster, setChosenPoster] = useState<number>(0);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const showConceptRef = useRef<ShowConcept | null>(null);
+  const posterOptionsRef = useRef<PosterOption[] | null>(null);
 
   // Poll for status once we have a projectId
   useEffect(() => {
@@ -96,10 +112,25 @@ export default function CreatePage() {
           return;
         }
 
+        // Choice gate: parse concept from backstory when choosing
+        if (status === 'choosing' || (showConceptRef.current && !hasAlbum)) {
+          if (!showConceptRef.current && data.project?.backstory) {
+            try {
+              const concept = JSON.parse(data.project.backstory) as ShowConcept;
+              showConceptRef.current = concept;
+              setShowConcept(concept);
+            } catch { /* backstory not JSON yet */ }
+          }
+          // Check for poster options
+          if (!posterOptionsRef.current && data.project?.poster_options?.length > 0) {
+            posterOptionsRef.current = data.project.poster_options;
+            setPosterOptions(data.project.poster_options);
+          }
+        }
+
+        // Redirect when album is ready (after finalize)
         if (hasAlbum) {
-          // Signal to album page that overture is playing
           sessionStorage.setItem('libretto_overture_active', 'true');
-          // Small delay so user sees 90% before redirect
           setTimeout(() => {
             if (!cancelled) router.push(`/album/${data.album.share_slug}`);
           }, 800);
@@ -114,14 +145,17 @@ export default function CreatePage() {
       }
     };
 
-    // Start polling after a short delay (give the API time to create the project)
     const timeout = setTimeout(poll, 1500);
     return () => { cancelled = true; clearTimeout(timeout); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, router]);
 
   // Rotate stage messages
   useEffect(() => {
     if (!projectId) return;
+    // Don't rotate messages during choice gate
+    if (showConcept && projectStatus === 'choosing') return;
+
     const messages = STAGE_MESSAGES[projectStatus] || STAGE_MESSAGES.enriching;
 
     const interval = setInterval(() => {
@@ -129,12 +163,11 @@ export default function CreatePage() {
       setStageMessage(messages![msgIndexRef.current]);
     }, 3500);
 
-    // Set initial message for this stage
     msgIndexRef.current = 0;
     setStageMessage(messages![0]);
 
     return () => clearInterval(interval);
-  }, [projectId, projectStatus]);
+  }, [projectId, projectStatus, showConcept]);
 
   // Elapsed time counter
   useEffect(() => {
@@ -153,13 +186,9 @@ export default function CreatePage() {
 
     setIsSubmitting(true);
     setError(null);
-
-    // Start the orchestra warmup audio immediately on user action
-    // (Web Audio API requires user gesture to start)
     startOverture();
 
     try {
-      // Step 1: Create session
       const sessionRes = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -169,23 +198,15 @@ export default function CreatePage() {
       const newProjectId = sessionData.projectId;
       sessionStorage.setItem('libretto_project_id', newProjectId);
 
-      // Step 2: Fire generation (don't await — let polling handle it)
-      // When orchestrator returns (lyrics done), immediately fire audio
+      // Fire generation (don't await — polling handles status)
       fetch('/api/generate-track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: newProjectId }),
-      }).then(() => {
-        fetch('/api/generate-song', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: newProjectId, trackNumber: 1 }),
-        }).catch(() => {});
       }).catch(err => {
         console.error('Generation request failed:', err);
       });
 
-      // Step 3: Enter loading state — polling takes over
       setProjectId(newProjectId);
     } catch (err) {
       console.error('Creation failed:', err);
@@ -195,7 +216,174 @@ export default function CreatePage() {
     }
   }, [musicalType, idea]);
 
-  // ===== LOADING STATE =====
+  const handleFinalize = useCallback(async () => {
+    if (!projectId || isFinalizing) return;
+    setIsFinalizing(true);
+
+    try {
+      const res = await fetch('/api/finalize-show', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          titleIndex: chosenTitle,
+          posterIndex: chosenPoster,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error('Finalize returned', res.status);
+        setIsFinalizing(false);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.share_slug) {
+        sessionStorage.setItem('libretto_overture_active', 'true');
+        router.push(`/album/${data.share_slug}`);
+      }
+      // If no slug, polling will eventually redirect
+    } catch (err) {
+      console.error('Finalize failed:', err);
+      setIsFinalizing(false);
+    }
+  }, [projectId, chosenTitle, chosenPoster, isFinalizing, router]);
+
+  // ===== CHOICE GATE =====
+  // Show choice gate when choosing OR when user has clicked finalize (prevents flicker to loading state)
+  if (projectId && isSubmitting && showConcept && (projectStatus === 'choosing' || isFinalizing)) {
+    return (
+      <main className="min-h-screen text-[#F2E8D5] flex flex-col relative overflow-hidden">
+        <ScribingAnimation className="absolute inset-0 w-full h-full object-cover opacity-20" />
+        <div className="absolute inset-0 bg-black/60 z-[1]" />
+
+        <div className="text-center pt-8 mb-4 relative z-10">
+          <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
+            BROADWAYIFY
+          </Link>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center px-4 relative z-10">
+          <div className="max-w-2xl w-full gentle-fade-in">
+            {/* Title Picker */}
+            <h2
+              className="text-2xl text-center mb-6"
+              style={{ fontFamily: 'var(--font-playfair)', fontStyle: 'italic' }}
+            >
+              Name your show
+            </h2>
+
+            <div className="grid gap-3 mb-10">
+              {showConcept.title_options.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => setChosenTitle(i)}
+                  className={`text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 ${
+                    chosenTitle === i
+                      ? 'border-[#C9A84C] bg-[#C9A84C]/10 shadow-lg shadow-[#C9A84C]/20'
+                      : 'border-[#C9A84C]/15 bg-[#1A0F1E]/50 hover:border-[#C9A84C]/40'
+                  }`}
+                >
+                  <div
+                    className="text-lg text-[#F2E8D5] font-semibold"
+                    style={{ fontFamily: 'var(--font-playfair)' }}
+                  >
+                    {opt.title}
+                  </div>
+                  <div
+                    className="text-sm text-[#F2E8D5]/50 mt-1"
+                    style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
+                  >
+                    {opt.tagline}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Poster Picker */}
+            <h2
+              className="text-2xl text-center mb-6"
+              style={{ fontFamily: 'var(--font-playfair)', fontStyle: 'italic' }}
+            >
+              Choose your poster
+            </h2>
+
+            <div className="grid grid-cols-3 gap-3 mb-10">
+              {posterOptions ? (
+                posterOptions.map((poster, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setChosenPoster(i)}
+                    className={`relative aspect-[2/3] rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                      chosenPoster === i
+                        ? 'border-[#C9A84C] shadow-lg shadow-[#C9A84C]/30 scale-[1.02]'
+                        : 'border-[#C9A84C]/15 hover:border-[#C9A84C]/40'
+                    }`}
+                  >
+                    <Image
+                      src={poster.url}
+                      alt={poster.label}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 30vw, 200px"
+                    />
+                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                      <span
+                        className="text-xs text-[#F2E8D5]/70"
+                        style={{ fontFamily: 'var(--font-oswald)' }}
+                      >
+                        {poster.label}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                // Skeleton loaders while posters generate
+                [0, 1, 2].map(i => (
+                  <div
+                    key={i}
+                    className="aspect-[2/3] rounded-xl border-2 border-[#C9A84C]/10 bg-[#1A0F1E]/50 animate-pulse flex items-center justify-center"
+                  >
+                    <Loader2 className="h-6 w-6 text-[#C9A84C]/30 animate-spin" />
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Open the Curtain Button */}
+            <div className="text-center">
+              <button
+                onClick={handleFinalize}
+                disabled={isFinalizing}
+                className="px-12 py-4 rounded-full bg-[#C9A84C] text-[#08070A] text-lg font-semibold hover:brightness-110 hover:scale-[1.02] transition-all shadow-lg shadow-[#C9A84C]/30 disabled:opacity-40 disabled:hover:scale-100 tracking-wide uppercase"
+                style={{ fontFamily: 'var(--font-oswald)' }}
+              >
+                {isFinalizing ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Raising the curtain...
+                  </span>
+                ) : (
+                  'Open the Curtain'
+                )}
+              </button>
+              {!posterOptions && (
+                <p
+                  className="mt-3 text-sm text-[#F2E8D5]/30"
+                  style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
+                >
+                  Poster art is still painting... you can pick a title first
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ===== LOADING STATE (enriching / generating_music / finalizing) =====
   if (projectId && isSubmitting) {
     const stageLabel = STAGE_LABELS[projectStatus] || 'Working...';
     const minutes = Math.floor(elapsedSeconds / 60);

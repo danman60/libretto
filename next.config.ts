@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.suno.ai',
       },
+      {
+        protocol: 'https',
+        hostname: 'fal.media',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.fal.media',
+      },
     ],
   },
 };

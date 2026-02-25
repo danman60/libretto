@@ -68,10 +68,9 @@ export async function doEnrichment(
 
   console.log('[generate-show] Enrichment done:', concept.title_options[0]?.title);
 
-  // Save backstory
+  // Save backstory (orchestrator sets status separately)
   await db.from('projects').update({
     backstory: JSON.stringify(concept),
-    status: 'generating_music',
     updated_at: new Date().toISOString(),
   }).eq('id', projectId);
 
