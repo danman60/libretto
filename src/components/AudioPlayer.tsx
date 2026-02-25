@@ -2,37 +2,54 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause } from 'lucide-react';
+import { crossfadeToTrack, stopOverture } from '@/lib/overture-synth';
 
 interface AudioPlayerProps {
   src: string;
   title: string;
   coverUrl?: string | null;
+  autoPlay?: boolean; // Start playing on mount (crossfade from overture)
 }
 
-export function AudioPlayer({ src, title, coverUrl }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, coverUrl, autoPlay }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const autoPlayFired = useRef(false);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      // Auto-play after metadata loaded
+      if (autoPlay && !autoPlayFired.current) {
+        autoPlayFired.current = true;
+        crossfadeToTrack(audio);
+        setIsPlaying(true);
+      }
+    };
     const handleEnded = () => setIsPlaying(false);
+    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => setIsPlaying(true);
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('play', handlePlay);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('play', handlePlay);
     };
-  }, []);
+  }, [autoPlay]);
 
   const togglePlay = () => {
     const audio = audioRef.current;

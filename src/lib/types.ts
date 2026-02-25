@@ -77,6 +77,16 @@ export interface Track {
   retry_count: number;
   created_at: string;
   updated_at: string;
+  // Generation stats
+  suno_id: string | null;
+  suno_model: string | null;
+  suno_tags: string | null;
+  suno_created_at: string | null;
+  // Alternate variant ("the cut song")
+  alt_audio_url: string | null;
+  alt_cover_image_url: string | null;
+  alt_duration: number | null;
+  alt_suno_id: string | null;
 }
 
 export interface Album {

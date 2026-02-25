@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'No track data' }, { status: 400 });
       }
 
-      // First in array = Suno's top pick (matches web UI ordering)
-      const primary = tracks[0];
-      const alt = tracks.length > 1 ? tracks[1] : null;
+      // Normalize field names (KIE mixes camelCase/snake_case)
+      const primary = normalizeTrack(tracks[0]);
+      const alt = tracks.length > 1 ? normalizeTrack(tracks[1]) : null;
 
       console.log(`[kie-webhook] Completing track ${trackNumber}: primary=${primary.audio_url?.substring(0, 60)}... duration=${primary.duration}s | variants=${tracks.length}`);
 
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         duration: primary.duration,
         suno_model: primary.model_name || null,
         suno_tags: primary.tags || null,
-        suno_created_at: primary.createTime || null,
+        suno_created_at: primary.createTime ? new Date(primary.createTime).toISOString() : null,
         status: 'complete',
         updated_at: new Date().toISOString(),
       };
@@ -151,6 +151,23 @@ export async function POST(request: NextRequest) {
 
   // Always return 200 quickly — KIE retries on non-200
   return NextResponse.json({ received: true });
+}
+
+// ===== Normalize KIE field names (they mix camelCase and snake_case) =====
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeTrack(raw: any): KieWebhookTrack {
+  return {
+    id: raw.id,
+    audio_url: raw.audio_url || raw.audioUrl,
+    stream_audio_url: raw.stream_audio_url || raw.streamAudioUrl,
+    image_url: raw.image_url || raw.imageUrl,
+    prompt: raw.prompt,
+    model_name: raw.model_name || raw.modelName,
+    title: raw.title,
+    tags: raw.tags,
+    createTime: raw.createTime,
+    duration: raw.duration,
+  };
 }
 
 // ===== Types for the KIE callback payload =====

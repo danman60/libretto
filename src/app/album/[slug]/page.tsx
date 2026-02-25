@@ -12,7 +12,7 @@ import { AlbumPlayer } from '@/components/AlbumPlayer';
 import { StageBackdrop } from '@/components/StageBackdrop';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
 import { generateBooklet } from '@/lib/generate-booklet';
-import { isOvertureActive, crossfadeToTrack, stopOverture } from '@/lib/overture-synth';
+import { stopOverture } from '@/lib/overture-synth';
 import { Share2, Check, Loader2, Download, PlusCircle, QrCode, Code, BookOpen, ChevronLeft, Music } from 'lucide-react';
 import type { AlbumPageData, Track, Emotion, PlaybillContent } from '@/lib/types';
 
@@ -33,7 +33,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const [audioTriggered, setAudioTriggered] = useState(false);
   const [rehearsingToast, setRehearsingToast] = useState(false);
   const [track1Ready, setTrack1Ready] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetch(`/api/album/${slug}`)
@@ -101,34 +100,20 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     }
   }, [data, audioTriggered]);
 
-  // Auto-play track 1 when audio arrives — crossfade from overture
+  // Detect when track 1 audio is ready — AudioPlayer handles the actual crossfade
   useEffect(() => {
     if (!data || track1Ready) return;
     const track1 = data.tracks.find((t: Track) => t.track_number === 1);
     if (track1?.status === 'complete' && track1.audio_url) {
       setTrack1Ready(true);
-      console.log('[album] Track 1 audio ready — auto-playing');
-
-      const audio = new Audio(track1.audio_url);
-      audioRef.current = audio;
-
-      // Crossfade from overture synth to real track
-      crossfadeToTrack(audio);
-
-      // Clean up overture flag
+      setHighlightedTrack(0);
       sessionStorage.removeItem('libretto_overture_active');
     }
   }, [data, track1Ready]);
 
-  // Clean up audio on unmount
+  // Clean up overture on unmount
   useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      stopOverture();
-    };
+    return () => { stopOverture(); };
   }, []);
 
   // Poll for in-progress tracks
@@ -695,6 +680,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                             isLocked={lockedTrackNumbers.has(track.track_number)}
                             onGenerateTrack={handleGenerateTrack}
                             variant="playbill"
+                            autoPlay={track.track_number === 1 && track1Ready}
                           />
                         ))}
                       </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { AudioPlayer } from './AudioPlayer';
-import { ChevronDown, ChevronUp, Loader2, Lock, Music, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2, Lock, Music, RotateCcw, Scissors } from 'lucide-react';
 import type { Track, SongRole } from '@/lib/types';
 
 const SONG_ROLE_LABELS: Record<SongRole, string> = {
@@ -128,10 +128,12 @@ interface SongCardProps {
   isLocked?: boolean;
   onGenerateTrack?: (trackNumber: number) => void;
   variant?: 'dark' | 'playbill';
+  autoPlay?: boolean;
 }
 
-export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, onGenerateTrack, variant = 'dark' }: SongCardProps) {
+export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, onGenerateTrack, variant = 'dark', autoPlay }: SongCardProps) {
   const [showLyrics, setShowLyrics] = useState(false);
+  const [playingCut, setPlayingCut] = useState(false); // true = playing alternate "cut song"
 
   const isComplete = track.status === 'complete';
   const isFailed = track.status === 'failed';
@@ -238,7 +240,26 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
             {/* Audio player for complete tracks */}
             {!isLocked && isComplete && track.audio_url && (
               <div className="mt-2">
-                <AudioPlayer src={track.audio_url} title={track.title} coverUrl={track.cover_image_url} />
+                <AudioPlayer
+                  src={playingCut && track.alt_audio_url ? track.alt_audio_url : track.audio_url}
+                  title={playingCut ? `${track.title} (Cut)` : track.title}
+                  coverUrl={playingCut && track.alt_cover_image_url ? track.alt_cover_image_url : track.cover_image_url}
+                  autoPlay={autoPlay}
+                />
+                {track.alt_audio_url && (
+                  <button
+                    onClick={() => setPlayingCut(!playingCut)}
+                    className={`flex items-center gap-1 text-[10px] mt-1.5 px-2 py-0.5 rounded-full border transition-colors ${
+                      playingCut
+                        ? 'bg-[#C9A84C]/15 border-[#C9A84C]/40 text-[#8A7434]'
+                        : 'border-[#1A0F1E]/15 text-[#1A0F1E]/35 hover:text-[#8A7434] hover:border-[#C9A84C]/30'
+                    }`}
+                    style={{ fontFamily: 'var(--font-oswald)' }}
+                  >
+                    <Scissors className="h-2.5 w-2.5" />
+                    {playingCut ? 'Playing the cut song' : 'Try the cut song'}
+                  </button>
+                )}
               </div>
             )}
 
@@ -354,7 +375,26 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
 
       {!isLocked && isComplete && track.audio_url && (
         <div className="mt-1">
-          <AudioPlayer src={track.audio_url} title={track.title} coverUrl={track.cover_image_url} />
+          <AudioPlayer
+            src={playingCut && track.alt_audio_url ? track.alt_audio_url : track.audio_url}
+            title={playingCut ? `${track.title} (Cut)` : track.title}
+            coverUrl={playingCut && track.alt_cover_image_url ? track.alt_cover_image_url : track.cover_image_url}
+            autoPlay={autoPlay}
+          />
+          {track.alt_audio_url && (
+            <button
+              onClick={() => setPlayingCut(!playingCut)}
+              className={`flex items-center gap-1 text-[10px] mt-1.5 px-2 py-0.5 rounded-full border transition-colors ${
+                playingCut
+                  ? 'bg-[#C9A84C]/20 border-[#C9A84C]/40 text-[#C9A84C]'
+                  : 'border-[#C9A84C]/15 text-[#F2E8D5]/30 hover:text-[#C9A84C] hover:border-[#C9A84C]/30'
+              }`}
+              style={{ fontFamily: 'var(--font-oswald)' }}
+            >
+              <Scissors className="h-2.5 w-2.5" />
+              {playingCut ? 'Playing the cut song' : 'Try the cut song'}
+            </button>
+          )}
         </div>
       )}
 
