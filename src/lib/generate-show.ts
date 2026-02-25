@@ -139,7 +139,7 @@ export async function generateLyricsOnly(
       buildSongLyricsPrompt(songConfig, trackNumber, concept, config),
       { temperature: 0.85, maxTokens: 1500 }
     );
-    const stylePrompt = buildSongStylePrompt(songConfig, config);
+    const stylePrompt = buildSongStylePrompt(songConfig, config, concept);
 
     await logGeneration({
       projectId, trackNumber, event: 'lyrics_done',
@@ -197,7 +197,7 @@ export async function generateLyricsAndSubmitAudio(
       buildSongLyricsPrompt(songConfig, trackNumber, concept, config),
       { temperature: 0.85, maxTokens: 1500 }
     );
-    const stylePrompt = buildSongStylePrompt(songConfig, config);
+    const stylePrompt = buildSongStylePrompt(songConfig, config, concept);
 
     await logGeneration({
       projectId, trackNumber, event: 'lyrics_done',
@@ -287,7 +287,7 @@ export async function generateSingleSong(
         buildSongLyricsPrompt(songConfig, trackNumber, concept, config),
         { temperature: 0.85, maxTokens: 1500 }
       );
-      stylePrompt = buildSongStylePrompt(songConfig, config);
+      stylePrompt = buildSongStylePrompt(songConfig, config, concept);
 
       await logGeneration({
         projectId, trackNumber, event: 'lyrics_done',
@@ -305,7 +305,7 @@ export async function generateSingleSong(
     }
 
     if (!stylePrompt) {
-      stylePrompt = buildSongStylePrompt(songConfig, config);
+      stylePrompt = buildSongStylePrompt(songConfig, config, concept);
     }
 
     // Generate audio via KIE

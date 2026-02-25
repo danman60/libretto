@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         buildSongLyricsPrompt(songConfig, trackNumber, concept, config),
         { temperature: 0.85, maxTokens: 1500 }
       );
-      stylePrompt = buildSongStylePrompt(songConfig, config);
+      stylePrompt = buildSongStylePrompt(songConfig, config, concept);
 
       await logGeneration({
         projectId, trackNumber, event: 'lyrics_done',
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!stylePrompt) {
-      stylePrompt = buildSongStylePrompt(songConfig, config);
+      stylePrompt = buildSongStylePrompt(songConfig, config, concept);
     }
 
     // Submit to KIE with webhook — returns immediately

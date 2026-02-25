@@ -115,13 +115,31 @@ Respond with ONLY the lyrics text (with structure tags). No explanations.`;
 
 // ===== Song Style =====
 
+/** Infer vocalist gender from the protagonist's character description */
+function inferVocalistGender(concept?: ShowConcept): string | null {
+  if (!concept?.characters?.length) return null;
+  const protagonist = concept.characters[0];
+  const text = `${protagonist.name} ${protagonist.description} ${protagonist.arc}`.toLowerCase();
+
+  const femaleSignals = (text.match(/\bshe\b|\bher\b|\bherself\b|\bwoman\b|\bgirl\b|\bmother\b|\bdaughter\b|\bsister\b|\bqueen\b|\bprincess\b|\bheroine\b|\bwife\b|\bwidow\b|\bgrandmother\b|\baunt\b|\bniece\b|\bwaitress\b|\bactress\b|\bgoddess\b/g) || []).length;
+  const maleSignals = (text.match(/\bhe\b|\bhis\b|\bhimself\b|\bman\b|\bboy\b|\bfather\b|\bson\b|\bbrother\b|\bking\b|\bprince\b|\bhero\b|\bhusband\b|\bgrandfather\b|\buncle\b|\bnephew\b|\bwaiter\b|\bactor\b|\bgod\b/g) || []).length;
+
+  if (femaleSignals > maleSignals) return 'Female Vocalist';
+  if (maleSignals > femaleSignals) return 'Male Vocalist';
+  return null; // ambiguous — let Suno pick
+}
+
 export function buildSongStylePrompt(
   songConfig: SongRoleConfig,
-  musicalTypeConfig: MusicalTypeConfig
+  musicalTypeConfig: MusicalTypeConfig,
+  concept?: ShowConcept
 ): string {
   // Use Suno-optimized style tags (ordered by weight, 4-8 tags, max 3-4 instruments)
   // Italian tempo term baked in (more reliable than BPM numbers)
-  return `${songConfig.suno_style}, ${songConfig.suno_tempo}`;
+  const vocalistTag = inferVocalistGender(concept);
+  const parts = [songConfig.suno_style, songConfig.suno_tempo];
+  if (vocalistTag) parts.push(vocalistTag);
+  return parts.join(', ');
 }
 
 /** Build Suno Exclude Styles string for negative prompting */
