@@ -116,6 +116,9 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     return () => { stopOverture(); };
   }, []);
 
+  // Track which songs have been kicked off but server may not reflect yet
+  const generatingTracksRef = useRef<Set<number>>(new Set());
+
   // Poll for in-progress tracks
   useEffect(() => {
     if (!data) return;
@@ -124,14 +127,39 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     const othersInProgress = data.tracks.some((t: Track) =>
       t.track_number !== 1 && t.status !== 'complete' && t.status !== 'failed' && t.status !== 'lyrics_complete' && t.status !== 'pending'
     );
+    const hasOptimisticGenerating = generatingTracksRef.current.size > 0;
     const missingCoverArt = !data.album.cover_image_url;
-    if (track1Done && !othersInProgress && !missingCoverArt) return;
+    if (track1Done && !othersInProgress && !hasOptimisticGenerating && !missingCoverArt) return;
 
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/album/${slug}`);
         if (!res.ok) return;
         const fresh = await res.json();
+
+        // Protect optimistic state: if we kicked off generation but server
+        // hasn't caught up yet, keep the optimistic generating_audio status
+        const generating = generatingTracksRef.current;
+        if (generating.size > 0) {
+          fresh.tracks = fresh.tracks.map((t: Track) => {
+            if (generating.has(t.track_number)) {
+              if (t.status === 'complete' || t.status === 'failed') {
+                // Server caught up — remove from optimistic set
+                generating.delete(t.track_number);
+                return t;
+              }
+              if (t.status === 'generating_audio' || t.status === 'generating_lyrics') {
+                // Server confirmed generation — remove from optimistic set
+                generating.delete(t.track_number);
+                return t;
+              }
+              // Server still shows lyrics_complete/pending — keep optimistic state
+              return { ...t, status: 'generating_audio' as const };
+            }
+            return t;
+          });
+        }
+
         setData(fresh);
         // Preload cover art when it arrives via polling
         if (fresh.album?.cover_image_url && !coverArtReady) {
@@ -149,6 +177,9 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const handleGenerateTrack = useCallback(async (trackNumber: number) => {
     if (!data) return;
 
+    // Mark as optimistically generating — auto-poll will protect this state
+    generatingTracksRef.current.add(trackNumber);
+
     // Immediate optimistic update — show progress bar right away
     setData(prev => {
       if (!prev) return prev;
@@ -162,7 +193,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       };
     });
 
-    // Fire generation in background (don't await — polling handles it)
+    // Fire generation in background (don't await — auto-poll handles completion)
     fetch('/api/generate-song', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -170,6 +201,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     }).catch(err => {
       console.error('Generate track failed:', err);
       // Revert optimistic update on failure
+      generatingTracksRef.current.delete(trackNumber);
       setData(prev => {
         if (!prev) return prev;
         return {
@@ -182,21 +214,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
         };
       });
     });
-
-    // Poll for completion
-    const pollInterval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/album/${slug}`);
-        if (!res.ok) return;
-        const fresh = await res.json();
-        setData(fresh);
-        const track = fresh.tracks.find((t: Track) => t.track_number === trackNumber);
-        if (track && (track.status === 'complete' || track.status === 'failed')) {
-          clearInterval(pollInterval);
-        }
-      } catch { /* ignore */ }
-    }, 5000);
-  }, [data, slug]);
+  }, [data]);
 
   // Auto-generate track 1 if it's pending (no user click needed)
   const autoGenFired = useRef(false);
