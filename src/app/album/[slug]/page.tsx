@@ -337,6 +337,20 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     sessionStorage.removeItem('libretto_project_id');
   };
 
+  // Derived values — safe when data is null (computed before early returns to keep hooks stable)
+  const track1Audio = data?.tracks.find(t => t.track_number === 1);
+  const canOpenProgramme = track1Audio?.status === 'complete' && !!track1Audio.audio_url;
+
+  /** Gate programme opening — show toast if still rehearsing */
+  const handleProgrammeClick = useCallback(() => {
+    if (canOpenProgramme) {
+      setProgrammeOpen(true);
+    } else {
+      setRehearsingToast(true);
+      setTimeout(() => setRehearsingToast(false), 3000);
+    }
+  }, [canOpenProgramme]);
+
   if (error) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -368,18 +382,6 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const playbill = album.playbill_content as PlaybillContent | null;
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
   const showProgramme = !!album.cover_image_url && coverArtReady;
-  const track1Audio = tracks.find(t => t.track_number === 1);
-  const canOpenProgramme = track1Audio?.status === 'complete' && !!track1Audio.audio_url;
-
-  /** Gate programme opening — show toast if still rehearsing */
-  const handleProgrammeClick = useCallback(() => {
-    if (canOpenProgramme) {
-      setProgrammeOpen(true);
-    } else {
-      setRehearsingToast(true);
-      setTimeout(() => setRehearsingToast(false), 3000);
-    }
-  }, [canOpenProgramme]);
   const act1Tracks = tracks.filter(t => t.track_number <= 3);
   const act2Tracks = tracks.filter(t => t.track_number >= 4);
 
