@@ -10,7 +10,7 @@ import { Guestbook } from '@/components/Guestbook';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { AlbumPlayer } from '@/components/AlbumPlayer';
 import { StageBackdrop } from '@/components/StageBackdrop';
-import { QuillScribeBg } from '@/components/QuillScribeBg';
+import { ScribingAnimation } from '@/components/ScribingAnimation';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
 import { generateBooklet } from '@/lib/generate-booklet';
 import { crossfadeToTrack, stopOverture } from '@/lib/overture-synth';
@@ -447,10 +447,10 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   if (isMusical && playbill) {
     return (
       <main className="min-h-screen text-[#F2E8D5] relative">
-        {/* Quill scribing overlay — visible until first song is ready */}
+        {/* Scribing animation overlay — visible until first song is ready */}
         {!track1Ready && (
           <div className="fixed inset-0 z-[5] pointer-events-none transition-opacity duration-[3000ms]">
-            <QuillScribeBg className="fixed inset-0 pointer-events-none" drawDuration={40000} />
+            <ScribingAnimation className="w-full h-full object-cover opacity-25" speed={0.3} />
           </div>
         )}
 

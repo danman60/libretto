@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { QuillScribeBg } from '@/components/QuillScribeBg';
+import { ScribingAnimation } from '@/components/ScribingAnimation';
 import type { Track } from '@/lib/types';
 
 const LOADING_MESSAGES = [
@@ -58,7 +58,7 @@ export function CurtainLoader({ tracks, isComplete }: CurtainLoaderProps) {
             >
               {LOADING_MESSAGES[messageIndex]}
             </p>
-            <QuillScribeBg className="fixed inset-0 pointer-events-none z-0" drawDuration={35000} />
+            <ScribingAnimation className="fixed inset-0 w-full h-full object-cover opacity-30 z-0" />
           </>
         )}
       </div>
