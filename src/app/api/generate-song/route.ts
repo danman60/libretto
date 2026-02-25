@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
-import { generateSingleSong, maybeFinalizeProject } from '@/lib/generate-show';
+import { submitKieWithWebhook } from '@/lib/suno-kie';
+import { logGeneration } from '@/lib/log-generation';
+import { getMusicalTypeConfig, getSongRoles } from '@/lib/musical-types';
+import { buildSongLyricsPrompt, buildSongStylePrompt } from '@/lib/prompts';
+import { callDeepSeek } from '@/lib/deepseek';
 import type { MusicalType, ShowConcept } from '@/lib/types';
 
-export const maxDuration = 300; // 5 minutes — audio generation can take a while
+export const maxDuration = 60; // Only needs ~15s for lyrics + KIE submit (webhook handles the rest)
 
 /**
  * POST /api/generate-song
- * Per-track worker: generates audio for a single track.
- * Called by the orchestrator for track 1, and by the frontend for tracks 2-6.
+ * Per-track worker: generates lyrics (if needed) + submits audio to KIE.
+ * Returns immediately after KIE submission — webhook handles completion.
+ *
+ * Called by the frontend (album page auto-trigger + manual unlock).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -43,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Idempotency guard: reject if track already generating or complete
     const { data: track } = await db
       .from('tracks')
-      .select('status')
+      .select('status, lyrics, style_prompt')
       .eq('project_id', projectId)
       .eq('track_number', trackNumber)
       .single();
@@ -58,31 +64,71 @@ export async function POST(request: NextRequest) {
 
     const musicalType = project.musical_type as MusicalType;
     const concept = JSON.parse(project.backstory) as ShowConcept;
+    const config = getMusicalTypeConfig(musicalType);
+    const songRoles = getSongRoles(musicalType);
+    const songConfig = songRoles[trackNumber - 1];
 
-    console.log(`[api/generate-song] Generating audio for track ${trackNumber} of project ${projectId}`);
+    let lyrics = track.lyrics;
+    let stylePrompt = track.style_prompt;
 
-    // Generate the song (lyrics if needed + audio)
-    await generateSingleSong(projectId, trackNumber, concept, musicalType);
+    // Generate lyrics if not yet done
+    if (!lyrics) {
+      console.log(`[api/generate-song] Track ${trackNumber}: generating lyrics first...`);
+      await db.from('tracks').update({
+        status: 'generating_lyrics',
+        updated_at: new Date().toISOString(),
+      }).eq('project_id', projectId).eq('track_number', trackNumber);
 
-    // Backfill album cover art as soon as any track has one
-    const { data: completedTrack } = await db
-      .from('tracks')
-      .select('cover_image_url')
-      .eq('project_id', projectId)
-      .eq('track_number', trackNumber)
-      .single();
+      await logGeneration({ projectId, trackNumber, event: 'lyrics_started', model: 'deepseek-chat' });
+      const lyricsStart = Date.now();
 
-    if (completedTrack?.cover_image_url) {
-      await db.from('albums')
-        .update({ cover_image_url: completedTrack.cover_image_url })
-        .eq('project_id', projectId)
-        .is('cover_image_url', null);
+      lyrics = await callDeepSeek(
+        buildSongLyricsPrompt(songConfig, trackNumber, concept, config),
+        { temperature: 0.85, maxTokens: 1500 }
+      );
+      stylePrompt = buildSongStylePrompt(songConfig, config);
+
+      await logGeneration({
+        projectId, trackNumber, event: 'lyrics_done',
+        durationMs: Date.now() - lyricsStart, model: 'deepseek-chat',
+      });
+
+      await db.from('tracks').update({
+        lyrics,
+        style_prompt: stylePrompt,
+        status: 'lyrics_complete',
+        updated_at: new Date().toISOString(),
+      }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+      console.log(`[api/generate-song] Track ${trackNumber}: lyrics done (${lyrics.length} chars)`);
     }
 
-    // Check if all tracks are done → finalize project
-    await maybeFinalizeProject(projectId);
+    if (!stylePrompt) {
+      stylePrompt = buildSongStylePrompt(songConfig, config);
+    }
 
-    return NextResponse.json({ success: true });
+    // Submit to KIE with webhook — returns immediately
+    console.log(`[api/generate-song] Track ${trackNumber}: submitting to KIE (webhook mode)...`);
+    await logGeneration({ projectId, trackNumber, event: 'audio_started', stylePrompt, model: 'kie-suno' });
+
+    const taskId = await submitKieWithWebhook(
+      lyrics,
+      stylePrompt,
+      songConfig.label,
+      projectId,
+      trackNumber
+    );
+
+    // Update track status + save taskId
+    await db.from('tracks').update({
+      suno_task_id: taskId,
+      status: 'generating_audio',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+    // Done! Webhook will handle completion, cover backfill, and finalization.
+    console.log(`[api/generate-song] Track ${trackNumber}: submitted (taskId=${taskId}). Webhook will complete.`);
+    return NextResponse.json({ success: true, taskId });
   } catch (err) {
     console.error('[api/generate-song] Error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

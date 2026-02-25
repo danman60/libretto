@@ -37,22 +37,52 @@ Migration `create_album_feedback_table` applied via MCP (2026-02-24). Table + in
 - Commandment #7 (correct scansion) is CRITICAL
 - Commandment #1 corrected: "don't sing so fast it cannot be understood"
 
-## Queued: FLUX Poster + Faster Audio
+## Just Shipped: FLUX Poster + Overture UX
+
+**FLUX poster generation** — LIVE
+- `lib/flux.ts` — fal.ai SDK, FLUX 1.1 Pro, ~5s, $0.04/image
+- Fires in parallel with playbill + lyrics after enrichment
+- Poster arrives in ~5s → album page shows immediately (no more "Painting the poster...")
+- Genre-specific art direction (classic = art deco, rock = neon, etc.)
+
+**Orchestra warmup audio** — LIVE
+- `lib/overture-synth.ts` — Web Audio API synthesized ambiance
+- Starts on "Create My Show" click → plays during loading wait
+- Crossfades into track 1 audio when ready
+- Album page continues overture if track 1 not yet done
+
+**Programme gating** — LIVE
+- Album page: click programme before track 1 audio ready → "We're still rehearsing!" toast
+- Track 1 auto-plays when audio arrives (crossfade from overture)
+- Programme unlocks when first song is ready
+
+**Instant song generation feedback** — LIVE
+- SongCard: optimistic status update on click → progress bar appears immediately
+- Per-song loading bars already show elapsed time + asymptotic progress
+
+## Just Shipped: KIE Webhook
+
+**`/api/kie-webhook`** — LIVE
+- Receives KIE callbacks at 4 stages: `text`, `first`, `complete`, `error`
+- Query params carry context: `?projectId=xxx&trackNumber=1&secret=xxx`
+- On `complete`: updates track with audio_url, cover_image_url, duration → backfills album cover → maybe finalizes project
+- On `error`: marks track as failed + logs
+- `generate-song/route.ts` now submits to KIE and returns immediately (~5s instead of 60-90s)
+- `maxDuration` dropped from 300s to 60s (only needs time for lyrics + KIE submit)
+- `suno-kie.ts` → new `submitKieWithWebhook()` builds callback URL with project context
+- `KIE_WEBHOOK_SECRET` env var for simple auth
+
+**Env vars needed in Vercel:**
+- `FAL_KEY` — fal.ai API key for FLUX poster
+- `KIE_WEBHOOK_SECRET` — shared secret for webhook auth
+- `NEXT_PUBLIC_APP_URL` — must be set to deployed URL (e.g. `https://libretto-alpha.vercel.app`)
+
+## Queued: Evaluate sunoapi.org
 
 **Reference:** `docs/POSTER_AND_AUDIO_RESEARCH.md`
-
-**Phase 1: FLUX poster generation** (decouple art from audio)
-- Add FLUX 1.1 Pro API client (`lib/flux.ts`) — 3-5s, $0.04/image
-- Fire in parallel with audio after enrichment
-- Poster arrives in ~5s instead of 60-90s → animate reveal
-- Overlay show title/tagline with CSS (better typography than AI text)
-
-**Phase 2: KIE webhook** (eliminate polling overhead)
-- Create `/api/kie-webhook` endpoint
-- Pass as `callBackUrl` in KIE requests — instant completion notification
-- Zero provider migration, just add webhook handler
-
-**Phase 3: Evaluate sunoapi.org** (20-30s claimed vs KIE's 60-90s)
+- Claims 20-30s generation (vs KIE's 60-90s)
+- Same Suno V5 model
+- Worth testing as KIE replacement for speed
 
 ## Queued: Suno Profiles Implementation
 
@@ -72,6 +102,31 @@ Migration `create_album_feedback_table` applied via MCP (2026-02-24). Table + in
 
 **Refactor `buildSongStylePrompt()`** to pull from suno-profiles instead of naive concatenation.
 **Refactor `buildSongLyricsPrompt()`** to use genre-specific structure templates with performance cues.
+
+## Queued: Orchestration Ideas Per Genre
+
+**Goal:** Each musical genre should have specific orchestration guidance that feeds into:
+1. DeepSeek lyrics prompt (inform lyrical style — ballad vs. belt, sparse vs. dense)
+2. Suno style tags (instrument choices, arrangement descriptors)
+3. Enrichment prompt (inform dramatic arc + mood)
+
+**Per-genre orchestration profiles to define:**
+- **Classic Broadway** — Full pit orchestra, lush strings, big brass, woodwinds, show tune feel
+- **Rock Musical** — Electric guitar, bass, drums, keys, raw energy, distorted guitars for confrontation
+- **Pop Musical** — Synth pads, programmed drums, acoustic guitar, piano, modern production
+- **Hip-Hop Musical** — 808s, trap hi-hats, sampled beats, sparse instrumentation, bass-heavy
+- **Jukebox Musical** — Era-specific instrumentation (60s soul horns, 80s synths, etc.)
+- **Romantic Musical** — Piano-forward, strings, acoustic guitar, gentle percussion, intimate
+
+**Per-song-role orchestration variation:**
+- Opening Number: Full ensemble, big arrangement
+- I Want Song: Stripped back, builds from solo instrument to fuller
+- Confrontation: Driving percussion, tension-building, staccato strings
+- Act II Opening: Fresh palette, new texture, contrast with Act I
+- 11 O'Clock: Peak instrumentation, everything at max
+- Finale: Reprises key motifs, warm resolution, landing energy
+
+**Implementation:** Add `orchestration_hints` to `SongRoleConfig` in `musical-types.ts`, feed into Suno style prompt.
 
 ## Queued: MTBible Layer 2+3 Integration
 

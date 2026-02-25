@@ -53,8 +53,24 @@ function getApiKey(): string {
   return key;
 }
 
+function getAppBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+}
+
 function getCallbackUrl(): string {
   return process.env.KIE_CALLBACK_URL || 'https://webhook.site/placeholder';
+}
+
+/**
+ * Build a webhook callback URL with project/track context.
+ * KIE will POST to this URL on completion.
+ */
+function buildWebhookUrl(projectId: string, trackNumber: number): string {
+  const base = getAppBaseUrl();
+  if (!base) return getCallbackUrl(); // fallback to legacy
+  const secret = process.env.KIE_WEBHOOK_SECRET || '';
+  return `${base}/api/kie-webhook?projectId=${projectId}&trackNumber=${trackNumber}&secret=${secret}`;
 }
 
 /**
@@ -187,7 +203,8 @@ export async function checkKieCredits(): Promise<number> {
 }
 
 /**
- * Generate a single track end-to-end via KIE.
+ * Generate a single track end-to-end via KIE (polling mode — legacy).
+ * Use submitKieWithWebhook() for webhook mode instead.
  */
 export async function generateTrackViaKie(
   lyrics: string,
@@ -197,6 +214,61 @@ export async function generateTrackViaKie(
 ): Promise<KieTrackResult> {
   const taskId = await submitKieGeneration(lyrics, stylePrompt, title, instrumental);
   return pollKieCompletion(taskId);
+}
+
+/**
+ * Submit a KIE generation with project-aware webhook callback.
+ * Returns the taskId immediately — no polling. KIE calls our webhook on completion.
+ */
+export async function submitKieWithWebhook(
+  lyrics: string,
+  stylePrompt: string,
+  title: string,
+  projectId: string,
+  trackNumber: number,
+  instrumental: boolean = false,
+  model: string = 'V5'
+): Promise<string> {
+  const webhookUrl = buildWebhookUrl(projectId, trackNumber);
+
+  const body: KieGenerateRequest = {
+    customMode: true,
+    instrumental,
+    model,
+    title,
+    style: stylePrompt,
+    prompt: lyrics,
+    callBackUrl: webhookUrl,
+  };
+
+  console.log(`[kie] Submitting with webhook: "${title}" | project=${projectId} track=${trackNumber}`);
+  console.log(`[kie] Webhook URL: ${webhookUrl.replace(/secret=[^&]*/, 'secret=***')}`);
+  console.log(`[kie] Style: ${stylePrompt}`);
+
+  const response = await fetch(`${KIE_API_URL}/api/v1/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getApiKey()}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`[kie] Generate error ${response.status}:`, errorText);
+    throw new Error(`KIE generate error ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  if (data.code !== 200 || !data.data?.taskId) {
+    console.error(`[kie] Submission failed:`, data);
+    throw new Error(`KIE submission failed: ${JSON.stringify(data)}`);
+  }
+
+  console.log(`[kie] Task submitted (webhook mode): ${data.data.taskId}`);
+  return data.data.taskId;
 }
 
 function sleep(ms: number): Promise<void> {

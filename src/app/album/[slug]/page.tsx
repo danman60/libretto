@@ -12,7 +12,8 @@ import { AlbumPlayer } from '@/components/AlbumPlayer';
 import { StageBackdrop } from '@/components/StageBackdrop';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
 import { generateBooklet } from '@/lib/generate-booklet';
-import { Share2, Check, Loader2, Download, PlusCircle, QrCode, Code, BookOpen, ChevronLeft } from 'lucide-react';
+import { isOvertureActive, crossfadeToTrack, stopOverture } from '@/lib/overture-synth';
+import { Share2, Check, Loader2, Download, PlusCircle, QrCode, Code, BookOpen, ChevronLeft, Music } from 'lucide-react';
 import type { AlbumPageData, Track, Emotion, PlaybillContent } from '@/lib/types';
 
 export default function AlbumPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -30,6 +31,9 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const [programmeOpen, setProgrammeOpen] = useState(false);
   const [coverArtReady, setCoverArtReady] = useState(false);
   const [audioTriggered, setAudioTriggered] = useState(false);
+  const [rehearsingToast, setRehearsingToast] = useState(false);
+  const [track1Ready, setTrack1Ready] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetch(`/api/album/${slug}`)
@@ -97,6 +101,36 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     }
   }, [data, audioTriggered]);
 
+  // Auto-play track 1 when audio arrives — crossfade from overture
+  useEffect(() => {
+    if (!data || track1Ready) return;
+    const track1 = data.tracks.find((t: Track) => t.track_number === 1);
+    if (track1?.status === 'complete' && track1.audio_url) {
+      setTrack1Ready(true);
+      console.log('[album] Track 1 audio ready — auto-playing');
+
+      const audio = new Audio(track1.audio_url);
+      audioRef.current = audio;
+
+      // Crossfade from overture synth to real track
+      crossfadeToTrack(audio);
+
+      // Clean up overture flag
+      sessionStorage.removeItem('libretto_overture_active');
+    }
+  }, [data, track1Ready]);
+
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      stopOverture();
+    };
+  }, []);
+
   // Poll for in-progress tracks
   useEffect(() => {
     if (!data) return;
@@ -129,43 +163,54 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
 
   const handleGenerateTrack = useCallback(async (trackNumber: number) => {
     if (!data) return;
-    try {
-      const res = await fetch('/api/generate-song', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: data.album.project_id, trackNumber }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        console.error('Generate track failed:', err);
-        return;
-      }
+
+    // Immediate optimistic update — show progress bar right away
+    setData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tracks: prev.tracks.map(t =>
+          t.track_number === trackNumber
+            ? { ...t, status: 'generating_audio' as const }
+            : t
+        ),
+      };
+    });
+
+    // Fire generation in background (don't await — polling handles it)
+    fetch('/api/generate-song', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId: data.album.project_id, trackNumber }),
+    }).catch(err => {
+      console.error('Generate track failed:', err);
+      // Revert optimistic update on failure
       setData(prev => {
         if (!prev) return prev;
         return {
           ...prev,
           tracks: prev.tracks.map(t =>
             t.track_number === trackNumber
-              ? { ...t, status: 'generating_audio' as const }
+              ? { ...t, status: 'lyrics_complete' as const }
               : t
           ),
         };
       });
-      const pollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/album/${slug}`);
-          if (!res.ok) return;
-          const fresh = await res.json();
-          setData(fresh);
-          const track = fresh.tracks.find((t: Track) => t.track_number === trackNumber);
-          if (track && (track.status === 'complete' || track.status === 'failed')) {
-            clearInterval(pollInterval);
-          }
-        } catch { /* ignore */ }
-      }, 5000);
-    } catch (err) {
-      console.error('Generate track error:', err);
-    }
+    });
+
+    // Poll for completion
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/album/${slug}`);
+        if (!res.ok) return;
+        const fresh = await res.json();
+        setData(fresh);
+        const track = fresh.tracks.find((t: Track) => t.track_number === trackNumber);
+        if (track && (track.status === 'complete' || track.status === 'failed')) {
+          clearInterval(pollInterval);
+        }
+      } catch { /* ignore */ }
+    }, 5000);
   }, [data, slug]);
 
   // Auto-generate track 1 if it's pending (no user click needed)
@@ -323,6 +368,18 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const playbill = album.playbill_content as PlaybillContent | null;
   const hasCompleteTracks = tracks.some(t => t.status === 'complete' && t.audio_url);
   const showProgramme = !!album.cover_image_url && coverArtReady;
+  const track1Audio = tracks.find(t => t.track_number === 1);
+  const canOpenProgramme = track1Audio?.status === 'complete' && !!track1Audio.audio_url;
+
+  /** Gate programme opening — show toast if still rehearsing */
+  const handleProgrammeClick = useCallback(() => {
+    if (canOpenProgramme) {
+      setProgrammeOpen(true);
+    } else {
+      setRehearsingToast(true);
+      setTimeout(() => setRehearsingToast(false), 3000);
+    }
+  }, [canOpenProgramme]);
   const act1Tracks = tracks.filter(t => t.track_number <= 3);
   const act2Tracks = tracks.filter(t => t.track_number >= 4);
 
@@ -378,7 +435,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                           <p className="text-[#C9A84C]/40 text-xs tracking-[0.3em] uppercase"
                             style={{ fontFamily: 'var(--font-oswald)' }}
                           >
-                            Painting the poster...
+                            The curtain is rising...
                           </p>
                         </div>
                       </div>
@@ -396,7 +453,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               <>
                 <div
                   className="programme-cover cursor-pointer gentle-fade-in"
-                  onClick={() => setProgrammeOpen(true)}
+                  onClick={handleProgrammeClick}
                 >
                   <div className="programme-cover-frame">
                     <div className="bg-[#1A0F1E] px-6 py-3 text-center border-b-2 border-[#C9A84C]/40">
@@ -449,8 +506,26 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                 <p className="text-sm text-[#F2E8D5]/30 mt-6 animate-pulse"
                   style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
                 >
-                  Tap to open the programme
+                  {canOpenProgramme ? 'Tap to open the programme' : (
+                    <span className="flex items-center justify-center gap-2">
+                      <Music className="h-3.5 w-3.5 animate-pulse" />
+                      The orchestra is warming up...
+                    </span>
+                  )}
                 </p>
+
+                {/* "Still rehearsing" toast */}
+                {rehearsingToast && (
+                  <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 gentle-fade-in">
+                    <div className="px-6 py-3 rounded-full bg-[#1A0F1E] border border-[#C9A84C]/30 shadow-xl shadow-black/50">
+                      <p className="text-sm text-[#F2E8D5] whitespace-nowrap"
+                        style={{ fontFamily: 'var(--font-cormorant)', fontStyle: 'italic' }}
+                      >
+                        We&apos;re still rehearsing! The first song is almost ready...
+                      </p>
+                    </div>
+                  </div>
+                )}
               </>
               )}
             </section>

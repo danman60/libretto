@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { MusicalTypeSelector } from '@/components/MusicalTypeSelector';
 import { QuillScribeBg } from '@/components/QuillScribeBg';
 import { Loader2 } from 'lucide-react';
+import { startOverture, stopOverture } from '@/lib/overture-synth';
 import type { MusicalType } from '@/lib/types';
 
 const STAGE_MESSAGES: Record<string, string[]> = {
@@ -17,7 +18,7 @@ const STAGE_MESSAGES: Record<string, string[]> = {
     'Building the dramatic arc...',
   ],
   generating_music: [
-    'Composing the overture...',
+    'Painting the poster...',
     'The orchestra is tuning...',
     'Rehearsing Act I...',
     'Setting the stage lights...',
@@ -90,11 +91,14 @@ export default function CreatePage() {
         setProgress(getStageProgress(status, hasAlbum, trackCount));
 
         if (status === 'failed') {
+          stopOverture();
           setError('Something went wrong backstage. Please try again.');
           return;
         }
 
         if (hasAlbum) {
+          // Signal to album page that overture is playing
+          sessionStorage.setItem('libretto_overture_active', 'true');
           // Small delay so user sees 90% before redirect
           setTimeout(() => {
             if (!cancelled) router.push(`/album/${data.album.share_slug}`);
@@ -150,6 +154,10 @@ export default function CreatePage() {
     setIsSubmitting(true);
     setError(null);
 
+    // Start the orchestra warmup audio immediately on user action
+    // (Web Audio API requires user gesture to start)
+    startOverture();
+
     try {
       // Step 1: Create session
       const sessionRes = await fetch('/api/session', {
@@ -181,6 +189,7 @@ export default function CreatePage() {
       setProjectId(newProjectId);
     } catch (err) {
       console.error('Creation failed:', err);
+      stopOverture();
       setError('Failed to start your show. Please try again.');
       setIsSubmitting(false);
     }
@@ -220,6 +229,7 @@ export default function CreatePage() {
                 </p>
                 <button
                   onClick={() => {
+                    stopOverture();
                     setProjectId(null);
                     setIsSubmitting(false);
                     setError(null);
