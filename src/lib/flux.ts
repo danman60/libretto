@@ -7,10 +7,13 @@ import { fal } from '@fal-ai/client';
 import type { ShowConcept } from './types';
 import type { MusicalTypeConfig } from './musical-types';
 
-// Configure fal with server-side API key
-fal.config({
-  credentials: process.env.FAL_KEY,
-});
+let falConfigured = false;
+function ensureFalConfig() {
+  if (!falConfigured) {
+    fal.config({ credentials: process.env.FAL_KEY });
+    falConfigured = true;
+  }
+}
 
 interface FluxImage {
   url: string;
@@ -62,6 +65,8 @@ export async function generatePoster(
   config: MusicalTypeConfig
 ): Promise<string> {
   const prompt = buildPosterPrompt(concept, config);
+
+  ensureFalConfig();
 
   console.log('[flux] Generating poster...');
   console.log('[flux] Prompt:', prompt.substring(0, 120) + '...');

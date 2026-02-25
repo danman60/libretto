@@ -1,129 +1,78 @@
 /**
- * Orchestra warmup synthesizer using Web Audio API.
- * Creates a gentle, theatrical "tuning up" ambiance:
- * - Low drone (concert A foundation)
- * - Warm pad chords
- * - Gentle volume swell
- *
- * Plays during the loading wait before the show is ready.
+ * Overture audio player.
+ * Plays a preloaded audio file during the generation wait.
+ * Replace /audio/overture.mp3 with your own file.
  */
 
-let audioCtx: AudioContext | null = null;
-let masterGain: GainNode | null = null;
-let isPlaying = false;
-let nodes: AudioNode[] = [];
+const OVERTURE_SRC = '/audio/overture.mp3';
 
-function getContext(): AudioContext {
-  if (!audioCtx) {
-    audioCtx = new AudioContext();
-  }
-  return audioCtx;
-}
-
-function createDrone(ctx: AudioContext, freq: number, gain: number, type: OscillatorType = 'sine'): OscillatorNode {
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  g.gain.value = gain;
-  osc.connect(g);
-  g.connect(masterGain!);
-  nodes.push(osc, g);
-  return osc;
-}
+let audio: HTMLAudioElement | null = null;
+let playing = false;
 
 /**
- * Start playing the orchestra warmup ambiance.
- * Call this when the user clicks "Create My Show".
- * Returns a cleanup function.
+ * Start playing the overture audio.
+ * Call on user gesture (button click) to satisfy autoplay policy.
  */
 export function startOverture(): () => void {
-  if (isPlaying) return stopOverture;
+  if (playing) return stopOverture;
+  if (typeof window === 'undefined') return () => {};
 
-  const ctx = getContext();
-  if (ctx.state === 'suspended') {
-    ctx.resume();
+  try {
+    audio = new Audio(OVERTURE_SRC);
+    audio.loop = true;
+    audio.volume = 0.3;
+    audio.play().catch(() => {});
+    playing = true;
+  } catch {
+    // Audio not available
   }
 
-  masterGain = ctx.createGain();
-  masterGain.gain.value = 0;
-  masterGain.connect(ctx.destination);
-  nodes.push(masterGain);
-
-  // Fade in over 2 seconds
-  masterGain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 2);
-
-  // Concert A drone (220Hz) — like the oboe giving the tuning note
-  const drone = createDrone(ctx, 220, 0.3, 'sine');
-  drone.start();
-
-  // Fifth above (330Hz, E) — warm harmony
-  const fifth = createDrone(ctx, 330, 0.15, 'sine');
-  fifth.start();
-
-  // Octave below (110Hz) — deep warmth
-  const bass = createDrone(ctx, 110, 0.2, 'triangle');
-  bass.start();
-
-  // Gentle shimmer (880Hz) — high harmonic
-  const shimmer = createDrone(ctx, 880, 0.03, 'sine');
-  shimmer.start();
-
-  // Subtle LFO on the shimmer for life
-  const lfo = ctx.createOscillator();
-  const lfoGain = ctx.createGain();
-  lfo.frequency.value = 0.3; // very slow wobble
-  lfoGain.gain.value = 0.02;
-  lfo.connect(lfoGain);
-  lfoGain.connect(shimmer.frequency);
-  lfo.start();
-  nodes.push(lfo, lfoGain);
-
-  isPlaying = true;
   return stopOverture;
 }
 
 /**
- * Fade out and stop the overture.
- * Takes ~1.5s to fade.
+ * Fade out and stop the overture. ~1.5s fade.
  */
 export function stopOverture(): void {
-  if (!isPlaying || !audioCtx || !masterGain) return;
+  if (!playing || !audio) return;
 
-  const ctx = audioCtx;
-  masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.5);
+  const el = audio;
+  const fade = setInterval(() => {
+    if (el.volume > 0.02) {
+      el.volume = Math.max(0, el.volume - 0.02);
+    } else {
+      el.pause();
+      el.currentTime = 0;
+      clearInterval(fade);
+    }
+  }, 50);
 
-  setTimeout(() => {
-    nodes.forEach(node => {
-      try {
-        if (node instanceof OscillatorNode) node.stop();
-        node.disconnect();
-      } catch { /* already stopped */ }
-    });
-    nodes = [];
-    masterGain = null;
-    isPlaying = false;
-  }, 1600);
+  audio = null;
+  playing = false;
 }
 
 /**
  * Crossfade from overture to a real audio element.
- * Fades out the synth while the real audio fades in.
  */
 export function crossfadeToTrack(audioElement: HTMLAudioElement): void {
-  if (!audioCtx || !masterGain) {
-    // No overture playing, just play the track
+  if (!audio || !playing) {
     audioElement.volume = 1;
     audioElement.play().catch(() => {});
     return;
   }
 
-  const ctx = audioCtx;
+  // Fade out overture
+  const old = audio;
+  const fadeOut = setInterval(() => {
+    if (old.volume > 0.02) {
+      old.volume = Math.max(0, old.volume - 0.02);
+    } else {
+      old.pause();
+      clearInterval(fadeOut);
+    }
+  }, 50);
 
-  // Fade out synth over 2s
-  masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 2);
-
-  // Start real audio at 0 volume, fade in
+  // Fade in real track
   audioElement.volume = 0;
   audioElement.play().catch(() => {});
 
@@ -133,15 +82,16 @@ export function crossfadeToTrack(audioElement: HTMLAudioElement): void {
     if (vol >= 1) {
       audioElement.volume = 1;
       clearInterval(fadeIn);
-      // Clean up synth nodes
-      stopOverture();
     } else {
       audioElement.volume = vol;
     }
-  }, 100); // 20 steps over 2s
+  }, 100);
+
+  audio = null;
+  playing = false;
 }
 
-/** Check if the overture is currently playing */
+/** Check if overture is currently playing */
 export function isOvertureActive(): boolean {
-  return isPlaying;
+  return playing;
 }
