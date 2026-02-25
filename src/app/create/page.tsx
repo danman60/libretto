@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { MusicalTypeSelector } from '@/components/MusicalTypeSelector';
 import { QuillScribeBg } from '@/components/QuillScribeBg';
 import { Loader2 } from 'lucide-react';
+import { ScribingAnimation } from '@/components/ScribingAnimation';
 import { startOverture, stopOverture } from '@/lib/overture-synth';
 import type { MusicalType } from '@/lib/types';
 
@@ -244,11 +245,9 @@ export default function CreatePage() {
               </>
             ) : (
               <>
-                {/* Animated spotlight */}
-                <div className="relative mb-8">
-                  <div className="w-20 h-20 mx-auto rounded-full border-2 border-[#C9A84C]/30 flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#C9A84C]" />
-                  </div>
+                {/* Music scribing animation */}
+                <div className="relative mb-6">
+                  <ScribingAnimation className="w-64 h-48 mx-auto opacity-80" />
                 </div>
 
                 {/* Stage label */}

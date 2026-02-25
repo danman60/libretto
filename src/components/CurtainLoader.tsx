@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { ScribingAnimation } from '@/components/ScribingAnimation';
 import type { Track } from '@/lib/types';
 
 const LOADING_MESSAGES = [
@@ -58,7 +58,7 @@ export function CurtainLoader({ tracks, isComplete }: CurtainLoaderProps) {
             >
               {LOADING_MESSAGES[messageIndex]}
             </p>
-            <Loader2 className="h-6 w-6 animate-spin text-[#C9A84C] mx-auto" />
+            <ScribingAnimation className="w-56 h-40 mx-auto opacity-75" />
           </>
         )}
       </div>
