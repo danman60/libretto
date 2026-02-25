@@ -37,6 +37,23 @@ Migration `create_album_feedback_table` applied via MCP (2026-02-24). Table + in
 - Commandment #7 (correct scansion) is CRITICAL
 - Commandment #1 corrected: "don't sing so fast it cannot be understood"
 
+## Queued: FLUX Poster + Faster Audio
+
+**Reference:** `docs/POSTER_AND_AUDIO_RESEARCH.md`
+
+**Phase 1: FLUX poster generation** (decouple art from audio)
+- Add FLUX 1.1 Pro API client (`lib/flux.ts`) — 3-5s, $0.04/image
+- Fire in parallel with audio after enrichment
+- Poster arrives in ~5s instead of 60-90s → animate reveal
+- Overlay show title/tagline with CSS (better typography than AI text)
+
+**Phase 2: KIE webhook** (eliminate polling overhead)
+- Create `/api/kie-webhook` endpoint
+- Pass as `callBackUrl` in KIE requests — instant completion notification
+- Zero provider migration, just add webhook handler
+
+**Phase 3: Evaluate sunoapi.org** (20-30s claimed vs KIE's 60-90s)
+
 ## Queued: Suno Profiles Implementation
 
 **Depends on:** MTBible map finalization (once the bible is sound, implement this pass)
