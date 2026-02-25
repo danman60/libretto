@@ -7,6 +7,12 @@ export interface SongRoleConfig {
   description: string;
   style_hints: string;
   lyrics_guidance: string;
+  /** Suno-optimized style tags (first = highest weight, 4-8 max, max 3-4 instruments) */
+  suno_style: string;
+  /** Italian tempo term for Suno (more reliable than BPM numbers) */
+  suno_tempo: string;
+  /** Lyrics structure with per-section performance cues for Suno */
+  suno_structure: string;
 }
 
 export interface MusicalTypeConfig {
@@ -16,6 +22,8 @@ export interface MusicalTypeConfig {
   icon: string; // emoji for the card
   description: string;
   style_overview: string;
+  /** Suno Exclude Styles field — negative prompting (4-6 terms max) */
+  suno_exclude: string;
   song_structure: SongRoleConfig[];
   enrichment_hints: string;
 }
@@ -28,6 +36,7 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
     icon: '🎭',
     description: 'Lush orchestrations, soaring ballads, and show-stopping ensemble numbers in the tradition of Rodgers & Hammerstein.',
     style_overview: 'orchestral, broadway, theatrical, lush strings, big band, show tune',
+    suno_exclude: 'Lo-fi, Acoustic, Muffled, Electronic, Autotune',
     song_structure: [
       {
         role: 'opening-number',
@@ -35,6 +44,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'Establishes the world, introduces the ensemble, sets the tone',
         style_hints: 'upbeat, orchestral, ensemble, broadway overture feel, theatrical, bright',
+        suno_style: 'Musical Theater, Broadway, Energetic, Bright, Orchestral Strings, Brass Section, Powerful Vocals, Cinematic',
+        suno_tempo: 'Allegro',
+        suno_structure: '[Verse 1 | Bright, Ensemble]\n[Chorus | Powerful, Full Orchestra]\n[Verse 2 | Building]\n[Chorus | Belting, Brass Swells]\n[Bridge | Dramatic]\n[Chorus | Full Ensemble, Triumphant]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — audience enters a new world. This song teaches them how to watch the show and sets the contract about what kind of show this is. Ensemble voice — "we" perspective. Paint the world with SPECIFIC sensory details, not generic descriptions. Must be understandable on first listen — audience is orienting.',
       },
       {
@@ -43,6 +55,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The protagonist reveals their deepest desire',
         style_hints: 'solo ballad, building, hopeful, soaring melody, strings, piano',
+        suno_style: 'Musical Theater, Power Ballad, Hopeful, Building, Grand Piano, Orchestral Strings, Soaring Vocals, Warm',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Soft, Intimate, Piano]\n[Chorus | Building, Hopeful]\n[Verse 2 | Strings Join, Growing]\n[Chorus | Powerful, Soaring]\n[Bridge | Vulnerable, Stripped Back]\n[Chorus | Belting, Full Orchestra]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — protagonist discovers and articulates their deepest desire. This is the show\'s engine. First person, deeply personal. Start intimate, build to a powerful declaration. The hook IS the want. Use SPECIFIC imagery from the character\'s world — not abstract yearning. The audience must fall in love with this character and root for them.',
       },
       {
@@ -51,6 +66,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'Conflict erupts — duet or ensemble clash',
         style_hints: 'dramatic, duet, tension building, minor key, percussive, intense',
+        suno_style: 'Musical Theater, Dramatic, Dark, Minor Key, Orchestral Strings, Timpani, Intense Vocals, Cinematic',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Tense, Staccato Strings]\n[Chorus | Powerful, Driving]\n[Verse 2 | Escalating, Percussive]\n[Chorus | Aggressive, Full Orchestra]\n[Bridge | Spoken Word, Dramatic Pause]\n[Chorus | Belting, Explosive]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — forces collide, point of no return. Two opposing voices or a solo against the world. Sharp, clipped phrasing. Build to a breaking point. Each verse must ESCALATE — specific grievances, not vague anger. Hit emotional peaks immediately, no slow setup.',
       },
       {
@@ -59,6 +77,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'Reset and reframe after intermission',
         style_hints: 'mid-tempo, reflective, then building, ensemble, new energy',
+        suno_style: 'Musical Theater, Broadway, Warm, Reflective, Piano, Light Strings, Smooth Vocals, Polished',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Warm, Reflective, Piano]\n[Chorus | Gentle, Optimistic]\n[Verse 2 | Building, Ensemble Joins]\n[Chorus | Brighter, Full Arrangement]\n[Bridge | New Energy]\n[Chorus | Uplifting, Ensemble]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — aftermath, the world has changed. This is a Charm Song — moment of relief. Melody is more important than lyric density. Steady beat, optimistic tone. Give the audience a breather with fresh images. Then rebuild momentum.',
       },
       {
@@ -67,6 +88,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The emotional climax — the showstopper',
         style_hints: 'powerful ballad, emotionally devastating, building to crescendo, full orchestra',
+        suno_style: 'Musical Theater, Power Ballad, Emotional, Dramatic, Grand Piano, Orchestral Strings, Powerful Belting, Cinematic',
+        suno_tempo: 'Adagio',
+        suno_structure: '[Verse 1 | Soft, Vulnerable, Piano Only]\n[Chorus | Building, Emotional]\n[Verse 2 | Strings Enter, Aching]\n[Chorus | Powerful, Soaring]\n[Bridge | Emotional Climax, Raw]\n[Modulate up a key]\n[Chorus | Belting, Full Orchestra, Triumphant]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — protagonist sees the truth. Maximum emotional intensity. Can use subtext: the character may express one thing on the surface while the audience understands something deeper (complaint that is really a prayer, denial that reveals acceptance). Raw, vulnerable, then triumphant. This is THE song. Use ALL CAPS for the climactic belt moment.',
       },
       {
@@ -75,6 +99,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'Resolution and curtain call',
         style_hints: 'anthemic, uplifting, reprise elements, full ensemble, major key, cathartic',
+        suno_style: 'Musical Theater, Broadway, Uplifting, Warm, Full Orchestra, Choir, Powerful Vocals, Sweeping',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Warm, Gentle, Piano]\n[Chorus | Uplifting, Strings]\n[Verse 2 | Ensemble Joins, Building]\n[Chorus | Full Orchestra, Choir]\n[Bridge | Reflective, Bittersweet]\n[Chorus | Anthemic, Full Ensemble, Cathartic]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — earned resolution, the character has been transformed. REPRISE earlier themes — callback key phrases or hooks from the Opening Number and I Want Song, but with TRANSFORMED meaning. Same words should feel completely different because the character has changed. This is a warm landing, not another peak.',
       },
     ],
@@ -87,6 +114,7 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
     icon: '🎸',
     description: 'Electric guitars, raw power, and anthemic rebellion in the spirit of Rent, Spring Awakening, and American Idiot.',
     style_overview: 'rock, electric guitar, drums, raw, powerful, alternative rock, grunge-tinged',
+    suno_exclude: 'Acoustic, Lo-fi, Synth Pop, Electronic, Smooth',
     song_structure: [
       {
         role: 'opening-number',
@@ -94,6 +122,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'A blast of energy that grabs you by the collar',
         style_hints: 'punk rock, fast tempo, electric guitar, drums, raw energy, garage rock',
+        suno_style: 'Rock, Punk Rock, Energetic, Raw, Electric Guitar, Drums, Powerful Vocals, Driving',
+        suno_tempo: 'Allegro',
+        suno_structure: '[Verse 1 | Raw, Driving Guitar]\n[Chorus | Explosive, Full Band]\n[Verse 2 | Aggressive, Building]\n[Chorus | Powerful, Arena Rock]\n[Bridge | Intense, Breakdown]\n[Chorus | Screaming, Maximum Energy]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — blast into the world. Manifesto energy. Short, punchy lines. Establish the rebellion or world. "We" or defiant "I". The audience must immediately understand the stakes and tone.',
       },
       {
@@ -102,6 +133,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The protagonist\'s raw, unfiltered desire',
         style_hints: 'acoustic to electric build, alt-rock ballad, emotional, building intensity',
+        suno_style: 'Rock, Alternative Rock, Emotional, Building, Acoustic Guitar, Electric Guitar, Gritty Vocals, Intimate',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Soft, Acoustic Guitar Only]\n[Chorus | Building, Electric Enters]\n[Verse 2 | Growing, Drums Join]\n[Chorus | Powerful, Full Band]\n[Bridge | Raw, Vulnerable]\n[Chorus | Explosive, Belting, Arena]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — raw desire articulated. Start stripped-back (acoustic). Build to electric explosion. The want is urgent, not polite. SPECIFIC — name what you want, not vague rebellion.',
       },
       {
@@ -110,6 +144,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The clash — screaming guitars and dueling voices',
         style_hints: 'heavy rock, aggressive, dueling guitars, intense drums, minor key, powerful',
+        suno_style: 'Rock, Heavy Rock, Aggressive, Dark, Distorted Guitar, Intense Drums, Powerful Vocals, Minor Key',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Menacing, Heavy Riff]\n[Chorus | Aggressive, Driving]\n[Verse 2 | Escalating, Pounding Drums]\n[Chorus | Explosive, Screaming]\n[Bridge | Breakdown, Spoken Word]\n[Chorus | Maximum Aggression, Full Power]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — point of no return. Rapid-fire exchanges. Angry, raw. Each verse ESCALATES — specific grievances that build to a scream. Use ALL CAPS for the breaking point.',
       },
       {
@@ -118,6 +155,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The morning after — quieter, damaged',
         style_hints: 'acoustic, stripped-back, melancholy, building slowly, indie rock',
+        suno_style: 'Rock, Indie Rock, Melancholic, Intimate, Acoustic Guitar, Soft Drums, Breathy Vocals, Warm',
+        suno_tempo: 'Adagio',
+        suno_structure: '[Verse 1 | Quiet, Acoustic, Vulnerable]\n[Chorus | Gentle, Aching]\n[Verse 2 | Slowly Building]\n[Chorus | Warmer, Strings Enter]\n[Bridge | Reflective, Stripped]\n[Chorus | Hopeful, Gentle Build]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — aftermath. Vulnerability. The armor is off. Acoustic guitar and voice. Let the pain breathe. Fresh images — not generic sadness.',
       },
       {
@@ -126,6 +166,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The anthem that brings the house down',
         style_hints: 'power ballad, epic build, arena rock, soaring vocals, full band, anthem',
+        suno_style: 'Rock, Power Ballad, Epic, Anthemic, Electric Guitar, Full Band, Soaring Vocals, Cinematic',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Quiet, Piano, Vulnerable]\n[Chorus | Building, Emotional]\n[Verse 2 | Electric Enters, Growing]\n[Chorus | Powerful, Soaring]\n[Bridge | Emotional Climax, Raw]\n[Modulate up a key]\n[Chorus | Arena Rock, Belting, Full Band]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — everything becomes clear. Start quiet, end HUGE. Subtext: this can be a song of defiance that is really about fear, or rage that is really grief. Use ALL CAPS for the climactic anthem moment. Singable chorus.',
       },
       {
@@ -134,6 +177,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'Resolution through noise and silence',
         style_hints: 'epic rock, building to climax then quiet resolve, cathartic, bittersweet',
+        suno_style: 'Rock, Epic, Cathartic, Bittersweet, Electric Guitar, Full Band, Powerful Vocals, Sweeping',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Gentle, Acoustic]\n[Chorus | Building, Full Band]\n[Verse 2 | Driving, Passionate]\n[Chorus | Epic, Powerful]\n[Bridge | Quiet Resolve, Bittersweet]\n[Chorus | Cathartic, Full Power, Anthemic]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — earned resolution. REPRISE the opening riff or I Want melody with TRANSFORMED meaning. Callback key phrases from earlier songs. Resolve through acceptance. The same words now carry different weight. End with power or silence.',
       },
     ],
@@ -146,6 +192,7 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
     icon: '🎵',
     description: 'Catchy, genre-spanning pop hits woven into a narrative — like Mamma Mia meets your imagination.',
     style_overview: 'pop, catchy, hook-driven, radio-friendly, danceable, upbeat',
+    suno_exclude: 'Lo-fi, Grunge, Heavy Metal, Dark, Muffled',
     song_structure: [
       {
         role: 'opening-number',
@@ -153,6 +200,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'An instant earworm that sets the vibe',
         style_hints: 'upbeat pop, catchy hook, danceable, fun, bright production, 80s/90s pop feel',
+        suno_style: 'Pop, Upbeat, Danceable, Catchy, Synth, Light Percussion, Bright Vocals, Polished',
+        suno_tempo: 'Allegro',
+        suno_structure: '[Verse 1 | Fun, Bright, Rhythmic]\n[Chorus | Catchy, Danceable, Singalong]\n[Verse 2 | Energetic, Building]\n[Chorus | Full Production, Joyful]\n[Bridge | Playful, Fresh]\n[Chorus | Maximum Energy, Anthemic]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — set the vibe. Pure pop energy. Instant hook. Establish the world through rhythm and joy. Danceable. Must be understandable first listen.',
       },
       {
@@ -161,6 +211,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'A pop ballad that defines the dream',
         style_hints: 'pop ballad, emotional, piano-driven, building, heartfelt, radio-ready',
+        suno_style: 'Pop, Power Ballad, Emotional, Heartfelt, Piano, Strings, Smooth Vocals, Warm',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Intimate, Piano, Gentle]\n[Chorus | Building, Heartfelt]\n[Verse 2 | Strings Enter, Emotional]\n[Chorus | Powerful, Soaring]\n[Bridge | Vulnerable, Stripped]\n[Chorus | Full Production, Belting]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — the dream crystallized. Think pop power ballad. Simple, universal lyrics but SPECIFIC to this character. The chorus IS the dream. Build from intimate to soaring.',
       },
       {
@@ -169,6 +222,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'An uptempo clash with attitude',
         style_hints: 'uptempo pop-rock, sass, attitude, rhythmic, synth accents, driving beat',
+        suno_style: 'Pop, Pop-Rock, Energetic, Sassy, Synth, Driving Beat, Powerful Vocals, Punchy',
+        suno_tempo: 'Allegro',
+        suno_structure: '[Verse 1 | Rhythmic, Attitude, Sharp]\n[Chorus | Explosive, Driving]\n[Verse 2 | Escalating, Sass]\n[Chorus | Full Power, Intense]\n[Bridge | Breakdown, Dramatic]\n[Chorus | Maximum Energy, Powerful]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — point of no return. Sassy, sharp. Each verse ESCALATES the conflict. Rhythmic verses, explosive chorus. Use ALL CAPS for the breaking point.',
       },
       {
@@ -177,6 +233,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The party after the storm',
         style_hints: 'dance pop, groove, feel-good, funky bass, handclaps, celebration',
+        suno_style: 'Pop, Dance Pop, Feel-Good, Funky, Bass Guitar, Handclaps, Bright Vocals, Groove',
+        suno_tempo: 'Allegro',
+        suno_structure: '[Verse 1 | Groovy, Fun, Rhythmic]\n[Chorus | Feel-Good, Danceable]\n[Verse 2 | Building, Ensemble]\n[Chorus | Celebration, Full Band]\n[Bridge | Fresh Energy]\n[Chorus | Joyful, Maximum Groove]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — defiant joy after the storm. Group energy. "We\'re still here." Melody-first, singable. Fresh images, not cliches.',
       },
       {
@@ -185,6 +244,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The emotional gut-punch disguised as a pop song',
         style_hints: 'emotional pop, building, intimate to epic, strings over pop production, powerful',
+        suno_style: 'Pop, Emotional, Intimate, Building, Piano, Strings, Powerful Vocals, Cinematic',
+        suno_tempo: 'Adagio',
+        suno_structure: '[Verse 1 | Soft, Intimate, Piano]\n[Chorus | Emotional, Building]\n[Verse 2 | Strings, Growing]\n[Chorus | Powerful, Soaring]\n[Bridge | Emotional Climax, Devastating]\n[Modulate up a key]\n[Chorus | Full Production, Belting, Epic]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — truth hits. The ballad that makes everyone cry. Simple words, devastating delivery. Subtext: what sounds like acceptance may really be letting go. Use ALL CAPS for the climactic moment.',
       },
       {
@@ -193,6 +255,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The megamix — all themes collide in joy',
         style_hints: 'uptempo pop, celebration, anthemic, full production, joyful, singalong',
+        suno_style: 'Pop, Anthemic, Uplifting, Celebratory, Full Production, Synth, Powerful Vocals, Joyful',
+        suno_tempo: 'Allegro',
+        suno_structure: '[Verse 1 | Warm, Building]\n[Chorus | Anthemic, Singalong]\n[Verse 2 | Full Energy, Ensemble]\n[Chorus | Celebration, Full Production]\n[Bridge | Reflective, Then Building]\n[Chorus | Maximum Joy, Everyone Sings]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — earned celebration. REPRISE hooks and phrases from the Opening and I Want Song with TRANSFORMED meaning. Everyone sings. Callback to earlier moments. The audience should want to dance.',
       },
     ],
@@ -205,6 +270,7 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
     icon: '✨',
     description: 'Sweeping melodies, magical worlds, and the timeless journey from innocence to courage.',
     style_overview: 'disney, orchestral pop, magical, whimsical, sweeping melody, animated musical feel',
+    suno_exclude: 'Dark, Grunge, Heavy Metal, Lo-fi, Aggressive',
     song_structure: [
       {
         role: 'opening-number',
@@ -212,6 +278,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'A storybook opening that paints the world',
         style_hints: 'whimsical, orchestral, storytelling, magical, warm, narrator voice, fairy tale',
+        suno_style: 'Musical Theater, Disney, Whimsical, Magical, Orchestral Strings, Flute, Warm Vocals, Cinematic',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Warm, Storytelling, Gentle Orchestra]\n[Chorus | Magical, Sweeping, Bright]\n[Verse 2 | Whimsical, Building]\n[Chorus | Full Orchestra, Enchanting]\n[Bridge | Wonder, Mysterious]\n[Chorus | Joyful, Full Ensemble, Magical]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — storybook opening. Narrator or ensemble introduces the world. "Once upon a time" energy. Vivid, SPECIFIC world-painting with magical sensory details. Teaches audience the rules of this world.',
       },
       {
@@ -220,6 +289,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The hero dreams of something more',
         style_hints: 'soaring ballad, hopeful, building, orchestral pop, disney princess energy, magical',
+        suno_style: 'Musical Theater, Disney, Hopeful, Soaring, Grand Piano, Orchestral Strings, Powerful Vocals, Magical',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Intimate, Curious, Piano]\n[Chorus | Hopeful, Soaring, Strings]\n[Verse 2 | Yearning, Building]\n[Chorus | Powerful, Full Orchestra]\n[Bridge | Dreaming, Vulnerable]\n[Chorus | Belting, Triumphant, Magical]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — the hero discovers their desire. THE defining Disney moment. "Part of Your World", "Let It Go". Use SPECIFIC objects and details from the character\'s world to express yearning (Ariel\'s "gadgets and gizmos" = mundane items expressing extraordinary longing). Build to soaring chorus.',
       },
       {
@@ -228,6 +300,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The antagonist\'s delicious, scene-stealing number',
         style_hints: 'theatrical, dark, jazzy undertones, dramatic, villain energy, minor key, show-stopping',
+        suno_style: 'Musical Theater, Dark, Theatrical, Jazzy, Saxophone, Minor Key, Powerful Vocals, Dramatic',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Sinister, Smooth, Jazzy]\n[Chorus | Menacing, Theatrical]\n[Verse 2 | Escalating, Darker]\n[Chorus | Powerful, Show-Stopping]\n[Bridge | Spoken Word, Seductive]\n[Chorus | Triumphant Evil, Full Orchestra]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — villain commits to their plan. Charismatic evil. Comedy Song rules apply: save the best joke/threat for last. Gets more menacing as it goes. Witty, seductive, dangerous. The audience should enjoy the villain.',
       },
       {
@@ -236,6 +311,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The hero finds unexpected allies or strength',
         style_hints: 'warm, ensemble, mid-tempo, heartfelt, friendship theme, acoustic warmth',
+        suno_style: 'Musical Theater, Disney, Warm, Heartfelt, Acoustic Guitar, Light Strings, Gentle Vocals, Intimate',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Warm, Gentle, Acoustic]\n[Chorus | Heartfelt, Friendship]\n[Verse 2 | Ensemble Joins, Growing]\n[Chorus | Warm, Full Arrangement]\n[Bridge | Tender, Genuine]\n[Chorus | Uplifting, Together, Bright]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — aftermath, finding strength. Found family. Charm Song rules: melody-first, optimistic, audience breathes. Warm and genuine. Fresh images, not generic friendship cliches.',
       },
       {
@@ -244,6 +322,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The hero discovers their true power',
         style_hints: 'epic, transformative, building from quiet to massive, full orchestra, triumphant, magical',
+        suno_style: 'Musical Theater, Disney, Epic, Triumphant, Grand Piano, Full Orchestra, Powerful Belting, Cinematic',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Quiet, Uncertain, Piano]\n[Chorus | Growing, Discovering]\n[Verse 2 | Confidence Building, Strings]\n[Chorus | Powerful, Transformative]\n[Bridge | Emotional Climax, Revelation]\n[Modulate up a key]\n[Chorus | Triumphant, Full Orchestra, Magical]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — the hero sees who they truly are. The transformation moment. From doubt to certainty. REPRISE the I Want melody but now the meaning has transformed — they HAVE the thing, or they\'ve become it. Use ALL CAPS for the triumphant climax.',
       },
       {
@@ -252,6 +333,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'Happily ever after — with depth',
         style_hints: 'warm, uplifting, reprise, full ensemble, major key, bittersweet joy, magical resolution',
+        suno_style: 'Musical Theater, Disney, Uplifting, Warm, Full Orchestra, Choir, Soaring Vocals, Magical',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Gentle, Warm, Piano]\n[Chorus | Uplifting, Sweeping]\n[Verse 2 | Ensemble, Building Joy]\n[Chorus | Full Orchestra, Choir]\n[Bridge | Bittersweet, Reflective]\n[Chorus | Magical Resolution, Full Ensemble]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — earned resolution. REPRISE key phrases from the Opening and I Want Song with TRANSFORMED meaning. The same words in a new context show how far the character has come. Earned happiness, not cheap.',
       },
     ],
@@ -264,6 +348,7 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
     icon: '🎤',
     description: 'Sharp lyrics, inventive wordplay, and the rhythm of revolution — in the spirit of Hamilton and In The Heights.',
     style_overview: 'hip-hop, rap, rhythmic, trap beats, 808s, spoken word, R&B hooks',
+    suno_exclude: 'Acoustic, Country, Lo-fi, Muffled, Folk',
     song_structure: [
       {
         role: 'opening-number',
@@ -271,6 +356,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'A rapid-fire introduction that drops you into the world',
         style_hints: 'fast rap, rhythmic, energetic, trap beat, 808s, storytelling flow',
+        suno_style: 'Hip Hop, Rap, Energetic, Rhythmic, 808 Bass, Trap Beat, Storytelling, Intense',
+        suno_tempo: 'Vivace',
+        suno_structure: '[Verse 1 | Fast Flow, Rhythmic, Storytelling]\n[Chorus | Catchy Hook, Energetic]\n[Verse 2 | Dense Bars, Building]\n[Chorus | Full Production, Powerful]\n[Bridge | Rapid Fire, Intense]\n[Chorus | Maximum Energy, Anthem]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — drop into the world. Dense storytelling. Fast flow establishing who, what, where. Internal rhymes. World-building through bars. SPECIFIC places, names, cultural details. 10-14 syllables per line.',
       },
       {
@@ -279,6 +367,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The dream, spoken in rhythm',
         style_hints: 'hip-hop ballad, R&B hook, emotional rap verses, melodic, piano and 808s',
+        suno_style: 'Hip Hop, R&B, Emotional, Melodic, Piano, 808 Bass, Smooth Vocals, Heartfelt',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Rap, Personal, Vulnerable]\n[Chorus | Sung, R&B Hook, Emotional]\n[Verse 2 | Deeper, More Specific]\n[Chorus | Building, Powerful Hook]\n[Bridge | Raw, Spoken Word]\n[Chorus | Full Production, Belting Hook]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — the dream articulated in bars. Rap verses (personal, SPECIFIC) with sung R&B chorus (universal want). Vulnerability in the bars. Must transform from setup to declaration.',
       },
       {
@@ -287,6 +378,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'A rap battle or lyrical showdown',
         style_hints: 'aggressive rap, battle rap energy, hard-hitting beat, intense, competitive',
+        suno_style: 'Hip Hop, Aggressive, Battle Rap, Intense, Hard-Hitting Beat, 808 Bass, Powerful Vocals, Dark',
+        suno_tempo: 'Allegro',
+        suno_structure: '[Verse 1 | Aggressive, Sharp Bars]\n[Chorus | Hard-Hitting, Intense]\n[Verse 2 | Escalating, Faster Flow]\n[Chorus | Explosive, Powerful]\n[Bridge | Breakdown, Devastating]\n[Chorus | Maximum Intensity, Victory]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — lyrical showdown, point of no return. Call and response. Each verse ESCALATES with sharper wordplay and higher stakes. End with a devastating bar in ALL CAPS.',
       },
       {
@@ -295,6 +389,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'Reflection and reinvention',
         style_hints: 'lo-fi hip-hop, introspective, jazz samples, mellow, thoughtful, spoken word elements',
+        suno_style: 'Hip Hop, Introspective, Mellow, Jazz, Piano, Soft Drums, Smooth Vocals, Thoughtful',
+        suno_tempo: 'Adagio',
+        suno_structure: '[Verse 1 | Introspective, Soft Beat, Thoughtful]\n[Chorus | Mellow, Melodic Hook]\n[Verse 2 | Jazz Piano, Reflective]\n[Chorus | Warmer, Growing]\n[Bridge | Spoken Word, Honest]\n[Chorus | Hopeful, Building Gently]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — aftermath, reflection. Slower, looking back. Jazz-influenced. Fresh images for processing change. Spoken word moments between verses.',
       },
       {
@@ -303,6 +400,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The most powerful verse they\'ll ever spit',
         style_hints: 'epic hip-hop, building, orchestra meets 808s, powerful, emotional, anthem rap',
+        suno_style: 'Hip Hop, Epic, Emotional, Cinematic, Orchestral Strings, 808 Bass, Powerful Vocals, Anthemic',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Emotional, Building, Orchestral]\n[Chorus | Powerful Sung Hook, Epic]\n[Verse 2 | Fastest Flow, Everything On Line]\n[Chorus | Full Orchestra Meets 808s]\n[Bridge | Emotional Climax, Raw]\n[Modulate up a key]\n[Chorus | Triumphant, Anthemic, Full Production]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — everything crystallizes. Everything on the line. Most technically impressive AND emotionally devastating verse. Subtext: defiance masking grief, or rage becoming acceptance. Sung hook = catharsis. ALL CAPS for the peak.',
       },
       {
@@ -311,6 +411,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'Legacy — what you leave behind',
         style_hints: 'triumphant hip-hop, full production, ensemble rap, uplifting, legacy anthem',
+        suno_style: 'Hip Hop, Triumphant, Uplifting, Anthemic, Full Production, Orchestral, Powerful Vocals, Legacy',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Reflective, Building]\n[Chorus | Legacy Anthem, Powerful]\n[Verse 2 | Ensemble Voices, Full Energy]\n[Chorus | Triumphant, Full Production]\n[Bridge | Callback, Meaningful]\n[Chorus | Maximum Power, Everyone Together]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — what you leave behind. REPRISE bars and hooks from the Opening and I Want Song with TRANSFORMED meaning. Ensemble voices. Callback to opening. Same phrases, different weight. Powerful, earned ending.',
       },
     ],
@@ -323,6 +426,7 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
     icon: '💫',
     description: 'Intimate, achingly beautiful — the joy and heartbreak of love, from first spark to lasting flame.',
     style_overview: 'romantic, intimate, acoustic, piano, gentle strings, indie folk, warm',
+    suno_exclude: 'Heavy Metal, Electronic, Aggressive, 808s, Autotune',
     song_structure: [
       {
         role: 'opening-number',
@@ -330,6 +434,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The world before love — ordinary life',
         style_hints: 'indie folk, acoustic guitar, gentle, slice-of-life, warm, storytelling',
+        suno_style: 'Indie Folk, Acoustic, Intimate, Warm, Acoustic Guitar, Gentle Percussion, Breathy Vocals, Natural',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Gentle, Acoustic Guitar, Storytelling]\n[Chorus | Warm, Intimate, Melodic]\n[Verse 2 | Building Gently, Strings Enter]\n[Chorus | Fuller, Heartfelt]\n[Bridge | Reflective, Tender]\n[Chorus | Warm, Hopeful, Gentle]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — teach the audience this intimate world before love disrupts it. Paint the ordinary with specific, sensory details: the coffee cup, the rain on the window, the walk home alone. Gentle observation that ESTABLISHES the emotional baseline everything will be measured against.',
       },
       {
@@ -338,6 +445,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'The ache of wanting to be known',
         style_hints: 'intimate piano ballad, vulnerable, building gently, strings enter, aching beauty',
+        suno_style: 'Ballad, Intimate, Vulnerable, Aching, Grand Piano, Soft Strings, Breathy Vocals, Beautiful',
+        suno_tempo: 'Adagio',
+        suno_structure: '[Verse 1 | Whispered, Piano Only, Vulnerable]\n[Chorus | Aching, Building Gently]\n[Verse 2 | Strings Enter, Yearning]\n[Chorus | Emotional, Soaring]\n[Bridge | Raw, Devastating]\n[Chorus | Powerful, Full Strings, Belting]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — the character discovers what they truly ache for. Not just wanting love — wanting to be SEEN. Specificity doctrine: "the way you fold the corners of your book" not "I want someone special." Quiet devastation, building vulnerability. Within 15 minutes the audience must understand the longing.',
       },
       {
@@ -346,6 +456,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 1,
         description: 'When love gets complicated',
         style_hints: 'building tension, minor key, duet energy, strings and piano, emotional crescendo',
+        suno_style: 'Musical Theater, Dramatic, Emotional, Tense, Piano, Strings, Powerful Vocals, Minor Key',
+        suno_tempo: 'Moderato',
+        suno_structure: '[Verse 1 | Tense, Controlled, Piano]\n[Chorus | Emotional, Building]\n[Verse 2 | Escalating, Strings Intensify]\n[Chorus | Powerful, Desperate]\n[Bridge | Breaking Point, Raw]\n[Chorus | Devastating, Full Emotional Power]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — the moment love is tested. ESCALATION: misunderstanding → betrayal → the thing they can\'t unsay. Two perspectives pulling apart. Subtext: what they\'re really fighting about is never the surface argument. Specific details from THEIR relationship, not generic conflict. ALL CAPS for the line that breaks everything.',
       },
       {
@@ -354,6 +467,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'Alone with the absence',
         style_hints: 'sparse, solo piano, melancholy, beautiful, lonely, rainy-day feeling',
+        suno_style: 'Ballad, Melancholic, Sparse, Beautiful, Solo Piano, Lonely, Breathy Vocals, Intimate',
+        suno_tempo: 'Largo',
+        suno_structure: '[Verse 1 | Solo Piano, Lonely, Quiet]\n[Chorus | Melancholic, Beautiful]\n[Verse 2 | Sparse Strings, Aching]\n[Chorus | Deeper Sadness, Growing]\n[Bridge | Devastating Silence]\n[Chorus | Acceptance, Gentle Beauty]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Transition — new reality after the break. The empty apartment. The cold side of the bed. Sensory details of absence: the silence where their laugh was, the untouched mug. Musicalize the mundane — ordinary objects become devastating. Subtext: pretending to be fine while falling apart.',
       },
       {
@@ -362,6 +478,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'The grand gesture — or the letting go',
         style_hints: 'emotional climax, building from whisper to full orchestra, heartbreaking beauty, cathartic',
+        suno_style: 'Ballad, Emotional, Heartbreaking, Cathartic, Piano, Orchestral Strings, Powerful Belting, Cinematic',
+        suno_tempo: 'Adagio',
+        suno_structure: '[Verse 1 | Whisper, Solo Piano, Fragile]\n[Chorus | Building, Emotional]\n[Verse 2 | Strings Swell, Growing]\n[Chorus | Powerful, Cathartic]\n[Bridge | Emotional Climax, Everything Breaks]\n[Modulate up a key]\n[Chorus | Full Orchestra, Belting, Heartbreaking Beauty]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Realization — the moment of absolute clarity. Either "I choose you" or "I release you" — devastating either way. Subtext: complaint becoming prayer (wanting them back → accepting what love taught you). Raw honesty. Build from whisper to the one ALL CAPS line that shatters everything. Peak emotional climax of the show.',
       },
       {
@@ -370,6 +489,9 @@ export const MUSICAL_TYPES: MusicalTypeConfig[] = [
         act: 2,
         description: 'What love leaves behind',
         style_hints: 'gentle, warm, acoustic with subtle strings, bittersweet, hopeful, intimate',
+        suno_style: 'Indie Folk, Intimate, Bittersweet, Hopeful, Acoustic Guitar, Soft Strings, Warm Vocals, Gentle',
+        suno_tempo: 'Andante',
+        suno_structure: '[Verse 1 | Quiet, Acoustic, Peaceful]\n[Chorus | Bittersweet, Warm]\n[Verse 2 | Gentle Strings, Hopeful]\n[Chorus | Fuller, Earned Peace]\n[Bridge | Reflective, Tender]\n[Chorus | Warm Landing, Gentle, Intimate]',
         lyrics_guidance: 'DRAMATIC FUNCTION: Decision — earned resolution, love has transformed them. REPRISE key phrases from the Opening Number and I Want Song with TRANSFORMED meaning — same words, completely different weight because the character has changed. Whether together or apart, quiet earned peace. Warm landing, not another peak.',
       },
     ],

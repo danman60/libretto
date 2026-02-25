@@ -92,15 +92,11 @@ Emotional context: ${actContext}
 ## Lyrics Guidance
 ${songConfig.lyrics_guidance}
 
-## Song Structure (MANDATORY)
-[Verse 1]
-[Chorus]
-[Verse 2]
-[Chorus]
-[Bridge]
-[Chorus]
+## Song Structure (MANDATORY — use these EXACT section tags with performance cues)
+${songConfig.suno_structure}
 
 The chorus appears THREE times and must be IDENTICAL every time. Copy-paste it exactly.
+The performance cues after the | (like "Soft, Piano" or "Belting, Full Orchestra") are for the music engine — include them in the output exactly as shown.
 
 ## Songwriting Rules (MTBible)
 1. **SINGABLE:** Sustained vowels on key words. Avoid hard consonants at the ends of important lines. If it's hard to sing on that note, it's the wrong word.
@@ -123,11 +119,16 @@ export function buildSongStylePrompt(
   songConfig: SongRoleConfig,
   musicalTypeConfig: MusicalTypeConfig
 ): string {
-  const parts: string[] = [];
-  parts.push(musicalTypeConfig.style_overview);
-  parts.push(songConfig.style_hints);
-  parts.push('catchy, melodic, theatrical');
-  return parts.join(', ');
+  // Use Suno-optimized style tags (ordered by weight, 4-8 tags, max 3-4 instruments)
+  // Italian tempo term baked in (more reliable than BPM numbers)
+  return `${songConfig.suno_style}, ${songConfig.suno_tempo}`;
+}
+
+/** Build Suno Exclude Styles string for negative prompting */
+export function buildSongExcludeStyles(
+  musicalTypeConfig: MusicalTypeConfig
+): string {
+  return musicalTypeConfig.suno_exclude;
 }
 
 // ===== Playbill Generation =====
