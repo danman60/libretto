@@ -66,39 +66,55 @@ export async function POST(request: NextRequest) {
       break;
 
     case 'complete': {
-      // All variants ready — pick the best and update the track
+      // All variants ready — Suno puts the preferred one first
       const tracks = body.data?.data;
       if (!tracks?.length) {
         console.error('[kie-webhook] Complete callback but no track data');
         return NextResponse.json({ error: 'No track data' }, { status: 400 });
       }
 
-      // Pick the longer track (higher quality usually)
-      const best = tracks.reduce((a, b) => (b.duration > a.duration ? b : a));
+      // First in array = Suno's top pick (matches web UI ordering)
+      const primary = tracks[0];
+      const alt = tracks.length > 1 ? tracks[1] : null;
 
-      console.log(`[kie-webhook] Completing track ${trackNumber}: audio=${best.audio_url?.substring(0, 60)}... duration=${best.duration}s`);
+      console.log(`[kie-webhook] Completing track ${trackNumber}: primary=${primary.audio_url?.substring(0, 60)}... duration=${primary.duration}s | variants=${tracks.length}`);
 
       await logGeneration({
         projectId,
         trackNumber,
         event: 'audio_done',
-        model: 'kie-suno',
+        model: primary.model_name || 'kie-suno',
       });
 
-      // Update track with audio data
-      await db.from('tracks').update({
-        suno_task_id: taskId || best.id,
-        audio_url: best.audio_url,
-        cover_image_url: best.image_url,
-        duration: best.duration,
+      // Update track with primary variant + generation stats
+      const updateData: Record<string, unknown> = {
+        suno_task_id: taskId || primary.id,
+        suno_id: primary.id,
+        audio_url: primary.audio_url,
+        cover_image_url: primary.image_url,
+        duration: primary.duration,
+        suno_model: primary.model_name || null,
+        suno_tags: primary.tags || null,
+        suno_created_at: primary.createTime || null,
         status: 'complete',
         updated_at: new Date().toISOString(),
-      }).eq('project_id', projectId).eq('track_number', trackNumber);
+      };
+
+      // Store alternate variant for A/B switching
+      if (alt) {
+        updateData.alt_audio_url = alt.audio_url;
+        updateData.alt_cover_image_url = alt.image_url;
+        updateData.alt_duration = alt.duration;
+        updateData.alt_suno_id = alt.id;
+      }
+
+      await db.from('tracks').update(updateData)
+        .eq('project_id', projectId).eq('track_number', trackNumber);
 
       // Backfill album cover art if missing
-      if (best.image_url) {
+      if (primary.image_url) {
         await db.from('albums')
-          .update({ cover_image_url: best.image_url })
+          .update({ cover_image_url: primary.image_url })
           .eq('project_id', projectId)
           .is('cover_image_url', null);
       }
@@ -106,7 +122,7 @@ export async function POST(request: NextRequest) {
       // Check if all tracks are done
       await maybeFinalizeProject(projectId);
 
-      console.log(`[kie-webhook] Track ${trackNumber} complete`);
+      console.log(`[kie-webhook] Track ${trackNumber} complete | model=${primary.model_name} tags=${primary.tags?.substring(0, 50)}`);
       break;
     }
 

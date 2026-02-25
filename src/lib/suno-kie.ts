@@ -158,8 +158,8 @@ export async function pollKieCompletion(taskId: string): Promise<KieTrackResult>
           throw new Error('KIE returned SUCCESS but no track data');
         }
 
-        // Pick the longer track (better quality usually)
-        const best = tracks.reduce((a, b) => (b.duration > a.duration ? b : a));
+        // First in array = Suno's top pick (matches web UI ordering)
+        const best = tracks[0];
 
         return {
           id: best.id,
