@@ -129,9 +129,10 @@ interface SongCardProps {
   onGenerateTrack?: (trackNumber: number) => void;
   variant?: 'dark' | 'playbill';
   autoPlay?: boolean;
+  startTime?: number;
 }
 
-export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, onGenerateTrack, variant = 'dark', autoPlay }: SongCardProps) {
+export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, onGenerateTrack, variant = 'dark', autoPlay, startTime }: SongCardProps) {
   const [showLyrics, setShowLyrics] = useState(false);
   const [playingCut, setPlayingCut] = useState(false); // true = playing alternate "cut song"
 
@@ -245,6 +246,7 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
                   title={playingCut ? `${track.title} (Cut)` : track.title}
                   coverUrl={playingCut && track.alt_cover_image_url ? track.alt_cover_image_url : track.cover_image_url}
                   autoPlay={autoPlay}
+                  startTime={startTime}
                 />
                 {track.alt_audio_url && (
                   <button
@@ -380,6 +382,7 @@ export function SongCard({ track, index, isHighlighted, isNowPlaying, isLocked, 
             title={playingCut ? `${track.title} (Cut)` : track.title}
             coverUrl={playingCut && track.alt_cover_image_url ? track.alt_cover_image_url : track.cover_image_url}
             autoPlay={autoPlay}
+            startTime={startTime}
           />
           {track.alt_audio_url && (
             <button

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { MusicalTypeSelector } from '@/components/MusicalTypeSelector';
 import { Loader2 } from 'lucide-react';
-import { ScribingAnimation } from '@/components/ScribingAnimation';
+import { QuillScribeBg } from '@/components/QuillScribeBg';
 import { startOverture, stopOverture } from '@/lib/overture-synth';
 import type { MusicalType } from '@/lib/types';
 
@@ -207,7 +207,7 @@ export default function CreatePage() {
     return (
       <main className="min-h-screen text-[#F2E8D5] flex flex-col relative overflow-hidden">
         {/* Full-viewport scribing animation background */}
-        <ScribingAnimation className="absolute inset-0 w-full h-full object-cover opacity-40" />
+        <QuillScribeBg className="absolute inset-0 pointer-events-none" drawDuration={35000} />
         {/* Dark overlay so text remains readable */}
         <div className="absolute inset-0 bg-black/50 z-[1]" />
 

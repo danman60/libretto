@@ -9,9 +9,10 @@ interface AudioPlayerProps {
   title: string;
   coverUrl?: string | null;
   autoPlay?: boolean; // Start playing on mount (crossfade from overture)
+  startTime?: number; // Seek to this time on auto-play (handoff from earlyAudio)
 }
 
-export function AudioPlayer({ src, title, coverUrl, autoPlay }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, coverUrl, autoPlay, startTime }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -28,7 +29,15 @@ export function AudioPlayer({ src, title, coverUrl, autoPlay }: AudioPlayerProps
       // Auto-play after metadata loaded
       if (autoPlay && !autoPlayFired.current) {
         autoPlayFired.current = true;
-        crossfadeToTrack(audio);
+        if (startTime && startTime > 0) {
+          // Handoff from earlyAudio — seek to position and play directly
+          audio.currentTime = startTime;
+          audio.volume = 1;
+          audio.play().catch(() => {});
+          stopOverture();
+        } else {
+          crossfadeToTrack(audio);
+        }
         setIsPlaying(true);
       }
     };
@@ -49,7 +58,7 @@ export function AudioPlayer({ src, title, coverUrl, autoPlay }: AudioPlayerProps
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('play', handlePlay);
     };
-  }, [autoPlay]);
+  }, [autoPlay, startTime]);
 
   const togglePlay = () => {
     const audio = audioRef.current;

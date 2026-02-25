@@ -10,7 +10,7 @@ import { Guestbook } from '@/components/Guestbook';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { AlbumPlayer } from '@/components/AlbumPlayer';
 import { StageBackdrop } from '@/components/StageBackdrop';
-import { ScribingAnimation } from '@/components/ScribingAnimation';
+import { QuillScribeBg } from '@/components/QuillScribeBg';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
 import { generateBooklet } from '@/lib/generate-booklet';
 import { crossfadeToTrack, stopOverture } from '@/lib/overture-synth';
@@ -34,6 +34,18 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   const [audioTriggered, setAudioTriggered] = useState(false);
   const [rehearsingToast, setRehearsingToast] = useState(false);
   const [track1Ready, setTrack1Ready] = useState(false);
+  const [earlyAudioTime, setEarlyAudioTime] = useState<number | null>(null);
+  const [pageLoadTime] = useState(() => Date.now());
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Count-up timer until first song is ready
+  useEffect(() => {
+    if (track1Ready) return;
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - pageLoadTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [track1Ready, pageLoadTime]);
 
   useEffect(() => {
     fetch(`/api/album/${slug}`)
@@ -113,6 +125,19 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       setTrack1Ready(true);
       setHighlightedTrack(0);
       sessionStorage.removeItem('libretto_overture_active');
+
+      // Log time-to-first-song for performance tracking
+      const timeToFirstSongMs = Date.now() - pageLoadTime;
+      console.log(`[album] First song ready in ${(timeToFirstSongMs / 1000).toFixed(1)}s`);
+      fetch('/api/log-timing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: data.album.project_id,
+          event: 'first_song_autoplay',
+          durationMs: timeToFirstSongMs,
+        }),
+      }).catch(() => {}); // fire-and-forget
 
       // Start playing immediately — don't wait for programme to open
       const audio = new Audio(track1.audio_url);
@@ -365,6 +390,12 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   /** Gate programme opening — show toast if still rehearsing */
   const handleProgrammeClick = useCallback(() => {
     if (canOpenProgramme) {
+      // Hand off earlyAudio playback to the SongCard player
+      if (earlyAudioRef.current && !earlyAudioRef.current.paused) {
+        setEarlyAudioTime(earlyAudioRef.current.currentTime);
+        earlyAudioRef.current.pause();
+        earlyAudioRef.current = null;
+      }
       setProgrammeOpen(true);
     } else {
       setRehearsingToast(true);
@@ -416,10 +447,10 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   if (isMusical && playbill) {
     return (
       <main className="min-h-screen text-[#F2E8D5] relative">
-        {/* Scribing animation overlay — visible until first song is ready */}
+        {/* Quill scribing overlay — visible until first song is ready */}
         {!track1Ready && (
           <div className="fixed inset-0 z-[5] pointer-events-none transition-opacity duration-[3000ms]">
-            <ScribingAnimation className="w-full h-full object-cover opacity-25" speed={0.3} />
+            <QuillScribeBg className="fixed inset-0 pointer-events-none" drawDuration={40000} />
           </div>
         )}
 
@@ -466,6 +497,11 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                             style={{ fontFamily: 'var(--font-oswald)' }}
                           >
                             The curtain is rising...
+                          </p>
+                          <p className="text-[#F2E8D5]/25 text-xs tabular-nums mt-3"
+                            style={{ fontFamily: 'var(--font-oswald)' }}
+                          >
+                            {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
                           </p>
                         </div>
                       </div>
@@ -543,6 +579,13 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                     </span>
                   )}
                 </p>
+                {!canOpenProgramme && (
+                  <p className="text-[#F2E8D5]/25 text-xs tabular-nums mt-2"
+                    style={{ fontFamily: 'var(--font-oswald)' }}
+                  >
+                    {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
+                  </p>
+                )}
 
                 {/* "Still rehearsing" toast */}
                 {rehearsingToast && (
@@ -723,7 +766,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                             isLocked={lockedTrackNumbers.has(track.track_number)}
                             onGenerateTrack={handleGenerateTrack}
                             variant="playbill"
-                            autoPlay={false}
+                            autoPlay={track.track_number === 1 && earlyAudioTime !== null}
+                            startTime={track.track_number === 1 ? earlyAudioTime ?? undefined : undefined}
                           />
                         ))}
                       </div>

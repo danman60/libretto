@@ -182,7 +182,13 @@ function buildTimeline(w: number, h: number): ScribeElement[] {
   return elements;
 }
 
-export function QuillScribeBg() {
+interface QuillScribeBgProps {
+  className?: string;
+  /** Draw duration in ms — higher = slower/dreamier. Default 35s */
+  drawDuration?: number;
+}
+
+export function QuillScribeBg({ className, drawDuration = 35000 }: QuillScribeBgProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
 
@@ -208,7 +214,7 @@ export function QuillScribeBg() {
     const h = window.innerHeight;
     const timeline = buildTimeline(w, h);
     const totalElements = timeline.length;
-    const DRAW_DURATION = 18000; // ms to draw everything
+    const DRAW_DURATION = drawDuration;
     const startTime = performance.now();
 
     // Quill position
@@ -322,7 +328,7 @@ export function QuillScribeBg() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
+      className={className || "fixed inset-0 pointer-events-none z-0"}
       aria-hidden="true"
     />
   );
