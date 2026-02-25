@@ -299,16 +299,18 @@
   border-color: rgba(201, 168, 76, 0.4);
 }
 
-/* ===== ALBUM REVEAL ===== */
+/* ===== ALBUM REVEAL — slow "painted on" effect ===== */
 .reveal-blur {
-  filter: blur(20px);
+  filter: blur(30px) saturate(0.3);
   opacity: 0;
-  animation: reveal-unblur 1.5s ease-out forwards;
+  animation: reveal-unblur 8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes reveal-unblur {
-  0% { filter: blur(20px); opacity: 0; transform: scale(1.05); }
-  100% { filter: blur(0); opacity: 1; transform: scale(1); }
+  0% { filter: blur(30px) saturate(0.3); opacity: 0; transform: scale(1.08); }
+  30% { filter: blur(18px) saturate(0.5); opacity: 0.4; transform: scale(1.05); }
+  60% { filter: blur(8px) saturate(0.7); opacity: 0.7; transform: scale(1.03); }
+  100% { filter: blur(0) saturate(1); opacity: 1; transform: scale(1); }
 }
 
 /* ===== GENTLE FADE IN ===== */

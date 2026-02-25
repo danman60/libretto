@@ -10,9 +10,10 @@ import { Guestbook } from '@/components/Guestbook';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { AlbumPlayer } from '@/components/AlbumPlayer';
 import { StageBackdrop } from '@/components/StageBackdrop';
+import { ScribingAnimation } from '@/components/ScribingAnimation';
 import { EMOTION_PALETTES } from '@/lib/mood-colors';
 import { generateBooklet } from '@/lib/generate-booklet';
-import { stopOverture } from '@/lib/overture-synth';
+import { crossfadeToTrack, stopOverture } from '@/lib/overture-synth';
 import { Share2, Check, Loader2, Download, PlusCircle, QrCode, Code, BookOpen, ChevronLeft, Music } from 'lucide-react';
 import type { AlbumPageData, Track, Emotion, PlaybillContent } from '@/lib/types';
 
@@ -100,7 +101,8 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     }
   }, [data, audioTriggered]);
 
-  // Detect when track 1 audio is ready — AudioPlayer handles the actual crossfade
+  // Detect when track 1 audio is ready — crossfade from overture IMMEDIATELY
+  const earlyAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     if (!data || track1Ready) return;
     const track1 = data.tracks.find((t: Track) => t.track_number === 1);
@@ -108,12 +110,25 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
       setTrack1Ready(true);
       setHighlightedTrack(0);
       sessionStorage.removeItem('libretto_overture_active');
+
+      // Start playing immediately — don't wait for programme to open
+      const audio = new Audio(track1.audio_url);
+      earlyAudioRef.current = audio;
+      audio.addEventListener('loadedmetadata', () => {
+        crossfadeToTrack(audio);
+      });
     }
   }, [data, track1Ready]);
 
-  // Clean up overture on unmount
+  // Clean up overture + early audio on unmount
   useEffect(() => {
-    return () => { stopOverture(); };
+    return () => {
+      stopOverture();
+      if (earlyAudioRef.current) {
+        earlyAudioRef.current.pause();
+        earlyAudioRef.current = null;
+      }
+    };
   }, []);
 
   // Track which songs have been kicked off but server may not reflect yet
@@ -397,7 +412,14 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
   // ===== MUSICAL: Cover + Interior with flip animation =====
   if (isMusical && playbill) {
     return (
-      <main className="min-h-screen text-[#F2E8D5]">
+      <main className="min-h-screen text-[#F2E8D5] relative">
+        {/* Scribing animation overlay — visible until first song is ready */}
+        {!track1Ready && (
+          <div className="fixed inset-0 z-[5] pointer-events-none transition-opacity duration-[3000ms]">
+            <ScribingAnimation className="w-full h-full object-cover opacity-25" speed={0.3} />
+          </div>
+        )}
+
         {/* Red velvet proscenium curtain */}
         <div className={`curtain-backdrop ${programmeOpen ? 'curtain-open' : ''}`}>
           <div className="curtain-panel curtain-panel-left" />
@@ -602,10 +624,10 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
               </div>
             )}
 
-            {/* THE PROGRAMME SPREAD — fills remaining viewport */}
-            <section className="flex-1 flex flex-col px-3 sm:px-6 py-3 sm:py-4">
-              <div className="playbill-spread playbill-spread-enter flex-1 flex flex-col">
-                <div className="grid grid-cols-1 md:grid-cols-2 flex-1">
+            {/* THE PROGRAMME SPREAD — centered with visible background */}
+            <section className="flex-1 flex items-start justify-center px-3 sm:px-6 py-3 sm:py-4">
+              <div className="playbill-spread playbill-spread-enter w-full max-w-4xl" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-hidden">
                   {/* LEFT PAGE — Playbill content */}
                   <div className="playbill-page border-b md:border-b-0 md:border-r border-[#C9A84C]/15 flex flex-col overflow-y-auto">
                     <div className="text-center mb-4 sm:mb-5">
@@ -698,7 +720,7 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
                             isLocked={lockedTrackNumbers.has(track.track_number)}
                             onGenerateTrack={handleGenerateTrack}
                             variant="playbill"
-                            autoPlay={track.track_number === 1 && track1Ready}
+                            autoPlay={false}
                           />
                         ))}
                       </div>

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { MusicalTypeSelector } from '@/components/MusicalTypeSelector';
-import { QuillScribeBg } from '@/components/QuillScribeBg';
 import { Loader2 } from 'lucide-react';
 import { ScribingAnimation } from '@/components/ScribingAnimation';
 import { startOverture, stopOverture } from '@/lib/overture-synth';
@@ -207,7 +206,10 @@ export default function CreatePage() {
 
     return (
       <main className="min-h-screen text-[#F2E8D5] flex flex-col relative overflow-hidden">
-        <QuillScribeBg />
+        {/* Full-viewport scribing animation background */}
+        <ScribingAnimation className="absolute inset-0 w-full h-full object-cover opacity-40" />
+        {/* Dark overlay so text remains readable */}
+        <div className="absolute inset-0 bg-black/50 z-[1]" />
 
         <div className="text-center pt-8 mb-4 relative z-10">
           <Link href="/" className="marquee-title inline-block py-2 text-2xl font-bold tracking-[0.15em] text-[#C9A84C]/60 hover:text-[#C9A84C] transition-colors" style={{ fontFamily: 'var(--font-playfair)' }}>
@@ -245,11 +247,6 @@ export default function CreatePage() {
               </>
             ) : (
               <>
-                {/* Music scribing animation */}
-                <div className="relative mb-6">
-                  <ScribingAnimation className="w-64 h-48 mx-auto opacity-80" />
-                </div>
-
                 {/* Stage label */}
                 <h2 className="text-2xl mb-2 text-[#F2E8D5]"
                   style={{ fontFamily: 'var(--font-playfair)', fontStyle: 'italic' }}

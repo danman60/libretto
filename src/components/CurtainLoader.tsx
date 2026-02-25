@@ -58,7 +58,7 @@ export function CurtainLoader({ tracks, isComplete }: CurtainLoaderProps) {
             >
               {LOADING_MESSAGES[messageIndex]}
             </p>
-            <ScribingAnimation className="w-56 h-40 mx-auto opacity-75" />
+            <ScribingAnimation className="fixed inset-0 w-full h-full object-cover opacity-30 z-0" />
           </>
         )}
       </div>

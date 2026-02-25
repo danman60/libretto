@@ -238,12 +238,14 @@ export function QuillScribeBg() {
       // Draw current element partially (ink appearing)
       if (elementsToShow < totalElements) {
         const currentEl = timeline[elementsToShow];
-        const elProgress = (progress * totalElements) % 1;
-        drawElement(ctx!, currentEl, elProgress);
+        if (currentEl) {
+          const elProgress = (progress * totalElements) % 1;
+          drawElement(ctx!, currentEl, elProgress);
 
-        // Update quill position to current element
-        quillX = currentEl.x;
-        quillY = currentEl.y;
+          // Update quill position to current element
+          quillX = currentEl.x;
+          quillY = currentEl.y;
+        }
       }
 
       // Draw the quill pen
@@ -286,10 +288,12 @@ export function QuillScribeBg() {
 
       if (elementsToShow < totalElements) {
         const currentEl = timeline[elementsToShow];
-        const elProgress = (progress * totalElements) % 1;
-        drawElement(ctx!, currentEl, elProgress);
-        quillX = currentEl.x;
-        quillY = currentEl.y;
+        if (currentEl) {
+          const elProgress = (progress * totalElements) % 1;
+          drawElement(ctx!, currentEl, elProgress);
+          quillX = currentEl.x;
+          quillY = currentEl.y;
+        }
       }
 
       if (progress < 1) {
