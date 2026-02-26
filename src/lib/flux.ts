@@ -124,8 +124,8 @@ function buildVariantPrompts(
       prompt: `Dramatic close-up theatrical poster artwork. Portrait of ${protagonist ? `${protagonist.name}, ${protagonist.description}` : 'the protagonist'} in ${setting}. Dramatic lighting, intense expression, emotional depth. ${base}`,
     },
     {
-      label: 'Dramatic Scene',
-      prompt: `Pivotal dramatic scene theatrical poster artwork. Multiple figures on stage in ${setting}. Theatrical staging, spotlight, action and tension. ${base}`,
+      label: 'Hand-Drawn',
+      prompt: `Hand-drawn illustration style Broadway poster. Ink and watercolor sketch feel, loose expressive brushstrokes, visible pencil lines, artistic imperfections. Scene from ${setting}. Whimsical yet dramatic, like a Playbill artist's original sketch. ${base.replace('painterly', 'hand-illustrated, sketch-like, ink wash')}`,
     },
   ];
 }
@@ -160,6 +160,13 @@ export async function generatePosterVariants(
       return { url, label: v.label };
     })
   );
+
+  // Log any rejected variants so failures aren't silent
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.error(`[flux] Variant ${i + 1} (${variants[i].label}) failed:`, r.reason?.message || r.reason);
+    }
+  });
 
   const options: PosterOption[] = results
     .filter((r): r is PromiseFulfilledResult<PosterOption> => r.status === 'fulfilled')

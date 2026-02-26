@@ -86,13 +86,16 @@ export async function POST(request: NextRequest) {
     ]);
 
     // Step 5: Save poster URLs to projects.poster_options
+    // Always save (even empty array) so the frontend knows posters are done loading
     const posterOptions = posterResult.status === 'fulfilled' ? posterResult.value : [];
+    await db.from('projects').update({
+      poster_options: posterOptions,
+      updated_at: new Date().toISOString(),
+    }).eq('id', projectId);
     if (posterOptions.length > 0) {
-      await db.from('projects').update({
-        poster_options: posterOptions,
-        updated_at: new Date().toISOString(),
-      }).eq('id', projectId);
       console.log(`[api/generate-track] Saved ${posterOptions.length} poster options`);
+    } else {
+      console.warn('[api/generate-track] All poster variants failed — saved empty array');
     }
 
     return NextResponse.json({ success: true });

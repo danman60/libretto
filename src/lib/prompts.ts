@@ -229,6 +229,35 @@ Respond with ONLY valid JSON (no markdown, no code fences):
 Each title should be evocative, 1-4 words. Make all 3 distinct in tone.`;
 }
 
+// ===== Title Regeneration =====
+
+export function buildTitleRegenPrompt(
+  concept: ShowConcept,
+  existingTitles: string[]
+): string {
+  return `You are a Broadway musical dramaturg. Generate 3 NEW title options for this show. They must be completely different from the existing titles.
+
+## Show Concept
+Setting: ${concept.setting}
+Synopsis: ${concept.synopsis.substring(0, 300)}
+Themes: ${concept.themes.join(', ')}
+Tone: ${concept.tone}
+
+## Existing Titles (DO NOT reuse these)
+${existingTitles.map(t => `- "${t}"`).join('\n')}
+
+Respond with ONLY valid JSON (no markdown, no code fences):
+{
+  "title_options": [
+    { "title": "New Title 1", "tagline": "One-line emotional tagline" },
+    { "title": "New Title 2", "tagline": "Another tagline" },
+    { "title": "New Title 3", "tagline": "Third tagline" }
+  ]
+}
+
+Each title should be evocative, 1-4 words, and distinct in tone from each other and the existing titles.`;
+}
+
 // ===== Legacy V2 Prompts (kept for old album backward compat) =====
 
 import type { Emotion, LifeMap, MusicProfile, NarrativeRole } from './types';

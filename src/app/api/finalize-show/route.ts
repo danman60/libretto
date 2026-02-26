@@ -19,14 +19,15 @@ export async function POST(request: NextRequest) {
   console.log('[api/finalize-show] POST');
   try {
     const body = await request.json();
-    const { projectId, titleIndex, posterIndex } = body as {
+    const { projectId, titleIndex, posterIndex, customTitle } = body as {
       projectId: string;
       titleIndex: number;
       posterIndex: number;
+      customTitle?: string;
     };
 
-    if (!projectId || titleIndex === undefined) {
-      return NextResponse.json({ error: 'Missing projectId or titleIndex' }, { status: 400 });
+    if (!projectId || (titleIndex === undefined && !customTitle)) {
+      return NextResponse.json({ error: 'Missing projectId or titleIndex/customTitle' }, { status: 400 });
     }
 
     const db = getServiceSupabase();
@@ -45,22 +46,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project missing backstory or musical_type' }, { status: 400 });
     }
 
-    // Atomic compare-and-swap: only flip if still 'choosing' (prevents double-submit)
+    // Build updated concept
     const concept: ShowConcept = JSON.parse(project.backstory);
     const musicalType = project.musical_type as MusicalType;
-    concept.recommended_title = titleIndex;
 
-    const { count } = await db.from('projects').update({
+    if (customTitle) {
+      // Custom title: inject as first option and select it
+      concept.title_options[0] = { title: customTitle, tagline: '' };
+      concept.recommended_title = 0;
+    } else {
+      concept.recommended_title = titleIndex;
+    }
+
+    // Atomic compare-and-swap: only flip if still 'choosing' (prevents double-submit)
+    // Use .select('id') to get back rows — count requires { count: 'exact' }
+    const { data: updated } = await db.from('projects').update({
       backstory: JSON.stringify(concept),
       status: 'generating_music',
       updated_at: new Date().toISOString(),
-    }).eq('id', projectId).eq('status', 'choosing');
+    }).eq('id', projectId).eq('status', 'choosing').select('id');
 
-    if (!count) {
+    if (!updated?.length) {
       return NextResponse.json({ error: 'Already finalized' }, { status: 409 });
     }
 
-    console.log(`[api/finalize-show] Title chosen: ${concept.title_options[titleIndex]?.title}, poster index: ${posterIndex}`);
+    const chosenTitle = customTitle || concept.title_options[titleIndex]?.title;
+    console.log(`[api/finalize-show] Title chosen: ${chosenTitle}, poster index: ${posterIndex}`);
 
     // Generate playbill + album (uses the updated recommended_title)
     const shareSlug = await generatePlaybillAndAlbum(projectId, concept, musicalType);
