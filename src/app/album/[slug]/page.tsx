@@ -217,6 +217,47 @@ export default function AlbumPage({ params }: { params: Promise<{ slug: string }
     return () => clearInterval(interval);
   }, [data, slug, coverArtReady]);
 
+  // Stale track check: if any track has been generating_audio for >3 minutes,
+  // call check-track as a polling fallback (webhook may have been missed).
+  // Also triggers on initial mount for stale project recovery (Fix 4).
+  const checkedTracksRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    if (!data) return;
+
+    const STALE_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes
+    const now = Date.now();
+
+    const staleTracks = data.tracks.filter((t: Track) => {
+      if (t.status !== 'generating_audio') return false;
+      if (checkedTracksRef.current.has(t.track_number)) return false;
+      const updatedAt = new Date(t.updated_at).getTime();
+      return (now - updatedAt) > STALE_THRESHOLD_MS;
+    });
+
+    if (staleTracks.length === 0) return;
+
+    // Mark as checked immediately to prevent repeated calls
+    staleTracks.forEach((t: Track) => checkedTracksRef.current.add(t.track_number));
+
+    // If multiple stale tracks, use project-wide mode
+    if (staleTracks.length > 1) {
+      console.log(`[album] ${staleTracks.length} stale tracks detected — triggering project-wide check`);
+      fetch('/api/check-track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: data.album.project_id }),
+      }).catch(err => console.error('[album] Stale track check failed:', err));
+    } else {
+      const t = staleTracks[0];
+      console.log(`[album] Track ${t.track_number} stale (generating_audio for >3min) — triggering check`);
+      fetch('/api/check-track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: data.album.project_id, trackNumber: t.track_number }),
+      }).catch(err => console.error('[album] Stale track check failed:', err));
+    }
+  }, [data]);
+
   const handleGenerateTrack = useCallback(async (trackNumber: number) => {
     if (!data) return;
 

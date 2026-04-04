@@ -273,6 +273,14 @@ export async function submitKieWithWebhook(
   return data.data.taskId;
 }
 
+/**
+ * Model fallback chain for retries: V5_5 → V5 → V4
+ */
+export function getFallbackModel(retryCount: number): string {
+  const chain = ['V5_5', 'V5', 'V4'];
+  return chain[Math.min(retryCount, chain.length - 1)];
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

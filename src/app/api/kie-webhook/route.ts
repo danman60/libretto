@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { maybeFinalizeProject } from '@/lib/generate-show';
+import { submitKieWithWebhook, getFallbackModel } from '@/lib/suno-kie';
 import { logGeneration } from '@/lib/log-generation';
 
 /**
@@ -80,12 +81,8 @@ export async function POST(request: NextRequest) {
           model: 'kie-suno',
         });
 
-        await db.from('tracks').update({
-          status: 'failed',
-          updated_at: new Date().toISOString(),
-        }).eq('project_id', projectId).eq('track_number', trackNumber);
-
-        await maybeFinalizeProject(projectId);
+        // Attempt retry with model fallback chain
+        await attemptRetryOrFail(db, projectId, trackNumber);
         return NextResponse.json({ received: true });
       }
 
@@ -153,11 +150,8 @@ export async function POST(request: NextRequest) {
         model: 'kie-suno',
       });
 
-      await db.from('tracks').update({
-        status: 'failed',
-        updated_at: new Date().toISOString(),
-      }).eq('project_id', projectId).eq('track_number', trackNumber);
-
+      // Attempt retry with model fallback chain
+      await attemptRetryOrFail(db, projectId, trackNumber);
       break;
     }
 
@@ -209,4 +203,87 @@ interface KieWebhookPayload {
     task_id: string;
     data: KieWebhookTrack[] | null;
   };
+}
+
+/**
+ * Retry a failed track with the next model in the fallback chain,
+ * or mark as permanently failed if retries are exhausted.
+ */
+async function attemptRetryOrFail(
+  db: ReturnType<typeof getServiceSupabase>,
+  projectId: string,
+  trackNumber: number
+): Promise<void> {
+  const { data: track } = await db
+    .from('tracks')
+    .select('retry_count, lyrics, style_prompt, title')
+    .eq('project_id', projectId)
+    .eq('track_number', trackNumber)
+    .single();
+
+  if (!track) {
+    console.error(`[kie-webhook] Track ${trackNumber} not found for retry`);
+    return;
+  }
+
+  if (track.retry_count >= 2) {
+    console.error(`[kie-webhook] Track ${trackNumber} exhausted ${track.retry_count} retries — marking failed`);
+    await db.from('tracks').update({
+      status: 'failed',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+    await maybeFinalizeProject(projectId);
+    return;
+  }
+
+  if (!track.lyrics || !track.style_prompt) {
+    console.error(`[kie-webhook] Track ${trackNumber} missing lyrics/style — cannot retry`);
+    await db.from('tracks').update({
+      status: 'failed',
+      retry_count: track.retry_count + 1,
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+    await maybeFinalizeProject(projectId);
+    return;
+  }
+
+  const newRetryCount = track.retry_count + 1;
+  const fallbackModel = getFallbackModel(newRetryCount);
+
+  console.log(`[kie-webhook] Retrying track ${trackNumber} (attempt ${newRetryCount}) with model ${fallbackModel}`);
+
+  await logGeneration({
+    projectId,
+    trackNumber,
+    event: 'retry',
+    model: fallbackModel,
+    errorMessage: `Retry ${newRetryCount} with fallback model ${fallbackModel}`,
+  });
+
+  try {
+    const newTaskId = await submitKieWithWebhook(
+      track.lyrics,
+      track.style_prompt,
+      track.title,
+      projectId,
+      trackNumber,
+      false,
+      fallbackModel
+    );
+
+    await db.from('tracks').update({
+      suno_task_id: newTaskId,
+      retry_count: newRetryCount,
+      status: 'generating_audio',
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+  } catch (err) {
+    console.error(`[kie-webhook] Retry submission failed for track ${trackNumber}:`, err);
+    await db.from('tracks').update({
+      status: 'failed',
+      retry_count: newRetryCount,
+      updated_at: new Date().toISOString(),
+    }).eq('project_id', projectId).eq('track_number', trackNumber);
+    await maybeFinalizeProject(projectId);
+  }
 }
