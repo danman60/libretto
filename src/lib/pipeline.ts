@@ -6,7 +6,6 @@
 
 import { getServiceSupabase } from './supabase';
 import { callDeepSeek, callDeepSeekJSON } from './deepseek';
-import { generateTrack, getDelayBetweenTracks } from './suno';
 import { sanitizeStoryInput } from './sanitize';
 import {
   buildLifeMapPrompt,
@@ -31,10 +30,6 @@ const NARRATIVE_ROLES: NarrativeRole[] = [
   'turning_point',
   'resolution',
 ];
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function generateSlug(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -214,103 +209,10 @@ export async function runPipeline(projectId: string): Promise<void> {
       }
     }
 
-    // ===== STEP 6: Generate Music =====
+    // ===== STEP 6: Set status to generating_music =====
+    // Music generation is now handled per-track by /api/generate-track,
+    // driven by the client polling loop. This avoids Vercel timeout limits.
     await db.from('projects').update({ status: 'generating_music', updated_at: new Date().toISOString() }).eq('id', projectId);
-
-    const { data: tracks } = await db
-      .from('tracks')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('track_number');
-
-    if (tracks) {
-      for (const track of tracks) {
-        if (track.status === 'failed' || !track.lyrics) continue;
-
-        await db
-          .from('tracks')
-          .update({ status: 'generating_audio', updated_at: new Date().toISOString() })
-          .eq('id', track.id);
-
-        try {
-          const isInstrumental = musicPrefs.vocal_mode === 'instrumental';
-          const result = await generateTrack(
-            track.lyrics || '',
-            track.style_prompt || '',
-            track.title,
-            isInstrumental
-          );
-
-          await db
-            .from('tracks')
-            .update({
-              suno_task_id: result.id,
-              audio_url: result.audio_url,
-              cover_image_url: result.image_url,
-              duration: result.duration,
-              status: 'complete',
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', track.id);
-        } catch (err) {
-          console.error(`Music generation failed for track ${track.track_number}:`, err);
-
-          if (track.retry_count === 0) {
-            try {
-              await db.from('tracks').update({ retry_count: 1 }).eq('id', track.id);
-              const simpleStyle = musicPrefs.genres[0] || 'pop';
-              const retryResult = await generateTrack(
-                track.lyrics || '',
-                simpleStyle,
-                track.title,
-                musicPrefs.vocal_mode === 'instrumental'
-              );
-              await db
-                .from('tracks')
-                .update({
-                  suno_task_id: retryResult.id,
-                  audio_url: retryResult.audio_url,
-                  cover_image_url: retryResult.image_url,
-                  duration: retryResult.duration,
-                  status: 'complete',
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', track.id);
-            } catch {
-              await db
-                .from('tracks')
-                .update({ status: 'failed', updated_at: new Date().toISOString() })
-                .eq('id', track.id);
-            }
-          } else {
-            await db
-              .from('tracks')
-              .update({ status: 'failed', updated_at: new Date().toISOString() })
-              .eq('id', track.id);
-          }
-        }
-
-        await sleep(getDelayBetweenTracks());
-      }
-    }
-
-    // ===== STEP 7: Finalization =====
-    const { data: completedTracks } = await db
-      .from('tracks')
-      .select('cover_image_url')
-      .eq('project_id', projectId)
-      .eq('status', 'complete')
-      .order('track_number')
-      .limit(1);
-
-    if (completedTracks?.length) {
-      await db
-        .from('albums')
-        .update({ cover_image_url: completedTracks[0].cover_image_url })
-        .eq('project_id', projectId);
-    }
-
-    await db.from('projects').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', projectId);
   } catch (err) {
     console.error('Pipeline error:', err);
     const db = getServiceSupabase();

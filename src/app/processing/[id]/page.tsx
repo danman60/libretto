@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProgressTracker } from '@/components/ProgressTracker';
 import { Disc3 } from 'lucide-react';
-import type { StatusResponse } from '@/lib/types';
+import type { StatusResponse, Track } from '@/lib/types';
 
 const POLL_INTERVAL = 5000;
 
@@ -13,9 +13,49 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const generatingTrackId = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
+
+    const kickOffNextTrack = async (tracks: Track[]) => {
+      // Don't fire if we're already generating a track
+      if (generatingTrackId.current) {
+        // Check if the track we're generating is done
+        const currentTrack = tracks.find((t) => t.id === generatingTrackId.current);
+        if (currentTrack && (currentTrack.status === 'complete' || currentTrack.status === 'failed')) {
+          generatingTrackId.current = null;
+        } else {
+          return; // Still generating
+        }
+      }
+
+      // Also bail if any track is currently generating_audio (could be from a previous session)
+      const alreadyGenerating = tracks.find((t) => t.status === 'generating_audio');
+      if (alreadyGenerating) {
+        generatingTrackId.current = alreadyGenerating.id;
+        return;
+      }
+
+      // Find the next track that needs audio generation
+      const nextTrack = tracks.find(
+        (t) => t.status === 'lyrics_done' && t.lyrics && !t.audio_url
+      );
+      if (!nextTrack) return;
+
+      generatingTrackId.current = nextTrack.id;
+
+      try {
+        await fetch('/api/generate-track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId, trackId: nextTrack.id }),
+        });
+      } catch (err) {
+        console.error('Failed to kick off track generation:', err);
+        generatingTrackId.current = null;
+      }
+    };
 
     const poll = async () => {
       try {
@@ -29,7 +69,6 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
         setStatus(data);
 
         if (data.project.status === 'complete' && data.album?.share_slug) {
-          // Small delay for the "complete" state to show
           setTimeout(() => router.push(`/album/${data.album!.share_slug}`), 1500);
           return;
         }
@@ -37,6 +76,11 @@ export default function ProcessingPage({ params }: { params: Promise<{ id: strin
         if (data.project.status === 'failed') {
           setError('Something went wrong during generation. Please try again.');
           return;
+        }
+
+        // Drive per-track music generation from the client
+        if (data.project.status === 'generating_music' && data.tracks.length > 0) {
+          kickOffNextTrack(data.tracks);
         }
 
         setTimeout(poll, POLL_INTERVAL);
