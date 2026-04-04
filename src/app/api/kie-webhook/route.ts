@@ -69,8 +69,24 @@ export async function POST(request: NextRequest) {
       // All variants ready — Suno puts the preferred one first
       const tracks = body.data?.data;
       if (!tracks?.length) {
-        console.error('[kie-webhook] Complete callback but no track data');
-        return NextResponse.json({ error: 'No track data' }, { status: 400 });
+        // KIE sometimes sends callbackType:"complete" even on failures (null sunoData)
+        console.error(`[kie-webhook] Complete callback but no track data — treating as failure | project=${projectId} track=${trackNumber}`);
+
+        await logGeneration({
+          projectId,
+          trackNumber,
+          event: 'failed',
+          errorMessage: 'KIE sent complete callback with null track data',
+          model: 'kie-suno',
+        });
+
+        await db.from('tracks').update({
+          status: 'failed',
+          updated_at: new Date().toISOString(),
+        }).eq('project_id', projectId).eq('track_number', trackNumber);
+
+        await maybeFinalizeProject(projectId);
+        return NextResponse.json({ received: true });
       }
 
       // Normalize field names (KIE mixes camelCase/snake_case)

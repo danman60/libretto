@@ -2,9 +2,11 @@
  * KIE.ai Suno API client.
  * Docs: https://docs.kie.ai/suno-api/generate-music
  *
- * VERIFIED WORKING: Feb 18, 2026
- * Status progression: PENDING → TEXT_SUCCESS → FIRST_SUCCESS → SUCCESS (~65s)
+ * VERIFIED WORKING: Apr 4, 2026
+ * Status progression: PENDING → TEXT_SUCCESS → FIRST_SUCCESS → SUCCESS (~65-150s)
  * Returns 2 tracks per generation (pick the best one).
+ * Models: V4→chirp-v4, V4_5→chirp-auk, V4_5ALL→chirp-auk-turbo (FLAKY),
+ *         V5→chirp-crow, V5_5→chirp-fenix (RECOMMENDED, fastest).
  */
 
 const KIE_API_URL = 'https://api.kie.ai';
@@ -82,7 +84,7 @@ export async function submitKieGeneration(
   stylePrompt: string,
   title: string,
   instrumental: boolean = false,
-  model: string = 'V5'
+  model: string = 'V5_5'
 ): Promise<string> {
   const body: KieGenerateRequest = {
     customMode: true,
@@ -227,7 +229,7 @@ export async function submitKieWithWebhook(
   projectId: string,
   trackNumber: number,
   instrumental: boolean = false,
-  model: string = 'V5'
+  model: string = 'V5_5'
 ): Promise<string> {
   const webhookUrl = buildWebhookUrl(projectId, trackNumber);
 
