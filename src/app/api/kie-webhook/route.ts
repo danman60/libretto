@@ -54,6 +54,32 @@ export async function POST(request: NextRequest) {
 
   const db = getServiceSupabase();
 
+  // Idempotency + staleness guard for mutating callbacks. KIE retries each
+  // callback up to 3x, and the model-fallback chain creates new task IDs — so a
+  // late or superseded callback can otherwise re-trigger generation (burning
+  // KIE credits / real money) or overwrite already-good audio. Only act on a
+  // callback whose task_id matches the track's CURRENT task, and never
+  // re-process a track that is already in a terminal state.
+  if (callbackType === 'complete' || callbackType === 'error') {
+    const { data: current } = await db
+      .from('tracks')
+      .select('status, suno_task_id')
+      .eq('project_id', projectId)
+      .eq('track_number', trackNumber)
+      .single();
+
+    if (current) {
+      if (current.status === 'complete' || current.status === 'failed') {
+        console.warn(`[kie-webhook] Ignoring ${callbackType} for track ${trackNumber} — already terminal (${current.status})`);
+        return NextResponse.json({ received: true, ignored: 'terminal' });
+      }
+      if (taskId && current.suno_task_id && taskId !== current.suno_task_id) {
+        console.warn(`[kie-webhook] Ignoring stale ${callbackType} for track ${trackNumber} — task ${taskId} superseded by ${current.suno_task_id}`);
+        return NextResponse.json({ received: true, ignored: 'stale_task' });
+      }
+    }
+  }
+
   // Handle different callback types
   switch (callbackType) {
     case 'text':
