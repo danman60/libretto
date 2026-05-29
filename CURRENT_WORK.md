@@ -1,6 +1,25 @@
 # Current Work — Libretto
 
-## Last Session: KIE Reliability Hardening (Apr 4, 2026)
+## Overnight Fleet Run (May 28, 2026) — webhook idempotency hardening
+
+Continued KIE reliability hardening. Built + committed (commit 0b6d674), **NOT pushed/deployed** (real-users production webhook runtime change; pause-before-deploy per overnight rails).
+
+### Shipped this run (committed, unpushed)
+- **Idempotency + task-staleness guard on `/api/kie-webhook`** — webhook now:
+  - ignores duplicate callbacks on already-terminal tracks → `{received,ignored:'terminal'}`
+  - ignores superseded-task callbacks (task_id ≠ current `suno_task_id`) → `{ignored:'stale_task'}`
+  - Closes a real bug: KIE retries callbacks 3× and model-fallback creates new task IDs, so a late/duplicate `error` callback could fire a 2nd/3rd generation (wasted KIE credits = $) or a stale `complete` could overwrite good audio.
+  - Verified safe: `generate-show.ts:228-229` sets `suno_task_id` + `generating_audio` together at submit, so the first legit callback is never false-ignored. `check-track` already guards on `status='generating_audio'`.
+- **`tests/agent/kie-failure-recovery-checklist.md`** — QA-agent checklist (real browser, per project no-unit-test rule): happy path, webhook-missed poll recovery, model fallback chain, idempotency, stale-task, null-data complete, secret enforcement.
+
+### PENDING USER APPROVAL (before push/deploy of 0b6d674)
+- Run `tests/agent/kie-failure-recovery-checklist.md` against a **preview** deploy (generation burns KIE credits — do NOT test on production).
+- Set `KIE_CALLBACK_URL` to real app URL (still `webhook.site/placeholder` per below).
+- Then push `main` (deploys to www.broadwayify.com).
+
+---
+
+## Prior Session: KIE Reliability Hardening (Apr 4, 2026)
 
 Investigated why music generation was failing for users on www.broadwayify.com. Root cause: KIE V5 model (`chirp-auk-turbo`) failing 75% with error 500 + webhook silently dropping failures. Deployed full hardening stack.
 
