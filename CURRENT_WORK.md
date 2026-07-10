@@ -1,5 +1,26 @@
 # Current Work — Libretto
 
+## Session July 9–10, 2026 — production domain outage fixed + KIE pipeline verified live
+
+### DNS outage (www.broadwayify.com dead) — ROOT-CAUSED & FIXED
+- **Symptom:** `broadwayify.com` + `www` returned NXDOMAIN everywhere; app itself healthy on `libretto-alpha.vercel.app` (HTTP 200).
+- **Root cause:** NameCheap registrar delegated the domain to Cloudflare NS `jack/rihana.ns.cloudflare.com` — a **stale/empty** zone (SOA only, no apex/www records). The **active** Cloudflare zone (id `65e67148…`, status `moved`) was assigned to NS `amos/aria.ns.cloudflare.com`. Registrar/zone NS mismatch → zone never served → every record NXDOMAIN.
+- **Fix (two parts):**
+  1. Added records to the active zone: apex `broadwayify.com` A → `216.150.1.1` + `216.150.16.1`; `www` CNAME → `cname.vercel-dns.com`; all DNS-only (grey cloud, Vercel-managed certs). Values from Vercel `/v6/domains/*/config` `recommendedIPv4`.
+  2. Repointed NameCheap nameservers `jack/rihana` → `amos/aria.ns.cloudflare.com` (`domains.dns.setCustom`, `Updated:true`).
+- **Verified live:** `www.broadwayify.com` → HTTP 200, title "BROADWAYIFY — Turn your idea into a Broadway musical"; apex `broadwayify.com` → 307 → www. Resolves on both 1.1.1.1 and 8.8.8.8.
+- Vercel domain binding was already correct (apex+www attached to project `libretto`, verified=true, apex redirects→www). Only DNS delegation was broken.
+
+### KIE Suno pipeline — VERIFIED WORKING (live test 2026-07-10)
+- Submitted a real generation with the app's exact payload (`suno-kie.ts` shape), model `V5_5`: `/api/v1/generate` → `code:200`; status PENDING→TEXT_SUCCESS→FIRST_SUCCESS→**SUCCESS** in ~72s; returned 2 variants (model `chirp-fenix`), audio downloaded HTTP 200 `audio/mpeg` 2.59 MB.
+- KIE credits 285 → 273 (−12/generation). ~22 generations of headroom.
+- Webhook **callback delivery** (KIE→`/api/kie-webhook`) not exercised in this test (polled `record-info` directly); backstopped by `check-track` polling regardless.
+
+### Correction to prior note
+- Commit `0b6d674` (idempotency guard) is **already pushed** — `git HEAD == origin/main`. The "NOT pushed/deployed / PENDING USER APPROVAL" note below is **stale/incorrect**; kept for history.
+
+---
+
 ## Overnight Fleet Run (May 28, 2026) — webhook idempotency hardening
 
 Continued KIE reliability hardening. Built + committed (commit 0b6d674), **NOT pushed/deployed** (real-users production webhook runtime change; pause-before-deploy per overnight rails).
