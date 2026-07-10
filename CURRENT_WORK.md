@@ -11,10 +11,15 @@
 - **Verified live:** `www.broadwayify.com` → HTTP 200, title "BROADWAYIFY — Turn your idea into a Broadway musical"; apex `broadwayify.com` → 307 → www. Resolves on both 1.1.1.1 and 8.8.8.8.
 - Vercel domain binding was already correct (apex+www attached to project `libretto`, verified=true, apex redirects→www). Only DNS delegation was broken.
 
-### KIE Suno pipeline — VERIFIED WORKING (live test 2026-07-10)
-- Submitted a real generation with the app's exact payload (`suno-kie.ts` shape), model `V5_5`: `/api/v1/generate` → `code:200`; status PENDING→TEXT_SUCCESS→FIRST_SUCCESS→**SUCCESS** in ~72s; returned 2 variants (model `chirp-fenix`), audio downloaded HTTP 200 `audio/mpeg` 2.59 MB.
-- KIE credits 285 → 273 (−12/generation). ~22 generations of headroom.
-- Webhook **callback delivery** (KIE→`/api/kie-webhook`) not exercised in this test (polled `record-info` directly); backstopped by `check-track` polling regardless.
+### KIE Suno pipeline — VERIFIED WORKING END-TO-END (live tests 2026-07-10)
+- Direct generation test: app's exact payload (`suno-kie.ts` shape), model `V5_5`: `/api/v1/generate` → `code:200`; status PENDING→TEXT_SUCCESS→FIRST_SUCCESS→**SUCCESS** ~72s; 2 variants (`chirp-fenix`), audio downloaded HTTP 200 `audio/mpeg` 2.59 MB.
+- **Full webhook round trip** (commit `79371bf`, after secret fix below): inserted throwaway project+track (`generating_audio`, suno_task_id set) → submitted KIE with real prod callback `libretto-alpha.vercel.app/api/kie-webhook` → KIE POSTed the live webhook → track flipped to `complete` with audio_url + alt_audio_url. Test rows deleted. **Confirms KIE→prod-webhook→DB works.**
+- KIE credits ~285 → ~261 (−12/generation, 2 test gens). Key `bd49471…`.
+
+### KIE webhook shared-secret bug — FIXED (commit `79371bf`, deployed)
+- **Bug:** prod `KIE_WEBHOOK_SECRET` was a bare newline (`'\n'`) and `buildWebhookUrl` interpolated it **raw** into the callback URL. A literal newline in a URL is fragile — KIE's HTTP client can strip it, so the callback arrives with an empty secret → webhook returns 401 → audio never finalizes via webhook (falls back to `check-track` poll only; likely cause of tracks stuck in `generating_audio`).
+- Verified deployed webhook auth: no/empty/bogus secret → 401; only `secret=%0A` (newline) → 200. Confirmed the fragility.
+- **Fix:** `buildWebhookUrl` now `encodeURIComponent((KIE_WEBHOOK_SECRET||'').trim())`; route trims both sides before compare. Rotated `KIE_WEBHOOK_SECRET` in Vercel prod to a clean 48-char hex token. Post-deploy verified: correct secret → 200, old newline → 401 (rotation proven), bogus → 401, secret+trailing-newline → 200 (trim works).
 
 ### Correction to prior note
 - Commit `0b6d674` (idempotency guard) is **already pushed** — `git HEAD == origin/main`. The "NOT pushed/deployed / PENDING USER APPROVAL" note below is **stale/incorrect**; kept for history.
