@@ -71,7 +71,11 @@ function getCallbackUrl(): string {
 function buildWebhookUrl(projectId: string, trackNumber: number): string {
   const base = getAppBaseUrl();
   if (!base) return getCallbackUrl(); // fallback to legacy
-  const secret = process.env.KIE_WEBHOOK_SECRET || '';
+  // Trim + URL-encode the secret. A stray newline in the env var (or any
+  // special char) would otherwise land raw in the callback URL, which KIE's
+  // HTTP client can mangle/strip — causing every callback to 401 and audio to
+  // silently never finalize (relying entirely on the check-track poll).
+  const secret = encodeURIComponent((process.env.KIE_WEBHOOK_SECRET || '').trim());
   return `${base}/api/kie-webhook?projectId=${projectId}&trackNumber=${trackNumber}&secret=${secret}`;
 }
 

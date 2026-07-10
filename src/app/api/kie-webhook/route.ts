@@ -32,9 +32,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid trackNumber' }, { status: 400 });
   }
 
-  // Simple shared-secret validation
-  const expectedSecret = process.env.KIE_WEBHOOK_SECRET || '';
-  if (expectedSecret && secret !== expectedSecret) {
+  // Simple shared-secret validation. Trim both sides so a stray newline in the
+  // env var (which produced a fragile secret='\n' scheme in prod) can't cause a
+  // mismatch between the URL builder and this validator.
+  const expectedSecret = (process.env.KIE_WEBHOOK_SECRET || '').trim();
+  if (expectedSecret && (secret || '').trim() !== expectedSecret) {
     console.error('[kie-webhook] Invalid secret');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
