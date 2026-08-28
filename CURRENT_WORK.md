@@ -80,7 +80,7 @@ PASSING on Vercel (production deploy `libretto-8vuk5m193`). Local build has pre-
 ## Gotchas
 - Deployed branch is **`main`**, NOT `master`
 - Production: `www.broadwayify.com` / `libretto-alpha.vercel.app`
-- KIE key: `bd49471376b4f00b8c14b88c065886c3` (465 credits as of Apr 4)
+- KIE key: `<REDACTED — KIE_API_KEY in ~/.env.keys>` (465 credits as of Apr 4)
 - KIE model map: V5→chirp-crow, V5_5→chirp-fenix, V4_5ALL→chirp-auk-turbo (FLAKY)
 - Supabase schema: `libretto` on CC&SS project
 - Tracks 2-6 manual unlock is intentional (pricing model)
